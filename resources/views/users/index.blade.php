@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title', 'SISFO Sarpras - User Management')
+
 @section('content')
     <div class="container mx-auto px-4 py-8">
         <div class="flex justify-between items-center mb-8">
