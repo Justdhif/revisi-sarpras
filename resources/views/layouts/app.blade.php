@@ -197,9 +197,9 @@
             <div class="pt-2">
                 <p class="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Transactions</p>
                 <div class="space-y-1">
-                    <div x-data="{ borrowOpen: {{ request()->routeIs('borrow-requests.index') || request()->routeIs('borrow-details.index') ? 'true' : 'false' }} }">
+                    <div x-data="{ borrowOpen: {{ request()->routeIs('borrow-requests.index', 'borrow-details.index', 'borrow-requests.show', 'borrow-details.show', 'borrow-requests.create', 'borrow-details.create') ? 'true' : 'false' }} }">
                         <button @click="borrowOpen = !borrowOpen"
-                            class="nav-item flex items-center justify-between w-full px-4 py-3 rounded-lg font-medium {{ request()->routeIs('borrow-requests.index') || request()->routeIs('borrow-details.index') ? 'active' : '' }}">
+                            class="nav-item flex items-center justify-between w-full px-4 py-3 rounded-lg font-medium {{ request()->routeIs('borrow-requests.index', 'borrow-details.index', 'borrow-requests.show', 'borrow-details.show', 'borrow-requests.create', 'borrow-details.create') ? 'active' : '' }}">
                             <span class="flex items-center">
                                 <i class="fas fa-hand-holding mr-3"></i> Borrow
                             </span>
@@ -207,7 +207,7 @@
                         </button>
                         <div x-show="borrowOpen" class="ml-8 mt-1 space-y-1" x-cloak>
                             <a href="{{ route('borrow-requests.index') }}"
-                                class="submenu-item block px-3 py-2 rounded text-sm {{ request()->routeIs('borrow-requests.index') ? 'active' : '' }}">
+                                class="submenu-item block px-3 py-2 rounded text-sm {{ request()->routeIs('borrow-requests.index', 'borrow-requests.show', 'borrow-requests.create', 'borrow-requests.edit') ? 'active' : '' }}">
                                 <i class="fas fa-inbox mr-2"></i> Borrow Requests
                             </a>
                             <a href="{{ route('borrow-details.index') }}"
