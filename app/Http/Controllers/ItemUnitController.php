@@ -87,9 +87,10 @@ class ItemUnitController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(ItemUnit $itemUnit)
     {
-        //
+        $itemUnit->with(['item', 'warehouse']);
+        return view('item_units.show', compact('itemUnit'));
     }
 
     /**
@@ -144,12 +145,5 @@ class ItemUnitController extends Controller
         $fileName = 'qr_codes/' . $sku . '.png';
         Storage::disk('public')->put($fileName, $qrCode);
         return 'storage/' . $fileName;
-    }
-
-    public function printAllQRCodes()
-    {
-        $itemUnits = ItemUnit::with(['item', 'warehouse'])->get();
-
-        return view('item_units.qr_print', compact('itemUnits'));
     }
 }

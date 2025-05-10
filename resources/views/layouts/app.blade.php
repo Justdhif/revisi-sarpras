@@ -172,9 +172,9 @@
                         </a>
                     </div>
                 </div>
-                <div x-data="{ unitOpen: {{ request()->routeIs('item-units.index') || request()->routeIs('item-units.create') ? 'true' : 'false' }} }">
+                <div x-data="{ unitOpen: {{ request()->routeIs('item-units.index', 'item-units.create', 'item-units.edit', 'item-units.show') ? 'true' : 'false' }} }">
                     <button @click="unitOpen = !unitOpen"
-                        class="nav-item flex items-center justify-between w-full px-4 py-3 rounded-lg font-medium {{ request()->routeIs('item-units.index') || request()->routeIs('item-units.create') ? 'active' : '' }}">
+                        class="nav-item flex items-center justify-between w-full px-4 py-3 rounded-lg font-medium {{ request()->routeIs('item-units.index', 'item-units.edit', 'item-units.show') || request()->routeIs('item-units.create') ? 'active' : '' }}">
                         <span class="flex items-center">
                             <i class="fas fa-ruler-combined mr-3"></i> Unit
                         </span>
@@ -182,17 +182,12 @@
                     </button>
                     <div x-show="unitOpen" class="ml-8 mt-1 space-y-1" x-cloak>
                         <a href="{{ route('item-units.index') }}"
-                            class="submenu-item block px-3 py-2 rounded text-sm {{ request()->routeIs('item-units.index') ? 'active' : '' }}">
+                            class="submenu-item block px-3 py-2 rounded text-sm {{ request()->routeIs('item-units.index', 'item-units.show') ? 'active' : '' }}">
                             <i class="fas fa-list mr-2"></i> Daftar Unit
                         </a>
                         <a href="{{ route('item-units.create') }}"
                             class="submenu-item block px-3 py-2 rounded text-sm {{ request()->routeIs('item-units.create') ? 'active' : '' }}">
                             <i class="fas fa-plus mr-2"></i> Tambah Unit
-                        </a>
-                        <a href="{{ route('item-units.qr.print') }}"
-                            class="submenu-item block px-3 py-2 rounded text-sm">
-                            <i class="fas fa-print mr-2"></i>
-                            Cetak QR Code
                         </a>
                     </div>
                 </div>
@@ -284,7 +279,7 @@
     <div class="flex-1 flex flex-col overflow-hidden ml-64">
         <!-- Topbar -->
         <header class="bg-white shadow z-10">
-            <div class="flex items-center justify-between px-6 py-4">
+            <div class="flex items-center justify-between p-6">
                 <h2 class="text-2xl font-semibold text-gray-800">@yield('heading', 'Dashboard')</h2>
                 <div class="flex items-center space-x-4">
                     <button class="relative p-2 rounded-full hover:bg-gray-100 transition-colors duration-300">

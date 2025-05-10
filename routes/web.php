@@ -64,10 +64,6 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::post('/return_requests/{return_request}/reject', [ReturnRequestController::class, 'reject'])
         ->name('return_requests.reject');
 
-    // Additional Item Unit Routes
-    Route::get('/item-units/qrs', [ItemUnitController::class, 'printAllQRCodes'])
-        ->name('item-units.qr.print');
-
     // Activity Logs
     Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
 
