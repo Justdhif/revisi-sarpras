@@ -277,23 +277,6 @@
 
     <!-- Main Content -->
     <div class="flex-1 flex flex-col overflow-hidden ml-64">
-        <!-- Topbar -->
-        <header class="bg-white shadow z-10">
-            <div class="flex items-center justify-between p-6">
-                <h2 class="text-2xl font-semibold text-gray-800">@yield('heading', 'Dashboard')</h2>
-                <div class="flex items-center space-x-4">
-                    <button class="relative p-2 rounded-full hover:bg-gray-100 transition-colors duration-300">
-                        <i class="fas fa-bell text-gray-500"></i>
-                        <span class="absolute top-0 right-0 w-2 h-2 bg-danger rounded-full"></span>
-                    </button>
-                    <div
-                        class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center transition-colors duration-300 hover:bg-primary/20">
-                        <i class="fas fa-user text-primary"></i>
-                    </div>
-                </div>
-            </div>
-        </header>
-
         <!-- Alert -->
         <main class="flex-1 overflow-y-auto p-6">
             @if (session('success'))
