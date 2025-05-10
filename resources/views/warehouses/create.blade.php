@@ -1,27 +1,104 @@
 @extends('layouts.app')
 
+@section('title', 'SISFO Sarpras - Tambah Warehouse')
+
 @section('content')
-    <div class="container">
-        <h1>Create Warehouse</h1>
-        <form action="{{ route('warehouses.store') }}" method="POST">
-            @csrf
-            <div class="mb-3">
-                <label for="name" class="form-label">Name</label>
-                <input type="text" name="name" class="form-control" value="{{ old('name') }}" required>
+    <div class="min-h-screen bg-gray-50 flex flex-col justify-center items-start py-12 sm:px-6 lg:px-8">
+        <div class="sm:mx-auto sm:w-full sm:max-w-2xl">
+            <div class="flex justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-indigo-600" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+                </svg>
             </div>
-            <div class="mb-3">
-                <label for="location" class="form-label">Location</label>
-                <textarea name="location" class="form-control" required>{{ old('location') }}</textarea>
+            <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                Buat Gudang Baru
+            </h2>
+            <p class="mt-2 text-center text-sm text-gray-600">
+                Lengkapi formulir berikut untuk menambahkan gudang baru ke sistem
+            </p>
+        </div>
+
+        <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-2xl">
+            <div class="bg-white py-8 px-6 shadow-lg rounded-lg sm:px-10 border border-gray-100">
+                <form class="space-y-6" action="{{ route('warehouses.store') }}" method="POST">
+                    @csrf
+
+                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                        <div>
+                            <label for="name" class="block text-sm font-medium text-gray-700">Nama Gudang</label>
+                            <div class="mt-1 relative rounded-md shadow-sm">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+                                    </svg>
+                                </div>
+                                <input type="text" name="name" id="name" required
+                                    class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-3 border"
+                                    value="{{ old('name') }}" placeholder="Contoh: Gudang Pusat">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="capacity" class="block text-sm font-medium text-gray-700">Kapasitas ( /units )</label>
+                            <div class="mt-1 relative rounded-md shadow-sm">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                                <input type="number" name="capacity" id="capacity" required
+                                    class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-3 border"
+                                    value="{{ old('capacity') }}" placeholder="Contoh: 5000">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="location" class="block text-sm font-medium text-gray-700">Lokasi</label>
+                        <div class="mt-1">
+                            <textarea id="location" name="location" rows="3" required
+                                class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border border-gray-300 rounded-md py-2 px-3 resize-none"
+                                placeholder="Alamat lengkap gudang">{{ old('location') }}</textarea>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="description" class="block text-sm font-medium text-gray-700">Deskripsi</label>
+                        <div class="mt-1">
+                            <textarea id="description" name="description" rows="4"
+                                class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border border-gray-300 rounded-md py-2 px-3 resize-none"
+                                placeholder="Informasi tambahan tentang gudang">{{ old('description') }}</textarea>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-6">
+                        <a href="{{ url()->previous() }}"
+                            class="flex items-center justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                            </svg>
+                            Kembali
+                        </a>
+                        <button type="submit"
+                            class="flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                            Buat Gudang
+                        </button>
+                    </div>
+                </form>
             </div>
-            <div class="mb-3">
-                <label for="capacity" class="form-label">Capacity</label>
-                <input type="number" name="capacity" class="form-control" value="{{ old('capacity') }}" required>
-            </div>
-            <div class="mb-3">
-                <label for="description" class="form-label">Description</label>
-                <textarea name="description" class="form-control">{{ old('description') }}</textarea>
-            </div>
-            <button type="submit" class="btn btn-success">Create</button>
-        </form>
+        </div>
     </div>
 @endsection
