@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\BorrowRequest;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class BorrowRequestController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Menampilkan semua permintaan peminjaman.
      */
     public function index()
     {
@@ -18,7 +18,7 @@ class BorrowRequestController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Menampilkan form untuk membuat permintaan peminjaman baru.
      */
     public function create()
     {
@@ -26,7 +26,7 @@ class BorrowRequestController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Menyimpan permintaan peminjaman baru ke database.
      */
     public function store(Request $request)
     {
@@ -41,20 +41,22 @@ class BorrowRequestController extends Controller
             'user_id' => Auth::id(),
         ]);
 
-        return redirect()->route('borrow-requests.index')->with('success', 'Request created.');
+        return redirect()->route('borrow-requests.index')->with('success', 'Permintaan peminjaman berhasil dibuat.');
     }
 
     /**
-     * Display the specified resource.
+     * Menampilkan detail dari permintaan peminjaman.
      */
     public function show(BorrowRequest $borrowRequest)
     {
-        $borrowRequest->with(['user', 'borrowDetail.itemUnit.item']);
+        // Pastikan eager loading diproses
+        $borrowRequest->load(['user', 'borrowDetail.itemUnit.item']);
+
         return view('borrow_requests.show', compact('borrowRequest'));
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Menampilkan form edit permintaan peminjaman.
      */
     public function edit(BorrowRequest $borrowRequest)
     {
@@ -62,7 +64,7 @@ class BorrowRequestController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Memperbarui data permintaan peminjaman.
      */
     public function update(Request $request, BorrowRequest $borrowRequest)
     {
@@ -73,36 +75,42 @@ class BorrowRequestController extends Controller
 
         $borrowRequest->update($request->only('return_date_expected', 'notes'));
 
-        return redirect()->route('borrow-requests.index')->with('success', 'Request updated.');
+        return redirect()->route('borrow-requests.index')->with('success', 'Permintaan berhasil diperbarui.');
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Menghapus permintaan peminjaman dari database.
      */
     public function destroy(BorrowRequest $borrowRequest)
     {
         $borrowRequest->delete();
-        return back()->with('success', 'Request deleted.');
+        return back()->with('success', 'Permintaan berhasil dihapus.');
     }
 
+    /**
+     * Menyetujui permintaan peminjaman.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function approve($id)
     {
         $request = BorrowRequest::with('borrowDetail.itemUnit.item')->findOrFail($id);
 
         foreach ($request->borrowDetail as $detail) {
-            $item = $detail->itemUnit->item;
+            $itemUnit = $detail->itemUnit;
+            $item = $itemUnit->item;
 
             if ($item->type === 'consumable') {
-                // Kurangi stok dari item unit
-                $itemUnit = $detail->itemUnit;
+                // Validasi stok habis pakai
                 if ($itemUnit->quantity < $detail->quantity) {
                     return back()->with('error', 'Stok tidak mencukupi untuk item: ' . $item->name);
                 }
+
                 $itemUnit->quantity -= $detail->quantity;
                 $itemUnit->save();
             } else {
-                // Non-consumable: ubah status jadi borrowed
-                $itemUnit = $detail->itemUnit;
+                // Ubah status menjadi 'borrowed' untuk item non-habis pakai
                 $itemUnit->status = 'borrowed';
                 $itemUnit->save();
             }
@@ -113,17 +121,24 @@ class BorrowRequestController extends Controller
             'approved_by' => Auth::id(),
         ]);
 
-        return back()->with('success', 'Request approved.');
+        return back()->with('success', 'Permintaan berhasil disetujui.');
     }
 
+    /**
+     * Menolak permintaan peminjaman.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function reject($id)
     {
         $request = BorrowRequest::findOrFail($id);
+
         $request->update([
             'status' => 'rejected',
             'approved_by' => Auth::id(),
         ]);
 
-        return back()->with('success', 'Request rejected.');
+        return back()->with('success', 'Permintaan berhasil ditolak.');
     }
 }

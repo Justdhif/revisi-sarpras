@@ -11,11 +11,17 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class ItemController extends Controller
 {
+    /**
+     * Export data barang ke file Excel.
+     */
     public function exportExcel()
     {
         return Excel::download(new ItemsExport, 'data-barang.xlsx');
     }
 
+    /**
+     * Export data barang ke file PDF.
+     */
     public function exportPdf()
     {
         $items = Item::with('category')->latest()->get();
@@ -24,7 +30,7 @@ class ItemController extends Controller
     }
 
     /**
-     * Display a listing of the resource.
+     * Menampilkan daftar barang.
      */
     public function index()
     {
@@ -33,7 +39,7 @@ class ItemController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Menampilkan form untuk menambahkan barang baru.
      */
     public function create()
     {
@@ -42,14 +48,14 @@ class ItemController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Menyimpan barang baru ke database.
      */
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required',
+            'name' => 'required|string|max:255',
             'type' => 'required|in:consumable,non-consumable',
-            'description' => 'nullable',
+            'description' => 'nullable|string',
             'image_url' => 'nullable|image|max:2048',
             'category_id' => 'required|exists:categories,id',
         ]);
@@ -60,20 +66,21 @@ class ItemController extends Controller
         }
 
         Item::create($validated);
-        return redirect()->route('items.index')->with('success', 'Item created successfully.');
+
+        return redirect()->route('items.index')->with('success', 'Barang berhasil ditambahkan.');
     }
 
     /**
-     * Display the specified resource.
+     * Menampilkan detail barang tertentu.
      */
     public function show(Item $item)
     {
-        $item->with(['category', 'itemUnits.warehouse']);
+        $item->load(['category', 'itemUnits.warehouse']); // Memuat relasi
         return view('items.show', compact('item'));
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Menampilkan form edit barang.
      */
     public function edit(Item $item)
     {
@@ -82,14 +89,14 @@ class ItemController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Memperbarui data barang.
      */
     public function update(Request $request, Item $item)
     {
         $validated = $request->validate([
-            'name' => 'required',
+            'name' => 'required|string|max:255',
             'type' => 'required|in:consumable,non-consumable',
-            'description' => 'nullable',
+            'description' => 'nullable|string',
             'image_url' => 'nullable|image|max:2048',
             'category_id' => 'required|exists:categories,id',
         ]);
@@ -100,15 +107,16 @@ class ItemController extends Controller
         }
 
         $item->update($validated);
-        return redirect()->route('items.index')->with('success', 'Item updated successfully.');
+
+        return redirect()->route('items.index')->with('success', 'Barang berhasil diperbarui.');
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Menghapus barang dari database.
      */
     public function destroy(Item $item)
     {
         $item->delete();
-        return redirect()->route('items.index')->with('success', 'Item deleted.');
+        return redirect()->route('items.index')->with('success', 'Barang berhasil dihapus.');
     }
 }

@@ -11,32 +11,44 @@ use Illuminate\Support\Facades\Hash;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
 
-
 class UserController extends Controller
 {
+    /**
+     * Menyediakan fungsionalitas untuk mengekspor data user ke file Excel.
+     */
     public function exportExcel()
     {
         return Excel::download(new UsersExport, 'data-users.xlsx');
     }
 
+    /**
+     * Menyediakan fungsionalitas untuk mengekspor data user ke file PDF.
+     */
     public function exportPdf()
     {
+        // Mengambil data user dengan role 'user'
         $users = User::where('role', 'user')->latest()->get();
+
+        // Membuat PDF dengan view 'users.pdf'
         $pdf = Pdf::loadView('users.pdf', compact('users'));
+
+        // Mengunduh file PDF yang dihasilkan
         return $pdf->download('data-users.pdf');
     }
 
     /**
-     * Display a listing of the resource.
+     * Menampilkan daftar user.
      */
     public function index()
     {
+        // Mengambil seluruh data user untuk ditampilkan
         $users = User::all();
+
         return view('users.index', compact('users'));
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Menampilkan form untuk membuat user baru.
      */
     public function create()
     {
@@ -44,10 +56,13 @@ class UserController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Menyimpan data user baru yang dikirimkan melalui form.
+     *
+     * @param  \Illuminate\Http\Request  $request
      */
     public function store(Request $request)
     {
+        // Validasi inputan dari form
         $validated = $request->validate([
             'username' => 'required|unique:users',
             'email' => 'nullable|email|unique:users',
@@ -55,6 +70,7 @@ class UserController extends Controller
             'password' => 'required|confirmed|min:6',
         ]);
 
+        // Membuat user baru
         User::create([
             'username' => $validated['username'],
             'email' => $validated['email'],
@@ -63,40 +79,51 @@ class UserController extends Controller
             'role' => 'user'
         ]);
 
+        // Mengarahkan ke halaman daftar user dengan pesan sukses
         return redirect()->route('users.index')->with('success', 'User berhasil dibuat.');
     }
 
     /**
-     * Display the specified resource.
+     * Menampilkan detail user beserta statistik peminjaman.
+     *
+     * @param  User  $user
      */
     public function show(User $user)
     {
+        // Menghitung jumlah peminjaman yang dilakukan oleh user
         $totalBorrowCount = BorrowRequest::where('user_id', $user->id)->count();
 
+        // Menghitung jumlah item yang dipinjam oleh user
         $totalItemBorrowed = BorrowDetail::whereHas('borrowRequest', function ($q) use ($user) {
             $q->where('user_id', $user->id);
         })->count();
 
+        // Menghitung jumlah item yang sudah dikembalikan oleh user
         $totalItemReturned = BorrowDetail::whereHas('borrowRequest', function ($q) use ($user) {
             $q->where('user_id', $user->id)->whereHas('returnRequest');
         })->count();
 
+        // Menampilkan semua peminjaman aktif yang belum dikembalikan
         $activeBorrows = BorrowRequest::with('borrowDetail.itemUnit.item')
             ->where('user_id', $user->id)
             ->where('status', 'approved')
-            ->whereDoesntHave('returnRequest') // belum dikembalikan
+            ->whereDoesntHave('returnRequest') // Belum dikembalikan
             ->get();
 
+        // Menampilkan semua peminjaman yang sudah dikembalikan
         $returnedBorrows = BorrowRequest::with('details.itemUnit.item')
             ->where('user_id', $user->id)
-            ->whereHas('returnRequest') // sudah dikembalikan
+            ->whereHas('returnRequest') // Sudah dikembalikan
             ->get();
 
+        // Menampilkan halaman detail user beserta data peminjaman terkait
         return view('users.show', compact('user', 'activeBorrows', 'returnedBorrows', 'totalBorrowCount', 'totalItemBorrowed', 'totalItemReturned'));
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Menampilkan form untuk mengedit data user.
+     *
+     * @param  User  $user
      */
     public function edit(User $user)
     {
@@ -104,10 +131,14 @@ class UserController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Memperbarui data user yang ada dalam database.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  User  $user
      */
     public function update(Request $request, User $user)
     {
+        // Validasi inputan dari form
         $validated = $request->validate([
             'username' => 'required|unique:users,username,' . $user->id,
             'email' => 'nullable|email|unique:users,email,' . $user->id,
@@ -115,6 +146,7 @@ class UserController extends Controller
             'password' => 'nullable|confirmed|min:6',
         ]);
 
+        // Memperbarui data user
         $user->username = $validated['username'];
         $user->email = $validated['email'];
         $user->phone = $validated['phone'];
@@ -123,15 +155,21 @@ class UserController extends Controller
         }
         $user->save();
 
+        // Mengarahkan ke halaman daftar user dengan pesan sukses
         return redirect()->route('users.index')->with('success', 'User diperbarui.');
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Menghapus data user dari database.
+     *
+     * @param  User  $user
      */
     public function destroy(User $user)
     {
+        // Menghapus user dari database
         $user->delete();
+
+        // Mengarahkan ke halaman daftar user dengan pesan sukses
         return redirect()->route('users.index')->with('success', 'User dihapus.');
     }
 }

@@ -4,13 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\ItemUnit;
 use App\Models\BorrowDetail;
-use Illuminate\Http\Request;
 use App\Models\BorrowRequest;
+use Illuminate\Http\Request;
 
 class BorrowDetailController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Menampilkan daftar detail peminjaman.
+     *
+     * @return \Illuminate\View\View
      */
     public function index()
     {
@@ -24,11 +26,15 @@ class BorrowDetailController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Menampilkan form untuk menambahkan item ke dalam permintaan peminjaman.
+     *
+     * @param  int  $borrowRequestId
+     * @return \Illuminate\View\View
      */
     public function create($borrowRequestId)
     {
         $borrowRequest = BorrowRequest::with('user')->findOrFail($borrowRequestId);
+
         $itemUnits = ItemUnit::with('item')
             ->where('status', 'available')
             ->whereHas('item', function ($query) {
@@ -46,7 +52,10 @@ class BorrowDetailController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Menyimpan data peminjaman barang ke dalam database.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function store(Request $request)
     {
@@ -57,22 +66,24 @@ class BorrowDetailController extends Controller
         ]);
 
         $unit = ItemUnit::findOrFail($request->item_unit_id);
-        $item = $unit->item; // relasi ke Item
+        $item = $unit->item;
 
         if ($item->type === 'consumable') {
+            // Validasi stok barang habis pakai
             if ($unit->quantity === null || $unit->quantity < $request->quantity) {
                 return back()->with('error', 'Stok tidak mencukupi untuk item: ' . $item->name);
             }
 
             $unit->quantity -= $request->quantity;
 
-            // Jika stok habis, status bisa jadi 'unavailable' (opsional)
+            // Tandai barang tidak tersedia jika stok habis
             if ($unit->quantity === 0) {
                 $unit->status = 'unavailable';
             }
 
             $unit->save();
         } else {
+            // Validasi barang tidak habis pakai harus tersedia
             if ($unit->status !== 'available') {
                 return back()->with('error', 'Item tidak tersedia untuk dipinjam.');
             }
@@ -83,11 +94,15 @@ class BorrowDetailController extends Controller
 
         BorrowDetail::create($request->only('borrow_request_id', 'item_unit_id', 'quantity'));
 
-        return redirect()->route('borrow-requests.show', $request->borrow_request_id)->with('success', 'Barang berhasil ditambahkan ke peminjaman.');
+        return redirect()
+            ->route('borrow-requests.show', $request->borrow_request_id)
+            ->with('success', 'Barang berhasil ditambahkan ke peminjaman.');
     }
 
     /**
-     * Display the specified resource.
+     * Placeholder untuk menampilkan detail peminjaman tertentu.
+     *
+     * @param  string  $id
      */
     public function show(string $id)
     {
@@ -95,7 +110,9 @@ class BorrowDetailController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Placeholder untuk menampilkan form edit peminjaman.
+     *
+     * @param  string  $id
      */
     public function edit(string $id)
     {
@@ -103,7 +120,10 @@ class BorrowDetailController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Placeholder untuk memperbarui data peminjaman.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  string  $id
      */
     public function update(Request $request, string $id)
     {
@@ -111,7 +131,9 @@ class BorrowDetailController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Placeholder untuk menghapus data peminjaman.
+     *
+     * @param  string  $id
      */
     public function destroy(string $id)
     {

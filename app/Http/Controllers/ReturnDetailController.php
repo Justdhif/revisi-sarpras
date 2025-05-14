@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\ItemUnit;
@@ -10,7 +9,7 @@ use App\Models\ReturnRequest;
 class ReturnDetailController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Menampilkan daftar return detail.
      */
     public function index()
     {
@@ -18,37 +17,48 @@ class ReturnDetailController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Menampilkan form untuk membuat return detail baru.
+     *
+     * @param  int  $returnRequestId  ID dari return request yang terkait.
      */
     public function create($returnRequestId)
     {
+        // Mendapatkan data return request berdasarkan ID
         $returnRequest = ReturnRequest::findOrFail($returnRequestId);
+
+        // Mengambil semua item unit yang terkait dengan barang yang dapat dikembalikan
         $itemUnits = ItemUnit::with('item')->get();
 
         return view('return_details.create', compact('returnRequest', 'itemUnits'));
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Menyimpan return detail yang baru dibuat.
+     *
+     * @param  \Illuminate\Http\Request  $request  Data request dari form.
      */
     public function store(Request $request)
     {
+        // Melakukan validasi terhadap input
         $validated = $request->validate([
             'condition' => 'required|string',
             'item_unit_id' => 'required|exists:item_units,id',
             'return_request_id' => 'required|exists:return_requests,id',
         ]);
 
+        // Membuat return detail baru berdasarkan data yang telah divalidasi
         $detail = ReturnDetail::create($validated);
 
+        // Mengembalikan response JSON sebagai konfirmasi
         return response()->json([
-            'message' => 'Return detail added.',
+            'message' => 'Return detail added successfully.',
             'data' => $detail,
         ]);
     }
 
     /**
-     * Display the specified resource.
+     * Menampilkan detail dari return request berdasarkan ID.
+     * Fungsi ini belum diimplementasikan.
      */
     public function show(string $id)
     {
@@ -56,7 +66,7 @@ class ReturnDetailController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Menampilkan form untuk mengedit return detail berdasarkan ID.
      */
     public function edit(string $id)
     {
@@ -64,7 +74,7 @@ class ReturnDetailController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Memperbarui return detail yang ada berdasarkan ID.
      */
     public function update(Request $request, string $id)
     {
@@ -72,7 +82,7 @@ class ReturnDetailController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Menghapus return detail berdasarkan ID.
      */
     public function destroy(string $id)
     {
