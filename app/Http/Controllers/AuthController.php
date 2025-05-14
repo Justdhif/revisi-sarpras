@@ -53,7 +53,7 @@ class AuthController extends Controller
     // Dashboard
     public function dashboard()
     {
-        $totalUsers = User::count();
+        $totalUsers = User::where('role', 'user')->count();
         $totalItems = Item::count();
         $totalBorrows = BorrowRequest::count();
         $totalReturns = ReturnRequest::count();

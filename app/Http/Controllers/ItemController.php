@@ -11,31 +11,6 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class ItemController extends Controller
 {
-    public function filter(Request $request)
-    {
-        $query = Item::query()->with('category');
-
-        if ($request->filled('search')) {
-            $query->where('name', 'like', '%' . $request->search . '%');
-        }
-
-        if ($request->filled('category')) {
-            $query->where('category_id', $request->category);
-        }
-
-        if ($request->filled('type')) {
-            $query->where('type', $request->type);
-        }
-
-        if ($request->filled('sort')) {
-            $query->orderBy('name', $request->sort);
-        }
-
-        $items = $query->get();
-
-        return response()->json(['items' => $items]);
-    }
-
     public function exportExcel()
     {
         return Excel::download(new ItemsExport, 'data-barang.xlsx');
@@ -43,7 +18,7 @@ class ItemController extends Controller
 
     public function exportPdf()
     {
-        $items = Item::with('category')->get();
+        $items = Item::with('category')->latest()->get();
         $pdf = Pdf::loadView('items.pdf', compact('items'));
         return $pdf->download('data-barang.pdf');
     }

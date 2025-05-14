@@ -17,14 +17,14 @@ class ItemUnitController extends Controller
 {
     public function exportExcel()
     {
-        return Excel::download(new ItemUnitsExport, 'item_units.xlsx');
+        return Excel::download(new ItemUnitsExport, 'data-units.xlsx');
     }
 
     public function exportPdf()
     {
-        $itemUnits = ItemUnit::with(['item', 'warehouse'])->get();
-        $pdf = Pdf::loadView('item_units.export_pdf', compact('itemUnits'));
-        return $pdf->download('item_units.pdf');
+        $itemUnits = ItemUnit::with(['item', 'warehouse'])->latest()->get();
+        $pdf = Pdf::loadView('item_units.pdf', compact('itemUnits'));
+        return $pdf->download('data-units.pdf');
     }
 
     /**
@@ -126,6 +126,11 @@ class ItemUnitController extends Controller
         }
 
         $itemUnit->update($validated);
+
+        // Update used_capacity
+        $warehouse = Warehouse::findOrFail($request->warehouse_id);
+        $warehouse->used_capacity = $warehouse->used_capacity - $itemUnit->quantity + $validated['quantity'];
+        $warehouse->save();
 
         return redirect()->route('item-units.index')->with('success', 'Unit barang berhasil diperbarui.');
     }

@@ -92,8 +92,8 @@
                                         <div class="flex justify-end space-x-2">
                                             <a href="{{ route('categories.show', $c->id) }}"
                                                 class="text-amber-600 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 px-3 py-1.5 rounded-md transition-colors duration-200 flex items-center">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20"
-                                                    fill="currentColor">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1"
+                                                    viewBox="0 0 20 20" fill="currentColor">
                                                     <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
                                                     <path fill-rule="evenodd"
                                                         d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
@@ -111,7 +111,7 @@
                                                 Edit
                                             </a>
                                             <form action="{{ route('categories.destroy', $c->id) }}" method="POST"
-                                                onsubmit="return confirm('Apakah Anda yakin ingin menghapus kategori ini?')">
+                                                class="inline delete-form">
                                                 @csrf @method('DELETE')
                                                 <button type="submit"
                                                     class="text-rose-600 hover:text-rose-900 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-md transition-colors duration-200 flex items-center">

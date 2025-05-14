@@ -68,6 +68,10 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
 
     // Export Routes
+    Route::get('activity-logs/export/excel', [ActivityLogController::class, 'exportExcel'])->name('activity-logs.exportExcel');
+    Route::get('activity-logs/export/pdf', [ActivityLogController::class, 'exportPdf'])->name('activity-logs.exportPdf');
+    Route::get('/users/export/excel', [UserController::class, 'exportExcel'])->name('users.exportExcel');
+    Route::get('/users/export/pdf', [UserController::class, 'exportPdf'])->name('users.exportPdf');
     Route::get('/items/export/excel', [ItemController::class, 'exportExcel'])->name('items.export.excel');
     Route::get('/items/export/pdf', [ItemController::class, 'exportPdf'])->name('items.export.pdf');
     Route::get('item-units/export/excel', [ItemUnitController::class, 'exportExcel'])->name('item-units.exportExcel');

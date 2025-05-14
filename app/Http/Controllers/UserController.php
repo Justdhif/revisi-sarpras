@@ -3,17 +3,35 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Exports\UsersExport;
+use App\Models\BorrowDetail;
 use Illuminate\Http\Request;
+use App\Models\BorrowRequest;
 use Illuminate\Support\Facades\Hash;
+use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
+
 
 class UserController extends Controller
 {
+    public function exportExcel()
+    {
+        return Excel::download(new UsersExport, 'data-users.xlsx');
+    }
+
+    public function exportPdf()
+    {
+        $users = User::where('role', 'user')->latest()->get();
+        $pdf = Pdf::loadView('users.pdf', compact('users'));
+        return $pdf->download('data-users.pdf');
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $users = User::where('role', 'user')->get();
+        $users = User::all();
         return view('users.index', compact('users'));
     }
 
@@ -51,9 +69,30 @@ class UserController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(User $user)
     {
-        //
+        $totalBorrowCount = BorrowRequest::where('user_id', $user->id)->count();
+
+        $totalItemBorrowed = BorrowDetail::whereHas('borrowRequest', function ($q) use ($user) {
+            $q->where('user_id', $user->id);
+        })->count();
+
+        $totalItemReturned = BorrowDetail::whereHas('borrowRequest', function ($q) use ($user) {
+            $q->where('user_id', $user->id)->whereHas('returnRequest');
+        })->count();
+
+        $activeBorrows = BorrowRequest::with('borrowDetail.itemUnit.item')
+            ->where('user_id', $user->id)
+            ->where('status', 'approved')
+            ->whereDoesntHave('returnRequest') // belum dikembalikan
+            ->get();
+
+        $returnedBorrows = BorrowRequest::with('details.itemUnit.item')
+            ->where('user_id', $user->id)
+            ->whereHas('returnRequest') // sudah dikembalikan
+            ->get();
+
+        return view('users.show', compact('user', 'activeBorrows', 'returnedBorrows', 'totalBorrowCount', 'totalItemBorrowed', 'totalItemReturned'));
     }
 
     /**

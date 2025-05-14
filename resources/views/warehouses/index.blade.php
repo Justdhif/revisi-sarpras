@@ -19,19 +19,6 @@
             </a>
         </div>
 
-        @if (session('success'))
-            <div class="bg-emerald-100 border-l-4 border-emerald-500 text-emerald-700 p-4 mb-6 rounded-lg shadow-sm">
-                <div class="flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <p class="font-medium">{{ session('success') }}</p>
-                </div>
-            </div>
-        @endif
-
         @if ($warehouses->isEmpty())
             <!-- Empty State -->
             <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 p-12 text-center">
@@ -136,8 +123,7 @@
                                                 </svg>
                                                 Edit
                                             </a>
-                                            <form action="{{ route('warehouses.destroy', $warehouse) }}" method="POST"
-                                                onsubmit="return confirm('Apakah Anda yakin ingin menghapus gudang ini?')">
+                                            <form action="{{ route('warehouses.destroy', $warehouse) }}" method="POST" class="inline delete-form">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit"
