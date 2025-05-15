@@ -170,8 +170,8 @@ class ItemUnitController extends Controller
      */
     private function generateAndSaveQr($sku)
     {
-        $qrCode = QrCode::format('png')->size(300)->generate($sku);
-        $fileName = 'qr_codes/' . $sku . '.png';
+        $qrCode = QrCode::format('svg')->size(300)->generate($sku);
+        $fileName = 'qr_codes/' . $sku . '.svg';
         Storage::disk('public')->put($fileName, $qrCode);
         return 'storage/' . $fileName;
     }
