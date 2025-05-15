@@ -35,7 +35,7 @@
         <!-- Inventory Management Section -->
         <div class="pt-2">
             <p class="px-4 py-2 text-xs font-semibold text-indigo-300 uppercase tracking-wider">Manajemen Inventori</p>
-            <div x-data="{ itemsOpen: {{ request()->routeIs('items.*') ? 'true' : 'false' }} }">
+            <div x-data="{ itemsOpen: {{ request()->routeIs('items.*', 'item-units.*') ? 'true' : 'false' }} }">
                 <button @click="itemsOpen = !itemsOpen"
                     class="nav-item flex items-center justify-between w-full px-4 py-3 rounded-lg font-medium {{ request()->routeIs('items.*') ? 'active' : '' }}">
                     <span class="flex items-center">
@@ -46,32 +46,12 @@
                 </button>
                 <div x-show="itemsOpen" class="ml-8 mt-1 space-y-1" x-cloak>
                     <a href="{{ route('items.index') }}"
-                        class="submenu-item block px-3 py-2 rounded text-sm {{ request()->routeIs('items.index') ? 'active' : '' }}">
-                        <i class="fas fa-list mr-2 text-indigo-300"></i> Daftar Barang
+                        class="submenu-item block px-3 py-2 rounded text-sm {{ request()->routeIs('items.*') ? 'active' : '' }}">
+                        <i class="fas fa-box mr-2 text-indigo-300"></i> Daftar Barang
                     </a>
-                    <a href="{{ route('items.create') }}"
-                        class="submenu-item block px-3 py-2 rounded text-sm {{ request()->routeIs('items.create') ? 'active' : '' }}">
-                        <i class="fas fa-plus mr-2 text-indigo-300"></i> Tambah Barang
-                    </a>
-                </div>
-            </div>
-            <div x-data="{ unitOpen: {{ request()->routeIs('item-units.*') ? 'true' : 'false' }} }">
-                <button @click="unitOpen = !unitOpen"
-                    class="nav-item flex items-center justify-between w-full px-4 py-3 rounded-lg font-medium {{ request()->routeIs('item-units.*') ? 'active' : '' }}">
-                    <span class="flex items-center">
-                        <i class="fas fa-ruler-combined mr-3 text-indigo-300"></i> Satuan
-                    </span>
-                    <i
-                        :class="unitOpen ? 'fas fa-chevron-up text-indigo-300' : 'fas fa-chevron-down text-indigo-300'"></i>
-                </button>
-                <div x-show="unitOpen" class="ml-8 mt-1 space-y-1" x-cloak>
                     <a href="{{ route('item-units.index') }}"
-                        class="submenu-item block px-3 py-2 rounded text-sm {{ request()->routeIs('item-units.index') ? 'active' : '' }}">
-                        <i class="fas fa-list mr-2 text-indigo-300"></i> Daftar Satuan
-                    </a>
-                    <a href="{{ route('item-units.create') }}"
-                        class="submenu-item block px-3 py-2 rounded text-sm {{ request()->routeIs('item-units.create') ? 'active' : '' }}">
-                        <i class="fas fa-plus mr-2 text-indigo-300"></i> Tambah Satuan
+                        class="submenu-item block px-3 py-2 rounded text-sm {{ request()->routeIs('item-units.*') ? 'active' : '' }}">
+                        <i class="fas fa-boxes mr-2 text-indigo-300"></i> Daftar Unit
                     </a>
                 </div>
             </div>
@@ -81,29 +61,24 @@
         <div class="pt-2">
             <p class="px-4 py-2 text-xs font-semibold text-indigo-300 uppercase tracking-wider">Transaksi</p>
             <div class="space-y-1">
-                <div x-data="{ borrowOpen: {{ request()->routeIs('borrow-requests.*', 'borrow-details.*') ? 'true' : 'false' }} }">
-                    <button @click="borrowOpen = !borrowOpen"
-                        class="nav-item flex items-center justify-between w-full px-4 py-3 rounded-lg font-medium {{ request()->routeIs('borrow-requests.*', 'borrow-details.*') ? 'active' : '' }}">
-                        <span class="flex items-center">
-                            <i class="fas fa-hand-holding mr-3 text-indigo-300"></i> Peminjaman
-                        </span>
-                        <i
-                            :class="borrowOpen ? 'fas fa-chevron-up text-indigo-300' : 'fas fa-chevron-down text-indigo-300'"></i>
-                    </button>
-                    <div x-show="borrowOpen" class="ml-8 mt-1 space-y-1" x-cloak>
-                        <a href="{{ route('borrow-requests.index') }}"
-                            class="submenu-item block px-3 py-2 rounded text-sm {{ request()->routeIs('borrow-requests.*') ? 'active' : '' }}">
-                            <i class="fas fa-inbox mr-2 text-indigo-300"></i> Permintaan Pinjam
-                        </a>
-                        <a href="{{ route('borrow-details.index') }}"
-                            class="submenu-item block px-3 py-2 rounded text-sm {{ request()->routeIs('borrow-details.*') ? 'active' : '' }}">
-                            <i class="fas fa-info-circle mr-2 text-indigo-300"></i> Detail Pinjam
-                        </a>
-                    </div>
-                </div>
+                <a href="{{ route('borrow-requests.index') }}"
+                    class="nav-item flex items-center px-4 py-3 rounded-lg font-medium {{ request()->routeIs('borrow-requests.*') ? 'active' : '' }}">
+                    <i class="fas fa-redo-alt mr-3 text-indigo-300"></i> Peminjaman
+                </a>
                 <a href="{{ route('return-requests.index') }}"
                     class="nav-item flex items-center px-4 py-3 rounded-lg font-medium {{ request()->routeIs('return-requests.index') ? 'active' : '' }}">
                     <i class="fas fa-undo-alt mr-3 text-indigo-300"></i> Pengembalian
+                </a>
+            </div>
+        </div>
+
+        <!-- Users Section -->
+        <div class="pt-2">
+            <p class="px-4 py-2 text-xs font-semibold text-indigo-300 uppercase tracking-wider">Pengguna</p>
+            <div class="space-y-1">
+                <a href="{{ route('users.index') }}"
+                    class="nav-item flex items-center px-4 py-3 rounded-lg font-medium {{ request()->routeIs('users.*') ? 'active' : '' }}">
+                    <i class="fas fa-users mr-3 text-indigo-300"></i> Pengguna
                 </a>
             </div>
         </div>
@@ -112,30 +87,34 @@
         <div class="pt-2">
             <p class="px-4 py-2 text-xs font-semibold text-indigo-300 uppercase tracking-wider">Sistem</p>
             <div class="space-y-1">
-                <div x-data="{ usersOpen: {{ request()->routeIs('users.*') ? 'true' : 'false' }} }">
-                    <button @click="usersOpen = !usersOpen"
-                        class="nav-item flex items-center justify-between w-full px-4 py-3 rounded-lg font-medium {{ request()->routeIs('users.*') ? 'active' : '' }}">
-                        <span class="flex items-center">
-                            <i class="fas fa-users mr-3 text-indigo-300"></i> Pengguna
-                        </span>
-                        <i
-                            :class="usersOpen ? 'fas fa-chevron-up text-indigo-300' : 'fas fa-chevron-down text-indigo-300'"></i>
-                    </button>
-                    <div x-show="usersOpen" class="ml-8 mt-1 space-y-1" x-cloak>
-                        <a href="{{ route('users.index') }}"
-                            class="submenu-item block px-3 py-2 rounded text-sm {{ request()->routeIs('users.index') ? 'active' : '' }}">
-                            <i class="fas fa-list mr-2 text-indigo-300"></i> Daftar Pengguna
-                        </a>
-                        <a href="{{ route('users.create') }}"
-                            class="submenu-item block px-3 py-2 rounded text-sm {{ request()->routeIs('users.create') ? 'active' : '' }}">
-                            <i class="fas fa-user-plus mr-2 text-indigo-300"></i> Tambah Pengguna
-                        </a>
-                    </div>
-                </div>
                 <a href="{{ route('activity-logs.index') }}"
                     class="nav-item flex items-center px-4 py-3 rounded-lg font-medium {{ request()->routeIs('activity-logs.index') ? 'active' : '' }}">
                     <i class="fas fa-history mr-3 text-indigo-300"></i> Log Aktivitas
                 </a>
+                <div x-data="{ archiveOpen: {{ request()->routeIs('archive.*') ? 'true' : 'false' }} }">
+                    <button @click="archiveOpen = !archiveOpen"
+                        class="nav-item flex items-center justify-between w-full px-4 py-3 rounded-lg font-medium {{ request()->routeIs('archive.*') ? 'active' : '' }}">
+                        <span class="flex items-center">
+                            <i class="fas fa-archive mr-3 text-indigo-300"></i> Archive
+                        </span>
+                        <i
+                            :class="archiveOpen ? 'fas fa-chevron-up text-indigo-300' : 'fas fa-chevron-down text-indigo-300'"></i>
+                    </button>
+                    <div x-show="archiveOpen" class="ml-8 mt-1 space-y-1" x-cloak>
+                        <a href="{{ route('archive.users') }}"
+                            class="submenu-item block px-3 py-2 rounded text-sm {{ request()->routeIs('archive.users') ? 'active' : '' }}">
+                            <i class="fas fa-user-friends mr-3 text-indigo-300"></i> Arsip Pengguna
+                        </a>
+                        <a href="{{ route('archive.items') }}"
+                            class="submenu-item block px-3 py-2 rounded text-sm {{ request()->routeIs('archive.items') ? 'active' : '' }}">
+                            <i class="fas fa-file-import mr-3 text-indigo-300"></i> Arsip Barang
+                        </a>
+                        <a href="{{ route('archive.item-units') }}"
+                            class="submenu-item block px-3 py-2 rounded text-sm {{ request()->routeIs('archive.item-units') ? 'active' : '' }}">
+                            <i class="fas fa-boxes mr-3 text-indigo-300"></i> Arsip Unit
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

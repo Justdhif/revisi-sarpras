@@ -77,6 +77,21 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('item-units/export/excel', [ItemUnitController::class, 'exportExcel'])->name('item-units.exportExcel');
     Route::get('item-units/export/pdf', [ItemUnitController::class, 'exportPdf'])->name('item-units.exportPdf');
 
+    // Archive item
+    Route::prefix('archive')->group(function () {
+        Route::get('/users', [UserController::class, 'archive'])->name('archive.users');
+        Route::post('/users/restore/{id}', [UserController::class, 'restore'])->name('archive.users.restore');
+        Route::delete('/users/force-delete/{id}', [UserController::class, 'forceDelete'])->name('archive.users.forceDelete');
+
+        Route::get('/items', [ItemController::class, 'archive'])->name('archive.items');
+        Route::post('/items/restore/{id}', [ItemController::class, 'restore'])->name('archive.items.restore');
+        Route::delete('/items/force-delete/{id}', [ItemController::class, 'forceDelete'])->name('archive.items.forceDelete');
+
+        Route::get('/item-units', [ItemUnitController::class, 'archive'])->name('archive.item-units');
+        Route::post('/item-units/restore/{id}', [ItemUnitController::class, 'restore'])->name('archive.item-units.restore');
+        Route::delete('/item-units/force-delete/{id}', [ItemUnitController::class, 'forceDelete'])->name('archive.item-units.forceDelete');
+    });
+
     // Fallback Route
     Route::fallback(function () {
         return response()->view('errors.404', [], 404);
