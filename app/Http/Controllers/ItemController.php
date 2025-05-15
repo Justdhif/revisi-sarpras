@@ -117,6 +117,8 @@ class ItemController extends Controller
     public function destroy(Item $item)
     {
         $item->delete();
+        $item->itemUnits()->delete();
+
         return redirect()->route('items.index')->with('success', 'Barang berhasil dihapus.');
     }
 }

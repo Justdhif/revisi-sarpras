@@ -11,6 +11,10 @@
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f8fafc;
+            background-image: url('images/bg.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
         }
 
         .gradient-bg {
@@ -26,7 +30,7 @@
     </style>
 </head>
 
-<body class="gradient-bg min-h-screen flex items-center justify-center p-4">
+<body class="min-h-screen flex items-center justify-center p-4">
     <div class="w-full max-w-md">
         <!-- Luxury Card -->
         <div class="card-glass rounded-xl shadow-xl overflow-hidden">
