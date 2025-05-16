@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
-use App\Models\ReturnRequest;
 use App\Models\ReturnDetail;
 use Illuminate\Http\Request;
+use App\Models\BorrowRequest;
+use App\Models\ReturnRequest;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Storage;
 
 class ReturnRequestApiController extends Controller
@@ -65,9 +66,12 @@ class ReturnRequestApiController extends Controller
             'item_units.*.photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
-        // Cek bahwa borrow_request milik user
-        $borrowRequest = $request->user()->borrowRequests()->findOrFail($request->borrow_request_id);
+        // Cek bahwa borrow_request milik user yang sedang login (jika perlu otentikasi user)
+        $borrowRequest = $request->user()
+            ? $request->user()->borrowRequests()->findOrFail($request->borrow_request_id)
+            : BorrowRequest::findOrFail($request->borrow_request_id); // fallback kalau tidak pakai auth
 
+        // Buat return request
         $returnRequest = ReturnRequest::create([
             'borrow_request_id' => $borrowRequest->id,
             'notes' => $request->notes,
@@ -91,7 +95,7 @@ class ReturnRequestApiController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Permintaan pengembalian berhasil dikirim.',
+            'message' => 'Pengembalian berhasil diajukan.',
             'data' => $returnRequest->load('returnDetails.itemUnit.item'),
         ]);
     }
