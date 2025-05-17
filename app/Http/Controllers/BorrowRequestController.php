@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\BorrowRequest;
+use App\Models\ItemUnit;
+use App\Models\BorrowDetail;
 use Illuminate\Http\Request;
+use App\Models\BorrowRequest;
 use Illuminate\Support\Facades\Auth;
 
 class BorrowRequestController extends Controller
@@ -22,7 +24,8 @@ class BorrowRequestController extends Controller
      */
     public function create()
     {
-        return view('borrow_requests.create');
+        $itemUnits = ItemUnit::where('status', 'available')->latest()->get();
+        return view('borrow_requests.create', compact('itemUnits'));
     }
 
     /**
@@ -31,15 +34,31 @@ class BorrowRequestController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'return_date_expected' => 'required|date',
+            'borrow_date_expected' => 'required|date',
+            'return_date_expected' => 'required|date|after_or_equal:borrow_date_expected',
+            'reason' => 'required|string',
             'notes' => 'nullable|string',
+            'item_unit_ids' => 'required|array',
+            'item_unit_ids.*' => 'required|exists:item_units,id',
+            'quantities' => 'required|array',
+            'quantities.*' => 'required|integer|min:1',
         ]);
 
-        BorrowRequest::create([
+        $borrowRequest = BorrowRequest::create([
+            'borrow_date_expected' => $request->borrow_date_expected,
             'return_date_expected' => $request->return_date_expected,
+            'reason' => $request->reason,
             'notes' => $request->notes,
             'user_id' => Auth::id(),
         ]);
+
+        foreach ($request->item_unit_ids as $index => $itemUnitId) {
+            BorrowDetail::create([
+                'borrow_request_id' => $borrowRequest->id,
+                'item_unit_id' => $itemUnitId,
+                'quantity' => $request->quantities[$index],
+            ]);
+        }
 
         return redirect()->route('borrow-requests.index')->with('success', 'Permintaan peminjaman berhasil dibuat.');
     }
@@ -102,15 +121,23 @@ class BorrowRequestController extends Controller
             $item = $itemUnit->item;
 
             if ($item->type === 'consumable') {
-                // Validasi stok habis pakai
+                // ✅ Validasi stok
                 if ($itemUnit->quantity < $detail->quantity) {
                     return back()->with('error', 'Stok tidak mencukupi untuk item: ' . $item->name);
                 }
 
+                // ✅ Kurangi stok
                 $itemUnit->quantity -= $detail->quantity;
+
+                // ✅ Update status jika stok habis
+                if ($itemUnit->quantity === 0) {
+                    $itemUnit->status = 'out_of_stock';
+                }
+
                 $itemUnit->save();
+
             } else {
-                // Ubah status menjadi 'borrowed' untuk item non-habis pakai
+                // ✅ Untuk non-consumable (e.g., laptop, kamera), status jadi borrowed
                 $itemUnit->status = 'borrowed';
                 $itemUnit->save();
             }

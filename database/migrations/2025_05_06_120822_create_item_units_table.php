@@ -18,7 +18,7 @@ return new class extends Migration {
             $table->string("acquisition_source");
             $table->date("acquisition_date");
             $table->text("acquisition_notes")->nullable();
-            $table->enum("status", ["available", "borrowed", "unknown"])->default("available");
+            $table->enum("status", ["available", "borrowed", "out_of_stock"])->default("available");
             $table->integer("quantity")->default(1);
             $table->string("qr_image_url");
             $table->foreignId("item_id")->constrained("items")->cascadeOnDelete();

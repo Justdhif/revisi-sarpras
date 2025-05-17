@@ -46,6 +46,7 @@ class ReturnRequestController extends Controller
             'item_units.*.id' => 'required|exists:item_units,id',
             'item_units.*.condition' => 'required|string',
             'item_units.*.photo' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+            'item_units.*.quantity' => 'required|numeric',
         ]);
 
         // Membuat return request baru
@@ -68,6 +69,7 @@ class ReturnRequestController extends Controller
                 'item_unit_id' => $unit['id'],
                 'condition' => $unit['condition'],
                 'return_request_id' => $returnRequest->id,
+                'quantity' => $unit['quantity'],
                 'photo' => $photoPath,
             ]);
         }

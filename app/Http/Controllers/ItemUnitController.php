@@ -38,7 +38,8 @@ class ItemUnitController extends Controller
     public function index()
     {
         $itemUnits = ItemUnit::with(['item', 'warehouse'])->latest()->get();
-        return view('item_units.index', compact('itemUnits'));
+        $warehouses = Warehouse::all();
+        return view('item_units.index', compact('itemUnits', 'warehouses'));
     }
 
     /**

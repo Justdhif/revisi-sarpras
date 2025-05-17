@@ -14,6 +14,8 @@ return new class extends Migration {
             $table->id();
             $table->string("condition");
             $table->string('photo')->nullable();
+            $table->text("quantity")->nullable();
+            $table->text("notes")->nullable();
             $table->foreignId("item_unit_id")->constrained("item_units")->cascadeOnDelete();
             $table->foreignId("return_request_id")->constrained("return_requests")->cascadeOnDelete();
             $table->timestamps();

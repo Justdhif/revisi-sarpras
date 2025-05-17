@@ -135,13 +135,7 @@
                                                 Lihat
                                             </a>
 
-                                            @php
-                                                $hasNonConsumable = $req->borrowDetail->contains(function ($detail) {
-                                                    return $detail->itemUnit->item->type !== 'consumable';
-                                                });
-                                            @endphp
-
-                                            @if ($req->status === 'approved' && $req->returnRequest === null && $hasNonConsumable)
+                                            @if ($req->status === 'approved' && $req->returnRequest === null)
                                                 <a href="{{ route('return_requests.create', $req->id) }}"
                                                     class="text-amber-600 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 px-3 py-1.5 rounded-md transition-colors duration-200 flex items-center">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1"

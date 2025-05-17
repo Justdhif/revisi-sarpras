@@ -12,8 +12,10 @@ return new class extends Migration {
     {
         Schema::create('borrow_requests', function (Blueprint $table) {
             $table->id();
+            $table->date("borrow_date_expected");
             $table->date("return_date_expected");
             $table->enum("status", ["pending", "approved", "rejected"])->default("pending");
+            $table->text("reason");
             $table->text("notes")->nullable();
             $table->foreignId("user_id")->constrained("users")->cascadeOnDelete();
             $table->foreignId("approved_by")->nullable()->constrained("users")->cascadeOnDelete();

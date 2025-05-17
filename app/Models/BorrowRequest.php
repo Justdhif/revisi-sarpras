@@ -10,8 +10,10 @@ class BorrowRequest extends Model
     use HasFactory;
 
     protected $fillable = [
+        'borrow_date_expected',
         'return_date_expected',
         'status',
+        'reason',
         'notes',
         'user_id',
         'approved_by'

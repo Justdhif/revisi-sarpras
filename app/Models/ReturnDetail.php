@@ -13,7 +13,8 @@ class ReturnDetail extends Model
         'condition',
         'photo',
         'item_unit_id',
-        'return_request_id'
+        'return_request_id',
+        'quantity',
     ];
 
     public function returnRequest()

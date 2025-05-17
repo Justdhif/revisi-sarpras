@@ -5,7 +5,7 @@
 @section('heading', 'Manajemen Inventori')
 
 @section('content')
-    <div class="container mx-auto px-4 py-8">
+    <div class="container mx-auto px-4 py-8" x-data="inventoryFilter()">
         <div class="flex justify-between items-center mb-8">
             <h1 class="text-3xl font-bold text-gray-800">Inventori Barang</h1>
             <div class="flex space-x-3">
@@ -39,19 +39,53 @@
             </div>
         </div>
 
-        <div class="mb-6">
-            <div class="relative">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
-                        fill="currentColor">
-                        <path fill-rule="evenodd"
-                            d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
-                            clip-rule="evenodd" />
-                    </svg>
+        <!-- Filter Controls -->
+        <div class="mb-6 bg-white p-4 rounded-lg shadow border border-gray-100">
+            <div class="flex items-center justify-center gap-4">
+                <!-- Search Input -->
+                <div class="relative w-full">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                            fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <input x-model="searchQuery" type="text"
+                        class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        placeholder="Cari barang...">
                 </div>
-                <input type="text" id="searchInput"
-                    class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                    placeholder="Cari barang...">
+
+                <!-- Type Filter -->
+                <div class="w-2/3">
+                    <select x-model="selectedType"
+                        class="block w-full pl-3 pr-10 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="">Semua Tipe</option>
+                        <option value="consumable">Consumable</option>
+                        <option value="non-consumable">Non-Consumable</option>
+                    </select>
+                </div>
+
+                <!-- Category Filter -->
+                <div class="w-2/3">
+                    <select x-model="selectedCategory"
+                        class="block w-full pl-3 pr-10 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="">Semua Kategori</option>
+                        @foreach ($categories as $category)
+                            <option value="{{ $category->id }}">{{ $category->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- Sort Options (Hanya Nama) -->
+                <div class="w-2/3">
+                    <select x-model="sortOption"
+                        class="block w-full pl-3 pr-10 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="name_asc">Nama A-Z</option>
+                        <option value="name_desc">Nama Z-A</option>
+                    </select>
+                </div>
             </div>
         </div>
 
@@ -87,12 +121,17 @@
             <!-- Items Table -->
             <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200" id="itemsTable">
+                    <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
                                 <th scope="col"
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                                    @click="toggleSort()">
                                     Nama Barang
+                                    <span x-show="sortField === 'name'" class="ml-1">
+                                        <template x-if="sortDirection === 'asc'">↑</template>
+                                        <template x-if="sortDirection === 'desc'">↓</template>
+                                    </span>
                                 </th>
                                 <th scope="col"
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -100,21 +139,24 @@
                                 </th>
                                 <th scope="col"
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Kategori</th>
+                                    Kategori
+                                </th>
                                 <th scope="col"
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Gambar
                                 </th>
                                 <th scope="col"
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Deskripsi</th>
+                                    Deskripsi
+                                </th>
                                 <th scope="col"
                                     class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Aksi</th>
+                                    Aksi
+                                </th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
-                            @foreach ($items as $item)
+                            <template x-for="item in filteredItems" :key="item.id">
                                 <tr class="hover:bg-gray-50 transition-colors duration-150">
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="flex items-center">
@@ -127,35 +169,34 @@
                                                 </svg>
                                             </div>
                                             <div class="ml-4">
-                                                <div class="text-sm font-medium text-gray-900">{{ $item->name }}</div>
+                                                <div class="text-sm font-medium text-gray-900" x-text="item.name"></div>
                                             </div>
                                         </div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <span
-                                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                            {{ $item->type }}
-                                        </span>
+                                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800"
+                                            x-text="item.type"></span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-600">{{ $item->category->name ?? '-' }}</div>
+                                        <div class="text-sm text-gray-600" x-text="item.category_name"></div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        @if ($item->image_url)
-                                            <img src="{{ $item->image_url }}"
-                                                class="h-10 w-10 rounded-lg object-cover shadow-sm"
-                                                alt="{{ $item->name }}">
-                                        @else
+                                        <template x-if="item.image_url">
+                                            <img :src="item.image_url" class="h-10 w-10 rounded-lg object-cover shadow-sm"
+                                                :alt="item.name">
+                                        </template>
+                                        <template x-if="!item.image_url">
                                             <span class="text-gray-400">-</span>
-                                        @endif
+                                        </template>
                                     </td>
                                     <td class="px-6 py-4">
-                                        <div class="text-sm text-gray-600 max-w-xs truncate">{{ $item->description }}
+                                        <div class="text-sm text-gray-600 max-w-xs truncate" x-text="item.description">
                                         </div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <div class="flex justify-end space-x-2">
-                                            <a href="{{ route('items.show', $item->id) }}"
+                                            <a :href="'items/' + item.id"
                                                 class="text-amber-600 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 px-3 py-1.5 rounded-md transition-colors duration-200 flex items-center">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1"
                                                     viewBox="0 0 20 20" fill="currentColor">
@@ -166,7 +207,7 @@
                                                 </svg>
                                                 Lihat
                                             </a>
-                                            <a href="{{ route('items.edit', $item) }}"
+                                            <a :href="'items/' + item.id + '/edit'"
                                                 class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-md transition-colors duration-200 flex items-center">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1"
                                                     viewBox="0 0 20 20" fill="currentColor">
@@ -175,7 +216,7 @@
                                                 </svg>
                                                 Edit
                                             </a>
-                                            <form action="{{ route('items.destroy', $item) }}" method="POST" class="inline delete-form">
+                                            <form :action="'items/' + item.id" method="POST" class="inline delete-form">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit"
@@ -192,25 +233,123 @@
                                         </div>
                                     </td>
                                 </tr>
-                            @endforeach
+                            </template>
                         </tbody>
                     </table>
+                </div>
+            </div>
+
+            <!-- Empty Filter State -->
+            <div x-show="filteredItems.length === 0 && !isEmpty"
+                class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 p-12 text-center">
+                <div class="max-w-md mx-auto">
+                    <div class="flex justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-20 w-20 text-gray-300" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <h3 class="mt-6 text-xl font-medium text-gray-900">Tidak Ada Barang Ditemukan</h3>
+                    <p class="mt-2 text-gray-500">Tidak ada barang yang sesuai dengan kriteria pencarian Anda. Coba ubah
+                        filter atau kata kunci pencarian.</p>
+                    <div class="mt-8">
+                        <button
+                            @click="searchQuery = ''; selectedType = ''; selectedCategory = ''; sortOption = 'name_asc'"
+                            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="-ml-1 mr-2 h-5 w-5" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            Reset Pencarian
+                        </button>
+                    </div>
                 </div>
             </div>
         @endif
     </div>
 
+    <!-- Alpine.js Component -->
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const input = document.getElementById("searchInput");
-            input.addEventListener("keyup", function() {
-                const value = this.value.toLowerCase();
-                const rows = document.querySelectorAll("#itemsTable tbody tr");
-                rows.forEach(row => {
-                    const text = row.textContent.toLowerCase();
-                    row.style.display = text.includes(value) ? "" : "none";
-                });
-            });
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('inventoryFilter', () => ({
+                items: [
+                    @foreach ($items as $item)
+                        {
+                            id: {{ $item->id }},
+                            name: '{{ addslashes($item->name) }}',
+                            type: '{{ addslashes($item->type) }}',
+                            category_id: {{ $item->category_id ?? 'null' }},
+                            category_name: '{{ addslashes($item->category->name ?? '-') }}',
+                            image_url: '{{ $item->image_url ? addslashes($item->image_url) : '' }}',
+                            description: '{{ $item->description ? addslashes($item->description) : '' }}',
+                        },
+                    @endforeach
+                ],
+                searchQuery: '',
+                selectedType: '',
+                selectedCategory: '',
+                sortOption: 'name_asc',
+                sortField: 'name',
+                sortDirection: 'asc',
+
+                init() {
+                    this.$watch('sortOption', (value) => {
+                        const [field, direction] = value.split('_');
+                        this.sortField = field;
+                        this.sortDirection = direction;
+                    });
+                },
+
+                get filteredItems() {
+                    let filtered = this.items;
+
+                    // Filter by search query
+                    if (this.searchQuery) {
+                        const query = this.searchQuery.toLowerCase();
+                        filtered = filtered.filter(item =>
+                            item.name.toLowerCase().includes(query) ||
+                            item.type.toLowerCase().includes(query) ||
+                            item.category_name.toLowerCase().includes(query) ||
+                            (item.description && item.description.toLowerCase().includes(query))
+                        );
+                    }
+
+                    // Filter by type
+                    if (this.selectedType) {
+                        filtered = filtered.filter(item => item.type.toLowerCase() === this
+                            .selectedType.toLowerCase());
+                    }
+
+                    // Filter by category
+                    if (this.selectedCategory) {
+                        filtered = filtered.filter(item => item.category_id == this
+                            .selectedCategory);
+                    }
+
+                    // Sorting hanya berdasarkan nama
+                    return filtered.sort((a, b) => {
+                        const nameA = a.name.toLowerCase();
+                        const nameB = b.name.toLowerCase();
+
+                        if (nameA < nameB) return this.sortDirection === 'asc' ? -1 : 1;
+                        if (nameA > nameB) return this.sortDirection === 'asc' ? 1 : -1;
+                        return 0;
+                    });
+                },
+
+                toggleSort() {
+                    // Toggle antara asc dan desc
+                    this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+                    this.sortOption = `name_${this.sortDirection}`;
+                },
+
+                // Helper untuk empty state
+                get isEmpty() {
+                    return this.items.length === 0;
+                }
+            }));
         });
     </script>
 @endsection

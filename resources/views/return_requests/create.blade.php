@@ -24,6 +24,9 @@
                     <label>{{ $detail->itemUnit->item->name }} (SKU: {{ $detail->itemUnit->sku }})</label>
                     <input type="text" name="item_units[{{ $loop->index }}][condition]" class="form-control mb-1"
                         placeholder="Kondisi saat dikembalikan" required>
+                    {{-- qty --}}
+                    <input type="number" name="item_units[{{ $loop->index }}][quantity]" class="form-control mb-1"
+                        placeholder="Jumlah barang yang dikembalikan" required>
                     <input type="file" name="item_units[{{ $loop->index }}][photo]" class="form-control" required>
                 </div>
             @endforeach
