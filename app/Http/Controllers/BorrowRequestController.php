@@ -20,50 +20,6 @@ class BorrowRequestController extends Controller
     }
 
     /**
-     * Menampilkan form untuk membuat permintaan peminjaman baru.
-     */
-    public function create()
-    {
-        $itemUnits = ItemUnit::where('status', 'available')->latest()->get();
-        return view('borrow_requests.create', compact('itemUnits'));
-    }
-
-    /**
-     * Menyimpan permintaan peminjaman baru ke database.
-     */
-    public function store(Request $request)
-    {
-        $request->validate([
-            'borrow_date_expected' => 'required|date',
-            'return_date_expected' => 'required|date|after_or_equal:borrow_date_expected',
-            'reason' => 'required|string',
-            'notes' => 'nullable|string',
-            'item_unit_ids' => 'required|array',
-            'item_unit_ids.*' => 'required|exists:item_units,id',
-            'quantities' => 'required|array',
-            'quantities.*' => 'required|integer|min:1',
-        ]);
-
-        $borrowRequest = BorrowRequest::create([
-            'borrow_date_expected' => $request->borrow_date_expected,
-            'return_date_expected' => $request->return_date_expected,
-            'reason' => $request->reason,
-            'notes' => $request->notes,
-            'user_id' => Auth::id(),
-        ]);
-
-        foreach ($request->item_unit_ids as $index => $itemUnitId) {
-            BorrowDetail::create([
-                'borrow_request_id' => $borrowRequest->id,
-                'item_unit_id' => $itemUnitId,
-                'quantity' => $request->quantities[$index],
-            ]);
-        }
-
-        return redirect()->route('borrow-requests.index')->with('success', 'Permintaan peminjaman berhasil dibuat.');
-    }
-
-    /**
      * Menampilkan detail dari permintaan peminjaman.
      */
     public function show(BorrowRequest $borrowRequest)

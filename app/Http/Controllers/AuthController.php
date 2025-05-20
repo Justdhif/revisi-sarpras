@@ -84,32 +84,6 @@ class AuthController extends Controller
         $recentItemUnits = ItemUnit::latest()->take(5)->get();
         $sku = ItemUnit::pluck('sku');
 
-        // Statistik peminjaman per bulan (tahun berjalan)
-        $borrowStats = DB::table('borrow_requests')
-            ->selectRaw('MONTH(created_at) as month, COUNT(*) as total')
-            ->whereYear('created_at', now()->year)
-            ->groupBy('month')
-            ->pluck('total', 'month');
-
-        // Statistik pengembalian per bulan (tahun berjalan)
-        $returnStats = DB::table('return_requests')
-            ->selectRaw('MONTH(created_at) as month, COUNT(*) as total')
-            ->whereYear('created_at', now()->year)
-            ->groupBy('month')
-            ->pluck('total', 'month');
-
-        // Buat data bulanan dari Januari sampai Desember untuk chart
-        $months = range(1, 12);
-        $borrowData = [];
-        $returnData = [];
-        $labels = [];
-
-        foreach ($months as $m) {
-            $labels[] = Carbon::create()->month($m)->format('M');
-            $borrowData[] = $borrowStats[$m] ?? 0;
-            $returnData[] = $returnStats[$m] ?? 0;
-        }
-
         return view('dashboard', compact(
             'totalUsers',
             'totalItems',
@@ -121,10 +95,6 @@ class AuthController extends Controller
             'recentItems',
             'recentItemUnits',
             'sku'
-        ), [
-            'chartLabels' => $labels,
-            'chartBorrowData' => $borrowData,
-            'chartReturnData' => $returnData,
-        ]);
+        ));
     }
 }

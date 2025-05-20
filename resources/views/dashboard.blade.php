@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="bg-gray-50 min-h-screen">
+    <div class="min-h-screen">
         <!-- Main Content Container -->
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <!-- Dashboard Header -->
@@ -93,22 +93,17 @@
                 </div>
             </div>
 
-            <!-- Statistics Chart -->
-            <div class="bg-white rounded-xl shadow-md p-6 mb-10">
-                <h2 class="text-xl font-bold text-gray-900 mb-4">Statistik Peminjaman & Pengembalian</h2>
-                <div class="h-80">
-                    <canvas id="chartStatistik"></canvas>
-                </div>
-            </div>
-
             <!-- Main Content Area -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <!-- Left Column -->
                 <div class="space-y-8">
                     <!-- Recent Activity Logs -->
-                    <div class="bg-white rounded-xl shadow-md overflow-hidden">
-                        <div class="px-6 py-5 border-b border-gray-200">
-                            <h2 class="text-lg font-medium text-gray-900">Log Aktivitas Terbaru</h2>
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
+                            <div class="flex items-center justify-between">
+                                <h2 class="text-lg font-semibold text-gray-900">Log Aktivitas Terbaru</h2>
+                                <a href="#" class="text-sm font-medium text-blue-600 hover:text-blue-700">View All</a>
+                            </div>
                         </div>
                         <div class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-gray-200">
@@ -126,25 +121,74 @@
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
-                                    @foreach ($recentLogs as $log)
-                                        <tr class="hover:bg-gray-50">
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                {{ $log->user->username ?? '-' }}</td>
+                                    @forelse ($recentLogs as $log)
+                                        <tr class="hover:bg-gray-50 transition-colors">
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="flex items-center">
+                                                    <div
+                                                        class="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                                        <span
+                                                            class="text-blue-600 font-medium">{{ substr($log->user->username ?? 'U', 0, 1) }}</span>
+                                                    </div>
+                                                    <div class="ml-4">
+                                                        <div class="text-sm font-medium text-gray-900">
+                                                            {{ $log->user->username ?? '-' }}</div>
+                                                        <div class="text-sm text-gray-500">{{ $log->user->email ?? '-' }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                <div class="text-sm text-gray-900">{{ Str::limit($log->description, 50) }}
+                                                </div>
+                                                <div class="text-xs text-gray-500 mt-1">{{ $log->log_name }}</div>
+                                            </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {{ $log->description }}</td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {{ $log->created_at->diffForHumans() }}</td>
+                                                <div class="flex items-center">
+                                                    <svg class="w-4 h-4 mr-1 text-gray-400" fill="none"
+                                                        stroke="currentColor" viewBox="0 0 24 24"
+                                                        xmlns="http://www.w3.org/2000/svg">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                    </svg>
+                                                    {{ $log->created_at->diffForHumans() }}
+                                                </div>
+                                            </td>
                                         </tr>
-                                    @endforeach
+                                    @empty
+                                        <tr>
+                                            <td colspan="3" class="px-6 py-12 text-center">
+                                                <div class="flex flex-col items-center justify-center">
+                                                    <svg class="w-12 h-12 text-gray-400" fill="none"
+                                                        stroke="currentColor" viewBox="0 0 24 24"
+                                                        xmlns="http://www.w3.org/2000/svg">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                                                        </path>
+                                                    </svg>
+                                                    <h3 class="mt-2 text-sm font-medium text-gray-900">No activity logs
+                                                        found</h3>
+                                                    <p class="mt-1 text-sm text-gray-500">User activities will appear here
+                                                    </p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforelse
                                 </tbody>
                             </table>
                         </div>
                     </div>
 
                     <!-- Recent Item Units -->
-                    <div class="bg-white rounded-xl shadow-md overflow-hidden">
-                        <div class="px-6 py-5 border-b border-gray-200">
-                            <h2 class="text-lg font-medium text-gray-900">Unit Barang Terbaru</h2>
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
+                            <div class="flex items-center justify-between">
+                                <h2 class="text-lg font-semibold text-gray-900">Unit Barang Terbaru</h2>
+                                <a href="#" class="text-sm font-medium text-blue-600 hover:text-blue-700">View
+                                    All</a>
+                            </div>
                         </div>
                         <div class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-gray-200">
@@ -165,28 +209,66 @@
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
-                                    @foreach ($recentItemUnits as $unit)
-                                        <tr class="hover:bg-gray-50">
+                                    @forelse ($recentItemUnits as $unit)
+                                        <tr class="hover:bg-gray-50 transition-colors">
                                             <td class="px-6 py-4 whitespace-nowrap">
-                                                {!! QrCode::format('svg')->size(100)->generate($sku) !!}</td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                {{ $unit->item->name ?? '-' }}</td>
+                                                <div
+                                                    class="w-12 h-12 bg-gray-100 rounded-md flex items-center justify-center">
+                                                    {!! QrCode::format('svg')->size(80)->generate($unit->sku) !!}
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                <div class="text-sm font-medium text-gray-900">
+                                                    {{ $unit->item->name ?? '-' }}</div>
+                                                <div class="text-xs text-gray-500 mt-1">
+                                                    {{ $unit->item->category->name ?? 'No category' }}</div>
+                                            </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {{ $unit->sku }}</td>
+                                                <span
+                                                    class="font-mono bg-gray-100 px-2 py-1 rounded">{{ $unit->sku }}</span>
+                                            </td>
                                             <td class="px-6 py-4 whitespace-nowrap">
                                                 @if ($unit->status == 'available')
                                                     <span
-                                                        class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Tersedia</span>
+                                                        class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 flex items-center">
+                                                        <span class="w-2 h-2 bg-green-500 rounded-full mr-1.5"></span>
+                                                        Tersedia
+                                                    </span>
                                                 @elseif($unit->status == 'borrowed')
                                                     <span
-                                                        class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-amber-100 text-amber-800">Dipinjam</span>
+                                                        class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-amber-100 text-amber-800 flex items-center">
+                                                        <span class="w-2 h-2 bg-amber-500 rounded-full mr-1.5"></span>
+                                                        Dipinjam
+                                                    </span>
                                                 @else
                                                     <span
-                                                        class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">{{ $unit->status }}</span>
+                                                        class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800 flex items-center">
+                                                        <span class="w-2 h-2 bg-gray-500 rounded-full mr-1.5"></span>
+                                                        {{ $unit->status }}
+                                                    </span>
                                                 @endif
                                             </td>
                                         </tr>
-                                    @endforeach
+                                    @empty
+                                        <tr>
+                                            <td colspan="4" class="px-6 py-12 text-center">
+                                                <div class="flex flex-col items-center justify-center">
+                                                    <svg class="w-12 h-12 text-gray-400" fill="none"
+                                                        stroke="currentColor" viewBox="0 0 24 24"
+                                                        xmlns="http://www.w3.org/2000/svg">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4">
+                                                        </path>
+                                                    </svg>
+                                                    <h3 class="mt-2 text-sm font-medium text-gray-900">No item units found
+                                                    </h3>
+                                                    <p class="mt-1 text-sm text-gray-500">Add new items to see them here
+                                                    </p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforelse
                                 </tbody>
                             </table>
                         </div>
@@ -196,9 +278,13 @@
                 <!-- Right Column -->
                 <div class="space-y-8">
                     <!-- Recent Borrowings -->
-                    <div class="bg-white rounded-xl shadow-md overflow-hidden">
-                        <div class="px-6 py-5 border-b border-gray-200">
-                            <h2 class="text-lg font-medium text-gray-900">Peminjaman Terbaru</h2>
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
+                            <div class="flex items-center justify-between">
+                                <h2 class="text-lg font-semibold text-gray-900">Peminjaman Terbaru</h2>
+                                <a href="#" class="text-sm font-medium text-blue-600 hover:text-blue-700">View
+                                    All</a>
+                            </div>
                         </div>
                         <div class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-gray-200">
@@ -209,6 +295,9 @@
                                             User</th>
                                         <th scope="col"
                                             class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Items</th>
+                                        <th scope="col"
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Status</th>
                                         <th scope="col"
                                             class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -216,38 +305,113 @@
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
-                                    @foreach ($recentBorrows as $borrow)
-                                        <tr class="hover:bg-gray-50">
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                {{ $borrow->user->username ?? '-' }}</td>
+                                    @forelse ($recentBorrows as $borrow)
+                                        <tr class="hover:bg-gray-50 transition-colors">
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="flex items-center">
+                                                    <div
+                                                        class="flex-shrink-0 h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
+                                                        <span
+                                                            class="text-purple-600 font-medium">{{ substr($borrow->user->username ?? 'U', 0, 1) }}</span>
+                                                    </div>
+                                                    <div class="ml-4">
+                                                        <div class="text-sm font-medium text-gray-900">
+                                                            {{ $borrow->user->username ?? '-' }}</div>
+                                                        <div class="text-xs text-gray-500">
+                                                            {{ $borrow->user->email ?? '-' }}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                <div class="text-sm text-gray-900">{{ $borrow->borrowDetail->count() }} items
+                                                </div>
+                                            </td>
                                             <td class="px-6 py-4 whitespace-nowrap">
                                                 @if ($borrow->status == 'approved')
                                                     <span
-                                                        class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Disetujui</span>
+                                                        class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 flex items-center">
+                                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                                        </svg>
+                                                        Disetujui
+                                                    </span>
                                                 @elseif($borrow->status == 'pending')
                                                     <span
-                                                        class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Menunggu</span>
+                                                        class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800 flex items-center">
+                                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                        </svg>
+                                                        Menunggu
+                                                    </span>
                                                 @elseif($borrow->status == 'rejected')
                                                     <span
-                                                        class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Ditolak</span>
+                                                        class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800 flex items-center">
+                                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                        </svg>
+                                                        Ditolak
+                                                    </span>
                                                 @else
                                                     <span
-                                                        class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">{{ $borrow->status }}</span>
+                                                        class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800 flex items-center">
+                                                        <span class="w-2 h-2 bg-gray-500 rounded-full mr-1.5"></span>
+                                                        {{ $borrow->status }}
+                                                    </span>
                                                 @endif
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {{ $borrow->created_at->diffForHumans() }}</td>
+                                                <div class="flex items-center">
+                                                    <svg class="w-4 h-4 mr-1 text-gray-400" fill="none"
+                                                        stroke="currentColor" viewBox="0 0 24 24"
+                                                        xmlns="http://www.w3.org/2000/svg">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                    </svg>
+                                                    {{ $borrow->created_at->diffForHumans() }}
+                                                </div>
+                                            </td>
                                         </tr>
-                                    @endforeach
+                                    @empty
+                                        <tr>
+                                            <td colspan="4" class="px-6 py-12 text-center">
+                                                <div class="flex flex-col items-center justify-center">
+                                                    <svg class="w-12 h-12 text-gray-400" fill="none"
+                                                        stroke="currentColor" viewBox="0 0 24 24"
+                                                        xmlns="http://www.w3.org/2000/svg">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2">
+                                                        </path>
+                                                    </svg>
+                                                    <h3 class="mt-2 text-sm font-medium text-gray-900">No borrow requests
+                                                        found</h3>
+                                                    <p class="mt-1 text-sm text-gray-500">Borrow requests will appear here
+                                                    </p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforelse
                                 </tbody>
                             </table>
                         </div>
                     </div>
 
                     <!-- Recent Returns -->
-                    <div class="bg-white rounded-xl shadow-md overflow-hidden">
-                        <div class="px-6 py-5 border-b border-gray-200">
-                            <h2 class="text-lg font-medium text-gray-900">Pengembalian Terbaru</h2>
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
+                            <div class="flex items-center justify-between">
+                                <h2 class="text-lg font-semibold text-gray-900">Pengembalian Terbaru</h2>
+                                <a href="#" class="text-sm font-medium text-blue-600 hover:text-blue-700">View
+                                    All</a>
+                            </div>
                         </div>
                         <div class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-gray-200">
@@ -258,6 +422,9 @@
                                             User</th>
                                         <th scope="col"
                                             class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Items</th>
+                                        <th scope="col"
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Status</th>
                                         <th scope="col"
                                             class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -265,35 +432,101 @@
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
-                                    @foreach ($recentReturns as $return)
-                                        <tr class="hover:bg-gray-50">
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                {{ $return->borrowRequest->user->username ?? '-' }}</td>
+                                    @forelse ($recentReturns as $return)
+                                        <tr class="hover:bg-gray-50 transition-colors">
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="flex items-center">
+                                                    <div
+                                                        class="flex-shrink-0 h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
+                                                        <span
+                                                            class="text-indigo-600 font-medium">{{ substr($return->borrowRequest->user->username ?? 'U', 0, 1) }}</span>
+                                                    </div>
+                                                    <div class="ml-4">
+                                                        <div class="text-sm font-medium text-gray-900">
+                                                            {{ $return->borrowRequest->user->username ?? '-' }}</div>
+                                                        <div class="text-xs text-gray-500">
+                                                            {{ $return->borrowRequest->user->email ?? '-' }}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                <div class="text-sm text-gray-900">
+                                                    {{ $return->borrowRequest->borrowDetail->count() }} items</div>
+                                            </td>
                                             <td class="px-6 py-4 whitespace-nowrap">
                                                 @if ($return->status == 'completed')
                                                     <span
-                                                        class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Selesai</span>
+                                                        class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 flex items-center">
+                                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                                        </svg>
+                                                        Selesai
+                                                    </span>
                                                 @elseif($return->status == 'pending')
                                                     <span
-                                                        class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Menunggu</span>
+                                                        class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800 flex items-center">
+                                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                        </svg>
+                                                        Menunggu
+                                                    </span>
                                                 @else
                                                     <span
-                                                        class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">{{ $return->status }}</span>
+                                                        class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800 flex items-center">
+                                                        <span class="w-2 h-2 bg-gray-500 rounded-full mr-1.5"></span>
+                                                        {{ $return->status }}
+                                                    </span>
                                                 @endif
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {{ $return->created_at->diffForHumans() }}</td>
+                                                <div class="flex items-center">
+                                                    <svg class="w-4 h-4 mr-1 text-gray-400" fill="none"
+                                                        stroke="currentColor" viewBox="0 0 24 24"
+                                                        xmlns="http://www.w3.org/2000/svg">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                    </svg>
+                                                    {{ $return->created_at->diffForHumans() }}
+                                                </div>
+                                            </td>
                                         </tr>
-                                    @endforeach
+                                    @empty
+                                        <tr>
+                                            <td colspan="4" class="px-6 py-12 text-center">
+                                                <div class="flex flex-col items-center justify-center">
+                                                    <svg class="w-12 h-12 text-gray-400" fill="none"
+                                                        stroke="currentColor" viewBox="0 0 24 24"
+                                                        xmlns="http://www.w3.org/2000/svg">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                                                    </svg>
+                                                    <h3 class="mt-2 text-sm font-medium text-gray-900">No returns found
+                                                    </h3>
+                                                    <p class="mt-1 text-sm text-gray-500">Item returns will appear here</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforelse
                                 </tbody>
                             </table>
                         </div>
                     </div>
 
                     <!-- Recent Items -->
-                    <div class="bg-white rounded-xl shadow-md overflow-hidden">
-                        <div class="px-6 py-5 border-b border-gray-200">
-                            <h2 class="text-lg font-medium text-gray-900">Daftar Barang Terbaru</h2>
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
+                            <div class="flex items-center justify-between">
+                                <h2 class="text-lg font-semibold text-gray-900">Daftar Barang Terbaru</h2>
+                                <a href="#" class="text-sm font-medium text-blue-600 hover:text-blue-700">View
+                                    All</a>
+                            </div>
                         </div>
                         <div class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-gray-200">
@@ -314,19 +547,54 @@
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
-                                    @foreach ($recentItems as $item)
-                                        <tr class="hover:bg-gray-50">
+                                    @forelse ($recentItems as $item)
+                                        <tr class="hover:bg-gray-50 transition-colors">
                                             <td class="px-6 py-4 whitespace-nowrap">
-                                                <img src="{{ $item->image_url }}" alt="" class="w-12">
+                                                <div class="w-12 h-12 bg-gray-100 rounded-md overflow-hidden">
+                                                    <img src="{{ $item->image_url }}" alt="{{ $item->name }}"
+                                                        class="w-full h-full object-cover">
+                                                </div>
                                             </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                {{ $item->name }}</td>
+                                            <td class="px-6 py-4">
+                                                <div class="text-sm font-medium text-gray-900">{{ $item->name }}</div>
+                                                <div class="text-xs text-gray-500 mt-1">{{ $item->sku }}</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <span
+                                                    class="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">{{ $item->category->name ?? '-' }}</span>
+                                            </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {{ $item->category->name ?? '-' }}</td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {{ $item->created_at->diffForHumans() }}</td>
+                                                <div class="flex items-center">
+                                                    <svg class="w-4 h-4 mr-1 text-gray-400" fill="none"
+                                                        stroke="currentColor" viewBox="0 0 24 24"
+                                                        xmlns="http://www.w3.org/2000/svg">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                    </svg>
+                                                    {{ $item->created_at->diffForHumans() }}
+                                                </div>
+                                            </td>
                                         </tr>
-                                    @endforeach
+                                    @empty
+                                        <tr>
+                                            <td colspan="4" class="px-6 py-12 text-center">
+                                                <div class="flex flex-col items-center justify-center">
+                                                    <svg class="w-12 h-12 text-gray-400" fill="none"
+                                                        stroke="currentColor" viewBox="0 0 24 24"
+                                                        xmlns="http://www.w3.org/2000/svg">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4">
+                                                        </path>
+                                                    </svg>
+                                                    <h3 class="mt-2 text-sm font-medium text-gray-900">No items found</h3>
+                                                    <p class="mt-1 text-sm text-gray-500">Add new items to see them here
+                                                    </p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforelse
                                 </tbody>
                             </table>
                         </div>
@@ -335,106 +603,4 @@
             </div>
         </div>
     </div>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const ctx = document.getElementById('chartStatistik');
-            if (ctx) {
-                const gradient1 = ctx.getContext('2d').createLinearGradient(0, 0, 0, 400);
-                gradient1.addColorStop(0, 'rgba(59, 130, 246, 0.8)');
-                gradient1.addColorStop(1, 'rgba(59, 130, 246, 0.2)');
-
-                const gradient2 = ctx.getContext('2d').createLinearGradient(0, 0, 0, 400);
-                gradient2.addColorStop(0, 'rgba(244, 63, 94, 0.8)');
-                gradient2.addColorStop(1, 'rgba(244, 63, 94, 0.2)');
-
-                new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: @json($chartLabels),
-                        datasets: [{
-                                label: 'Peminjaman',
-                                data: @json($chartBorrowData),
-                                backgroundColor: gradient1,
-                                borderColor: 'rgba(59, 130, 246, 1)',
-                                borderWidth: 2,
-                                pointBackgroundColor: 'white',
-                                pointBorderColor: 'rgba(59, 130, 246, 1)',
-                                pointBorderWidth: 2,
-                                tension: 0.4,
-                                fill: true
-                            },
-                            {
-                                label: 'Pengembalian',
-                                data: @json($chartReturnData),
-                                backgroundColor: gradient2,
-                                borderColor: 'rgba(244, 63, 94, 1)',
-                                borderWidth: 2,
-                                pointBackgroundColor: 'white',
-                                pointBorderColor: 'rgba(244, 63, 94, 1)',
-                                pointBorderWidth: 2,
-                                tension: 0.4,
-                                fill: true
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'top',
-                                labels: {
-                                    usePointStyle: true,
-                                    padding: 20,
-                                    font: {
-                                        size: 12,
-                                        family: "'Inter', sans-serif"
-                                    }
-                                }
-                            },
-                            tooltip: {
-                                backgroundColor: 'rgba(17, 24, 39, 0.9)',
-                                padding: 12,
-                                titleFont: {
-                                    size: 14,
-                                    family: "'Inter', sans-serif"
-                                },
-                                bodyFont: {
-                                    size: 13,
-                                    family: "'Inter', sans-serif"
-                                },
-                                cornerRadius: 8,
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                grid: {
-                                    drawBorder: false,
-                                    color: 'rgba(229, 231, 235, 0.5)'
-                                },
-                                ticks: {
-                                    font: {
-                                        size: 11,
-                                        family: "'Inter', sans-serif"
-                                    }
-                                }
-                            },
-                            x: {
-                                grid: {
-                                    display: false
-                                },
-                                ticks: {
-                                    font: {
-                                        size: 11,
-                                        family: "'Inter', sans-serif"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-        });
-    </script>
 @endsection

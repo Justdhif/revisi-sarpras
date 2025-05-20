@@ -8,15 +8,6 @@
     <div class="container mx-auto px-4 py-8">
         <div class="flex justify-between items-center mb-8">
             <h1 class="text-3xl font-bold text-gray-800">Manajemen Permohonan Peminjaman</h1>
-            <a href="{{ route('borrow-requests.create') }}"
-                class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-medium py-2 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd"
-                        d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-                        clip-rule="evenodd" />
-                </svg>
-                Buat Permohonan
-            </a>
         </div>
 
         @if ($requests->isEmpty())
@@ -33,18 +24,6 @@
                     <h3 class="mt-6 text-xl font-medium text-gray-900">Belum Ada Permohonan Peminjaman</h3>
                     <p class="mt-2 text-gray-500">Anda belum memiliki data permohonan peminjaman. Mulai dengan membuat
                         permohonan baru untuk meminjam barang.</p>
-                    <div class="mt-8">
-                        <a href="{{ route('borrow-requests.create') }}"
-                            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="-ml-1 mr-2 h-5 w-5" viewBox="0 0 20 20"
-                                fill="currentColor">
-                                <path fill-rule="evenodd"
-                                    d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-                                    clip-rule="evenodd" />
-                            </svg>
-                            Buat Permohonan Pertama
-                        </a>
-                    </div>
                 </div>
             </div>
         @else
@@ -135,17 +114,17 @@
                                                 Lihat
                                             </a>
 
-                                            @if ($req->status === 'approved' && $req->returnRequest === null)
-                                                <a href="{{ route('return_requests.create', $req->id) }}"
-                                                    class="text-amber-600 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 px-3 py-1.5 rounded-md transition-colors duration-200 flex items-center">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1"
-                                                        viewBox="0 0 20 20" fill="currentColor">
-                                                        <path fill-rule="evenodd"
-                                                            d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
-                                                            clip-rule="evenodd" />
-                                                    </svg>
-                                                    Pengembalian
-                                                </a>
+                                                @if ($req->status === 'approved' && $req->returnRequest === null)
+                                                    <a href="{{ route('return_requests.create', $req->id) }}"
+                                                        class="text-amber-600 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 px-3 py-1.5 rounded-md transition-colors duration-200 flex items-center">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1"
+                                                            viewBox="0 0 20 20" fill="currentColor">
+                                                            <path fill-rule="evenodd"
+                                                                d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
+                                                                clip-rule="evenodd" />
+                                                        </svg>
+                                                        Pengembalian
+                                                    </a>
                                             @elseif ($req->returnRequest)
                                                 <span
                                                     class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">

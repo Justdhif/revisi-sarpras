@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CartController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\CategoryController;
@@ -26,6 +28,13 @@ Route::post('logout', [AuthController::class, 'logout'])->name('logout');
 
 // Admin Routes
 Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('/home', [HomeController::class, 'index'])->name('home');
+    Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+    Route::post('/cart', [CartController::class, 'store'])->name('cart.store');
+    Route::patch('/cart/{id}/quantity', [CartController::class, 'updateQuantity'])->name('cart.updateQuantity');
+    Route::delete('/cart/{id}', [CartController::class, 'destroy'])->name('cart.destroy');
+    Route::post('/cart/submit', [CartController::class, 'submit'])->name('cart.submit');
+
     // Dashboard
     Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('dashboard');
 

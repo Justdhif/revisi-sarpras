@@ -43,4 +43,9 @@ class ItemUnit extends Model
     {
         return $this->hasMany(ReturnDetail::class);
     }
+
+    public function cart()
+    {
+        return $this->hasMany(Cart::class);
+    }
 }

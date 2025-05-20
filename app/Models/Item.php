@@ -28,6 +28,10 @@ class Item extends Model
         return $this->hasMany(ItemUnit::class);
     }
 
+    public function carts() {
+        return $this->hasMany(Cart::class);
+    }
+
     public function isConsumable()
     {
         return $this->type === 'consumable';

@@ -17,6 +17,12 @@
             <i class="fas fa-home mr-3 text-indigo-300"></i> Dashboard
         </a>
 
+        <!-- Home Link -->
+        <a href="{{ route('home') }}"
+            class="nav-item flex items-center px-4 py-3 rounded-lg font-medium {{ request()->routeIs('home') ? 'active' : '' }}">
+            <i class="fas fa-home mr-3 text-indigo-300"></i> Beranda
+        </a>
+
         <!-- Master Data Section -->
         <div class="pt-2">
             <p class="px-4 py-2 text-xs font-semibold text-indigo-300 uppercase tracking-wider">Master Data</p>
