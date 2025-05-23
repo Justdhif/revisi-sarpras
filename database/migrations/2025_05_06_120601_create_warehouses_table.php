@@ -18,7 +18,6 @@ return new class extends Migration {
             $table->integer("capacity");
             $table->unsignedInteger('used_capacity')->default(0);
             $table->timestamps();
-            $table->softDeletes();
         });
     }
 

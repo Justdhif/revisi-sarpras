@@ -24,7 +24,6 @@ return new class extends Migration {
             $table->foreignId("item_id")->constrained("items")->cascadeOnDelete();
             $table->foreignId("warehouse_id")->constrained("warehouses")->cascadeOnDelete();
             $table->timestamps();
-            $table->softDeletes();
         });
     }
 

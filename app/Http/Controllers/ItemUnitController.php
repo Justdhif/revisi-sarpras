@@ -178,26 +178,4 @@ class ItemUnitController extends Controller
         Storage::disk('public')->put($fileName, $qrCode);
         return 'storage/' . $fileName;
     }
-
-    public function archive()
-    {
-        $itemUnits = ItemUnit::onlyTrashed()->with('item')->get();
-        return view('item_units.archive', compact('itemUnits'));
-    }
-
-    public function restore($id)
-    {
-        $unit = ItemUnit::withTrashed()->findOrFail($id);
-        $unit->restore();
-
-        return redirect()->route('archive.item-units')->with('success', 'Unit berhasil dipulihkan.');
-    }
-
-    public function forceDelete($id)
-    {
-        $unit = ItemUnit::withTrashed()->findOrFail($id);
-        $unit->forceDelete();
-
-        return redirect()->route('archive.item-units')->with('success', 'Unit berhasil dihapus permanen.');
-    }
 }

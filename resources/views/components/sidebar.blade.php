@@ -97,30 +97,6 @@
                     class="nav-item flex items-center px-4 py-3 rounded-lg font-medium {{ request()->routeIs('activity-logs.index') ? 'active' : '' }}">
                     <i class="fas fa-history mr-3 text-indigo-300"></i> Log Aktivitas
                 </a>
-                <div x-data="{ archiveOpen: {{ request()->routeIs('archive.*') ? 'true' : 'false' }} }">
-                    <button @click="archiveOpen = !archiveOpen"
-                        class="nav-item flex items-center justify-between w-full px-4 py-3 rounded-lg font-medium {{ request()->routeIs('archive.*') ? 'active' : '' }}">
-                        <span class="flex items-center">
-                            <i class="fas fa-archive mr-3 text-indigo-300"></i> Archive
-                        </span>
-                        <i
-                            :class="archiveOpen ? 'fas fa-chevron-up text-indigo-300' : 'fas fa-chevron-down text-indigo-300'"></i>
-                    </button>
-                    <div x-show="archiveOpen" class="ml-8 mt-1 space-y-1" x-cloak>
-                        <a href="{{ route('archive.users') }}"
-                            class="submenu-item block px-3 py-2 rounded text-sm {{ request()->routeIs('archive.users') ? 'active' : '' }}">
-                            <i class="fas fa-user-friends mr-3 text-indigo-300"></i> Arsip Pengguna
-                        </a>
-                        <a href="{{ route('archive.items') }}"
-                            class="submenu-item block px-3 py-2 rounded text-sm {{ request()->routeIs('archive.items') ? 'active' : '' }}">
-                            <i class="fas fa-file-import mr-3 text-indigo-300"></i> Arsip Barang
-                        </a>
-                        <a href="{{ route('archive.item-units') }}"
-                            class="submenu-item block px-3 py-2 rounded text-sm {{ request()->routeIs('archive.item-units') ? 'active' : '' }}">
-                            <i class="fas fa-boxes mr-3 text-indigo-300"></i> Arsip Unit
-                        </a>
-                    </div>
-                </div>
             </div>
         </div>
     </div>

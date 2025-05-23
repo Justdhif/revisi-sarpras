@@ -122,26 +122,4 @@ class ItemController extends Controller
 
         return redirect()->route('items.index')->with('success', 'Barang berhasil dihapus.');
     }
-
-    public function archive()
-    {
-        $items = Item::onlyTrashed()->with('category', 'location')->get(); // jika pakai relasi
-        return view('items.archive', compact('items'));
-    }
-
-    public function restore(Item $item)
-    {
-        $item->withTrashed();
-        $item->restore();
-
-        return redirect()->route('items.archive')->with('success', 'Item berhasil dipulihkan.');
-    }
-
-    public function forceDelete(Item $item)
-    {
-        $item->withTrashed();
-        $item->forceDelete();
-
-        return redirect()->route('items.archive')->with('success', 'Item berhasil dihapus permanen.');
-    }
 }

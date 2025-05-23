@@ -172,26 +172,4 @@ class UserController extends Controller
         // Mengarahkan ke halaman daftar user dengan pesan sukses
         return redirect()->route('users.index')->with('success', 'User dihapus.');
     }
-
-    public function archive()
-    {
-        $users = User::onlyTrashed()->get();
-        return view('users.archive', compact('users'));
-    }
-
-    public function restore($id)
-    {
-        $user = User::withTrashed()->findOrFail($id);
-        $user->restore();
-
-        return redirect()->route('archive.users')->with('success', 'User berhasil dipulihkan.');
-    }
-
-    public function forceDelete($id)
-    {
-        $user = User::withTrashed()->findOrFail($id);
-        $user->forceDelete();
-
-        return redirect()->route('archive.users')->with('success', 'User dihapus permanen.');
-    }
 }
