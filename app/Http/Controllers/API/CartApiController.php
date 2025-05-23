@@ -1,21 +1,20 @@
 <?php
+namespace App\Http\Controllers\Api;
 
-
-namespace App\Http\Controllers;
-
+use App\Http\Controllers\Controller;
 use App\Models\Cart;
 use App\Models\ItemUnit;
 use App\Models\BorrowDetail;
-use Illuminate\Http\Request;
 use App\Models\BorrowRequest;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-class CartController extends Controller
+class CartApiController extends Controller
 {
     public function index()
     {
         $carts = Cart::with('item', 'itemUnit')->where('user_id', Auth::id())->get();
-        return view('cart.index', compact('carts'));
+        return response()->json($carts);
     }
 
     public function store(Request $request)
@@ -25,10 +24,9 @@ class CartController extends Controller
             'item_unit_id' => 'required|exists:item_units,id',
         ]);
 
-        // validasi jika quantity tidak sesuai
         $itemUnit = ItemUnit::findOrFail($request->item_unit_id);
         if ($itemUnit->quantity < $request->quantity || $itemUnit->status === 'borrowed') {
-            return redirect()->back()->with('error', 'Stok tidak mencukupi / item sedang dipinjam');
+            return response()->json(['message' => 'Stok tidak mencukupi atau item sedang dipinjam'], 400);
         }
 
         $exists = Cart::where('user_id', Auth::id())
@@ -37,20 +35,22 @@ class CartController extends Controller
             ->exists();
 
         if ($exists) {
-            return redirect()->back()->with('error', 'Item sudah ada di keranjang');
+            return response()->json(['message' => 'Item sudah ada di keranjang'], 409);
         }
 
-        Cart::create([
+        $cart = Cart::create([
             'user_id' => Auth::id(),
             'item_id' => $request->item_id,
             'item_unit_id' => $request->item_unit_id,
             'quantity' => $request->quantity ?? 1,
         ]);
 
+        $itemUnit->quantity -= $request->quantity;
+
         $itemUnit->status = 'reserved';
         $itemUnit->save();
 
-        return redirect()->back()->with('success', 'Ditambahkan ke keranjang');
+        return response()->json(['message' => 'Ditambahkan ke keranjang', 'data' => $cart]);
     }
 
     public function updateQuantity(Request $request, $id)
@@ -60,26 +60,20 @@ class CartController extends Controller
         $quantity = (int) $request->input('quantity');
         $item = $cart->item;
 
-        // Validasi stok tersedia (hanya untuk item disposable)
-        if ($item->consumable) {
-            if ($quantity > $item->quantity) {
-                return redirect()->back()->with('error', 'Stok tidak mencukupi');
-            }
+        if ($item->consumable && $quantity > $item->quantity) {
+            return response()->json(['message' => 'Stok tidak mencukupi'], 400);
         }
 
         $cart->quantity = $quantity;
         $cart->save();
 
-        return redirect()->back()->with('success', 'Kuantitas diubah');
+        return response()->json(['message' => 'Kuantitas diubah']);
     }
 
     public function destroy($id)
     {
-        $cart = Cart::where('id', $id)
-            ->where('user_id', Auth::id())
-            ->firstOrFail();
+        $cart = Cart::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
 
-        // Jika ada item_unit_id, update status unit ke 'available'
         if ($cart->item_unit_id && $cart->itemUnit) {
             $cart->itemUnit->status = 'available';
             $cart->itemUnit->save();
@@ -87,7 +81,7 @@ class CartController extends Controller
 
         $cart->delete();
 
-        return redirect()->back()->with('success', 'Dihapus dari keranjang');
+        return response()->json(['message' => 'Item dihapus dari keranjang']);
     }
 
     public function submit(Request $request)
@@ -101,7 +95,7 @@ class CartController extends Controller
         $carts = Cart::where('user_id', Auth::id())->get();
 
         if ($carts->isEmpty()) {
-            return redirect()->back()->with('error', 'Keranjang kosong.');
+            return response()->json(['message' => 'Keranjang kosong'], 400);
         }
 
         $borrow = BorrowRequest::create([
@@ -122,6 +116,6 @@ class CartController extends Controller
 
         Cart::where('user_id', Auth::id())->delete();
 
-        return redirect()->back()->with('success', 'Permintaan peminjaman dikirim.');
+        return response()->json(['message' => 'Permintaan peminjaman dikirim']);
     }
 }

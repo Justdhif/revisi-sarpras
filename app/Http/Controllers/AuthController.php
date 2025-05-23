@@ -44,9 +44,13 @@ class AuthController extends Controller
 
         $user = User::where('email', $request->email)->first();
 
-        if ($user && Hash::check($request->password, $user->password)) {
+        if ($user && $user->role === 'admin' && Hash::check($request->password, $user->password)) {
             Auth::login($user, $remember);
             return redirect()->route('dashboard')->with('success', 'Hai ' . $user->username . ', selamat datang!');
+        }
+
+        if ($user && $user->role === 'user') {
+            return redirect()->back()->with('error', 'Akun mu bukan sebagai admin');
         }
 
         return back()->with('error', 'Email atau password salah!');

@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\AuthController;
+use App\Http\Controllers\API\CartApiController;
 use App\Http\Controllers\Api\ItemApiController;
 use App\Http\Controllers\Api\ItemUnitApiController;
 use App\Http\Controllers\Api\BorrowDetailApiController;
@@ -12,6 +13,12 @@ use App\Http\Controllers\Api\ReturnRequestApiController;
 Route::post('/login', [AuthController::class, 'login']);
 
 Route::middleware(['auth:sanctum', 'role:user'])->group(function () {
+    Route::get('/cart', [CartApiController::class, 'index']);
+    Route::post('/cart', [CartApiController::class, 'store']);
+    Route::put('/cart/{id}/quantity', [CartApiController::class, 'updateQuantity']);
+    Route::delete('/cart/{id}', [CartApiController::class, 'destroy']);
+    Route::post('/cart/submit', [CartApiController::class, 'submit']);
+
     Route::get('/borrow-details/{borrowRequestId}', [BorrowDetailApiController::class, 'index']);
     Route::post('/borrow-details', [BorrowDetailApiController::class, 'store']);
 

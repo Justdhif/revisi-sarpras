@@ -94,7 +94,7 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="text-sm text-gray-600">
-                                            {{ $warehouse->capacity - $warehouse->used_capacity }} <span
+                                            {{ $warehouse->capacity }} <span
                                                 class="text-gray-400">unit</span></div>
                                     </td>
                                     <td class="px-6 py-4">

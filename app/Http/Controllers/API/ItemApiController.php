@@ -28,6 +28,7 @@ class ItemApiController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Item tidak ditemukan',
+                'image_url' => asset($item->image_url),
             ], 404);
         }
 

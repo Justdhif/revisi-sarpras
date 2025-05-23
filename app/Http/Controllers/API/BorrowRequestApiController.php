@@ -2,16 +2,16 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Models\Cart;
 use App\Models\BorrowDetail;
-use Illuminate\Http\Request;
 use App\Models\BorrowRequest;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 
 class BorrowRequestApiController extends Controller
 {
-    // Menampilkan semua permintaan peminjaman milik user yang sedang login
     public function index()
     {
         $userId = Auth::id();
@@ -25,6 +25,8 @@ class BorrowRequestApiController extends Controller
                 'id' => $req->id,
                 'status' => $req->status,
                 'return_date_expected' => $req->return_date_expected,
+                'borrow_date_expected' => $req->borrow_date_expected,
+                'reason' => $req->reason,
                 'borrow_detail' => $req->borrowDetail->map(function ($d) {
                     return [
                         'id' => $d->id,
@@ -48,31 +50,40 @@ class BorrowRequestApiController extends Controller
         ]);
     }
 
-    // Menyimpan permintaan peminjaman baru
     public function store(Request $request)
     {
         $data = $request->validate([
             'return_date_expected' => 'required|date',
             'notes' => 'nullable|string',
-            'borrow_details' => 'required|array',
-            'borrow_details.*.item_unit_id' => 'required|exists:item_units,id',
-            'borrow_details.*.quantity' => 'required|integer|min:1',
         ]);
 
         $userId = Auth::id();
 
-        $borrowRequest = DB::transaction(function () use ($data, $userId) {
+        // Ambil data cart milik user
+        $cartItems = Cart::where('user_id', $userId)->get();
+
+        if ($cartItems->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Keranjang peminjaman kosong',
+            ], 400);
+        }
+
+        $borrowRequest = DB::transaction(function () use ($data, $userId, $cartItems) {
             $request = BorrowRequest::create([
                 'user_id' => $userId,
                 'return_date_expected' => $data['return_date_expected'],
+                'borrow_date_expected' => $data['borrow_date_expected'],
+                'status' => 'pending',
+                'reason' => $data['reason'],
                 'notes' => $data['notes'] ?? null,
             ]);
 
-            $details = collect($data['borrow_details'])->map(function ($detail) use ($request) {
+            $details = $cartItems->map(function ($cart) use ($request) {
                 return [
                     'borrow_request_id' => $request->id,
-                    'item_unit_id' => $detail['item_unit_id'],
-                    'quantity' => $detail['quantity'],
+                    'item_unit_id' => $cart->item_unit_id,
+                    'quantity' => $cart->quantity,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ];
@@ -80,15 +91,21 @@ class BorrowRequestApiController extends Controller
 
             BorrowDetail::insert($details->toArray());
 
+            // Hapus isi cart setelah berhasil
+            Cart::where('user_id', $userId)->delete();
+
             return $request;
         });
 
-        // Load relasi dan transform agar sesuai format index
+        // Load relasi dan format respons
         $borrowRequest->load('borrowDetail.itemUnit.item');
+
         $responseData = [
             'id' => $borrowRequest->id,
             'status' => $borrowRequest->status,
             'return_date_expected' => $borrowRequest->return_date_expected,
+            'borrow_date_expected' => $borrowRequest->borrow_date_expected,
+            'reason' => $borrowRequest->reason,
             'borrow_detail' => $borrowRequest->borrowDetail->map(function ($d) {
                 return [
                     'id' => $d->id,
@@ -111,7 +128,6 @@ class BorrowRequestApiController extends Controller
         ]);
     }
 
-    // Menampilkan detail permintaan peminjaman tertentu
     public function show($id)
     {
         $request = BorrowRequest::with('borrowDetail.itemUnit.item')
@@ -125,11 +141,12 @@ class BorrowRequestApiController extends Controller
             ], 404);
         }
 
-        // Mapping agar formatnya konsisten dengan index
         $data = [
             'id' => $request->id,
             'status' => $request->status,
             'return_date_expected' => $request->return_date_expected,
+            'borrow_date_expected' => $request->borrow_date_expected,
+            'reason' => $request->reason,
             'borrow_detail' => $request->borrowDetail->map(function ($d) {
                 return [
                     'id' => $d->id,
