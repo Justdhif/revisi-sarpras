@@ -10,7 +10,7 @@ class ItemUnitApiController extends Controller
     // Menampilkan semua item unit
     public function index()
     {
-        $units = ItemUnit::with(['item', 'warehouse'])->latest()->get();
+        $units = ItemUnit::with(['item', 'warehouse'])->where('status', 'available')->latest()->get();
 
         return response()->json([
             'success' => true,

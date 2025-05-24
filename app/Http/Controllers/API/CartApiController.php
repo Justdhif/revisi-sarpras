@@ -24,9 +24,19 @@ class CartApiController extends Controller
             'item_unit_id' => 'required|exists:item_units,id',
         ]);
 
-        $itemUnit = ItemUnit::findOrFail($request->item_unit_id);
-        if ($itemUnit->quantity < $request->quantity || $itemUnit->status === 'borrowed') {
-            return response()->json(['message' => 'Stok tidak mencukupi atau item sedang dipinjam'], 400);
+        $itemUnit = ItemUnit::with('item')->findOrFail($request->item_unit_id);
+        $itemType = $itemUnit->item->type; // ambil tipe item: 'consumable' atau 'non consumable'
+
+        if ($itemType === 'consumable') {
+            // Cek stok untuk consumable
+            if ($itemUnit->quantity < $request->quantity) {
+                return response()->json(['message' => 'Stok tidak mencukupi'], 400);
+            }
+        } else {
+            // Cek status untuk non-consumable
+            if ($itemUnit->status === 'borrowed' || $itemUnit->status === 'reserved') {
+                return response()->json(['message' => 'Item sedang dipinjam atau sudah dipesan'], 400);
+            }
         }
 
         $exists = Cart::where('user_id', Auth::id())
@@ -45,9 +55,13 @@ class CartApiController extends Controller
             'quantity' => $request->quantity ?? 1,
         ]);
 
-        $itemUnit->quantity -= $request->quantity;
+        // Update item unit sesuai jenis item
+        if ($itemType === 'consumable') {
+            $itemUnit->quantity -= $request->quantity;
+        } else {
+            $itemUnit->status = 'reserved';
+        }
 
-        $itemUnit->status = 'reserved';
         $itemUnit->save();
 
         return response()->json(['message' => 'Ditambahkan ke keranjang', 'data' => $cart]);

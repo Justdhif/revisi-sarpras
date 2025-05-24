@@ -22,13 +22,19 @@ class ItemApiController extends Controller
     // Menampilkan detail item berdasarkan ID
     public function show($id)
     {
-        $item = Item::with(['category', 'itemUnits.warehouse'])->find($id);
+        $item = Item::with([
+            'category',
+            'itemUnits' => function ($query) {
+                $query->where('status', 'available')
+                    ->where('qty', '>', 0)
+                    ->with('warehouse'); // pastikan warehouse ikut dimuat
+            }
+        ])->find($id);
 
         if (!$item) {
             return response()->json([
                 'success' => false,
                 'message' => 'Item tidak ditemukan',
-                'image_url' => asset($item->image_url),
             ], 404);
         }
 
