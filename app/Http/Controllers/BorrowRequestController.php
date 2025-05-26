@@ -100,9 +100,6 @@ class BorrowRequestController extends Controller
                     return back()->with('error', 'Stok tidak mencukupi untuk item: ' . $item->name);
                 }
 
-                // ✅ Kurangi stok
-                $itemUnit->quantity -= $detail->quantity;
-
                 // ✅ Update status jika stok habis
                 if ($itemUnit->quantity === 0) {
                     $itemUnit->status = 'out_of_stock';
@@ -111,7 +108,6 @@ class BorrowRequestController extends Controller
                 $itemUnit->save();
 
             } else {
-                // ✅ Untuk non-consumable (e.g., laptop, kamera), status jadi borrowed
                 $itemUnit->status = 'borrowed';
                 $itemUnit->save();
             }

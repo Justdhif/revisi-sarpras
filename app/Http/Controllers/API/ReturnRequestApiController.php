@@ -60,43 +60,38 @@ class ReturnRequestApiController extends Controller
         $request->validate([
             'borrow_request_id' => 'required|exists:borrow_requests,id',
             'notes' => 'nullable|string',
-            'item_units' => 'required|array|min:1',
-            'item_units.*.id' => 'required|exists:item_units,id',
-            'item_units.*.condition' => 'required|string',
-            'item_units.*.photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'return_details' => 'required|array|min:1',
+            'return_details.*.item_unit_id' => 'required|exists:item_units,id',
+            'return_details.*.condition' => 'required|string',
+            'return_details.*.photo' => 'nullable|image|max:2048',
         ]);
 
-        // Cek bahwa borrow_request milik user yang sedang login (jika perlu otentikasi user)
-        $borrowRequest = $request->user()
-            ? $request->user()->borrowRequests()->findOrFail($request->borrow_request_id)
-            : BorrowRequest::findOrFail($request->borrow_request_id); // fallback kalau tidak pakai auth
-
-        // Buat return request
-        $returnRequest = ReturnRequest::create([
-            'borrow_request_id' => $borrowRequest->id,
+        $return = ReturnRequest::create([
+            'borrow_request_id' => $request->borrow_request_id,
             'notes' => $request->notes,
+            'user_id' => auth()->id(),
             'status' => 'pending',
         ]);
 
-        foreach ($request->item_units as $index => $unit) {
+        foreach ($request->return_details as $detail) {
             $photoPath = null;
-
-            if ($request->hasFile("item_units.$index.photo")) {
-                $photoPath = $request->file("item_units.$index.photo")->store('return_photos', 'public');
+            if (isset($detail['photo'])) {
+                $photo = $detail['photo'];
+                $photoPath = $photo->store('return_photos', 'public');
             }
 
             ReturnDetail::create([
-                'item_unit_id' => $unit['id'],
-                'condition' => $unit['condition'],
-                'return_request_id' => $returnRequest->id,
+                'return_request_id' => $return->id,
+                'item_unit_id' => $detail['item_unit_id'],
+                'condition' => $detail['condition'],
                 'photo' => $photoPath,
             ]);
         }
 
         return response()->json([
             'success' => true,
-            'message' => 'Pengembalian berhasil diajukan.',
-            'data' => $returnRequest->load('returnDetails.itemUnit.item'),
+            'message' => 'Pengembalian berhasil disimpan',
+            'data' => $return->load('returnDetails'),
         ]);
     }
 }
