@@ -111,7 +111,7 @@
                                         </div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <div class="flex justify-end">
+                                        <div class="flex justify-end space-x-2">
                                             <a href="{{ route('return_requests.show', $return->id) }}"
                                                 class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-md transition-colors duration-200 flex items-center">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1"
@@ -123,6 +123,38 @@
                                                 </svg>
                                                 Lihat
                                             </a>
+
+                                            @if (Auth::user()->role === 'admin' && $return->status === 'pending')
+                                                <form action="{{ route('return-requests.approve', $return->id) }}"
+                                                    method="POST" class="inline">
+                                                    @csrf
+                                                    @method('PUT')
+                                                    <button type="submit"
+                                                        class="text-green-600 hover:text-green-900 bg-green-50 hover:bg-green-100 px-3 py-1.5 rounded-md transition-colors duration-200 flex items-center">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1"
+                                                            viewBox="0 0 20 20" fill="currentColor">
+                                                            <path fill-rule="evenodd"
+                                                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                                                clip-rule="evenodd" />
+                                                        </svg>
+                                                        Setujui
+                                                    </button>
+                                                </form>
+                                                <form action="{{ route('return-requests.reject', $return->id) }}"
+                                                    method="POST" class="inline">
+                                                    @csrf
+                                                    <button type="submit"
+                                                        class="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-md transition-colors duration-200 flex items-center">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1"
+                                                            viewBox="0 0 20 20" fill="currentColor">
+                                                            <path fill-rule="evenodd"
+                                                                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                                                clip-rule="evenodd" />
+                                                        </svg>
+                                                        Tolak
+                                                    </button>
+                                                </form>
+                                            @endif
                                         </div>
                                     </td>
                                 </tr>

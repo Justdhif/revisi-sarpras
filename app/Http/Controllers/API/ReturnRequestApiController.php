@@ -64,6 +64,7 @@ class ReturnRequestApiController extends Controller
             'return_details.*.item_unit_id' => 'required|exists:item_units,id',
             'return_details.*.condition' => 'required|string',
             'return_details.*.photo' => 'nullable|image|max:2048',
+            'return_details.*.quantity' => 'nullable|integer|min:1', // ✅ validasi quantity
         ]);
 
         $return = ReturnRequest::create([
@@ -75,6 +76,7 @@ class ReturnRequestApiController extends Controller
 
         foreach ($request->return_details as $detail) {
             $photoPath = null;
+
             if (isset($detail['photo'])) {
                 $photo = $detail['photo'];
                 $photoPath = $photo->store('return_photos', 'public');
@@ -84,6 +86,7 @@ class ReturnRequestApiController extends Controller
                 'return_request_id' => $return->id,
                 'item_unit_id' => $detail['item_unit_id'],
                 'condition' => $detail['condition'],
+                'quantity' => $detail['quantity'] ?? 1, // ✅ default quantity = 1
                 'photo' => $photoPath,
             ]);
         }
