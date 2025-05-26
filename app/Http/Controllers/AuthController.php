@@ -14,6 +14,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Cache;
 
 class AuthController extends Controller
 {
@@ -74,25 +75,36 @@ class AuthController extends Controller
      */
     public function dashboard()
     {
-        // Statistik utama
+        // Statistik utama dengan trend
         $totalUsers = User::where('role', 'user')->count();
+        $totalUsersTrend = $this->calculateTrend(User::class, 'user');
+
         $totalItems = Item::count();
+        $totalItemsTrend = $this->calculateTrend(Item::class);
+
         $totalBorrows = BorrowRequest::count();
+        $totalBorrowsTrend = $this->calculateTrend(BorrowRequest::class);
+
         $totalReturns = ReturnRequest::count();
+        $totalReturnsTrend = $this->calculateTrend(ReturnRequest::class);
 
         // Data terbaru untuk ditampilkan
         $recentLogs = ActivityLog::latest()->take(5)->get();
-        $recentBorrows = BorrowRequest::latest()->take(5)->get();
-        $recentReturns = ReturnRequest::latest()->take(5)->get();
-        $recentItems = Item::latest()->take(5)->get();
-        $recentItemUnits = ItemUnit::latest()->take(5)->get();
+        $recentBorrows = BorrowRequest::with('user')->latest()->take(5)->get();
+        $recentReturns = ReturnRequest::with('borrowRequest.user')->latest()->take(5)->get();
+        $recentItems = Item::with('category')->latest()->take(5)->get();
+        $recentItemUnits = ItemUnit::with('item.category')->latest()->take(5)->get();
         $sku = ItemUnit::pluck('sku');
 
         return view('dashboard', compact(
             'totalUsers',
+            'totalUsersTrend',
             'totalItems',
+            'totalItemsTrend',
             'totalBorrows',
+            'totalBorrowsTrend',
             'totalReturns',
+            'totalReturnsTrend',
             'recentLogs',
             'recentBorrows',
             'recentReturns',
@@ -100,5 +112,49 @@ class AuthController extends Controller
             'recentItemUnits',
             'sku'
         ));
+    }
+
+    /**
+     * Menghitung persentase trend perubahan data
+     *
+     * @param string $model Class model yang akan dihitung
+     * @param mixed $condition Kondisi tambahan untuk query
+     * @param int $days Jumlah hari untuk periode perbandingan (default 30 hari)
+     * @return string
+     */
+    private function calculateTrend($model, $condition = null, $days = 30)
+    {
+        return Cache::remember("trend-{$model}-{$condition}", now()->addHours(6), function () use ($model, $condition, $days) {
+            $currentPeriod = now()->subDays($days)->toDateString();
+            $previousPeriod = now()->subDays($days * 2)->toDateString();
+
+            $query = $model::query();
+
+            // Handle special case for User model with role condition
+            if ($model === User::class && $condition === 'user') {
+                $query->where('role', 'user');
+            }
+            // Apply condition if provided for other models
+            elseif ($condition) {
+                $query->where('status', $condition);
+            }
+
+            $currentCount = $query->clone()
+                ->where('created_at', '>=', $currentPeriod)
+                ->count();
+
+            $previousCount = $query->clone()
+                ->whereBetween('created_at', [$previousPeriod, $currentPeriod])
+                ->count();
+
+            if ($previousCount == 0) {
+                return $currentCount > 0 ? '+100%' : '0%';
+            }
+
+            $percentage = (($currentCount - $previousCount) / $previousCount) * 100;
+            $formatted = number_format(abs($percentage), 1) . '%';
+
+            return ($percentage >= 0 ? '+' : '-') . $formatted;
+        });
     }
 }

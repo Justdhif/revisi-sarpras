@@ -132,6 +132,75 @@
             background: hsl(var(--muted-foreground));
             border-radius: 3px;
         }
+
+        /* Notification animations */
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+
+        @keyframes progressBar {
+            from {
+                width: 100%;
+            }
+
+            to {
+                width: 0%;
+            }
+        }
+
+        .notification {
+            position: relative;
+            border-radius: 0.375rem;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            animation: slideInRight 0.3s ease-out forwards;
+            transition: all 0.3s ease;
+            margin-bottom: 0.75rem;
+        }
+
+        .notification.slide-out {
+            animation: slideOutRight 0.3s ease-in forwards;
+        }
+
+        .notification.success {
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+        }
+
+        .notification.error {
+            background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+        }
+
+        .notification.warning {
+            background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+        }
+
+        .notification-close {
+            transition: opacity 0.2s ease;
+        }
+
+        .notification-close:hover {
+            opacity: 1 !important;
+        }
     </style>
 </head>
 
