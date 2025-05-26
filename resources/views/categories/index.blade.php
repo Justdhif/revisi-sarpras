@@ -2,13 +2,21 @@
 
 @section('title', 'SISFO Sarpras - Kategori')
 
-@section('heading', 'Kategori')
+@section('heading')
+    <a href="{{ route('categories.index') }}">
+        <i class="fas fa-tags ml-2 mr-1 text-indigo-300"></i>
+        Kategori
+    </a>
+@endsection
 
 @section('content')
+    @include('categories._create-modal')
+    @include('categories._edit-modal')
+
     <div class="container mx-auto px-4 py-8">
         <div class="flex justify-between items-center mb-8">
-            <h1 class="text-3xl font-bold text-gray-800">Kategori Produk</h1>
-            <a href="{{ route('categories.create') }}"
+            <h1 class="text-3xl font-bold text-gray-800">Daftar Kategori</h1>
+            <button onclick="openModal('create-modal')"
                 class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-medium py-2 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 flex items-center">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd"
@@ -16,35 +24,33 @@
                         clip-rule="evenodd" />
                 </svg>
                 Tambah Kategori
-            </a>
+            </button>
         </div>
 
         @if ($categories->isEmpty())
-            <!-- Empty State -->
-            <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 p-12 text-center">
-                <div class="max-w-md mx-auto">
-                    <div class="flex justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-20 w-20 text-gray-300" fill="none"
-                            viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+            <!-- Modern Empty State -->
+            <div class="flex flex-col items-center justify-center min-h-[60vh] py-12 text-center">
+                <div class="max-w-md mx-auto px-4">
+                    <div class="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-indigo-50 mb-6">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-indigo-600" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
                         </svg>
                     </div>
-                    <h3 class="mt-6 text-xl font-medium text-gray-900">Belum Ada Kategori</h3>
-                    <p class="mt-2 text-gray-500">Anda belum memiliki kategori produk. Mulai dengan menambahkan kategori
-                        baru untuk mengorganisir produk Anda.</p>
-                    <div class="mt-8">
-                        <a href="{{ route('categories.create') }}"
-                            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="-ml-1 mr-2 h-5 w-5" viewBox="0 0 20 20"
-                                fill="currentColor">
-                                <path fill-rule="evenodd"
-                                    d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-                                    clip-rule="evenodd" />
-                            </svg>
-                            Tambah Kategori Pertama
-                        </a>
-                    </div>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-2">Tidak ada kategori</h2>
+                    <p class="text-gray-500 mb-8">Mulai dengan membuat kategori pertama Anda untuk mengorganisir produk dan
+                        aset.</p>
+                    <button onclick="openModal('create-modal')"
+                        class="inline-flex items-center px-4 py-3 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="-ml-1 mr-2 h-5 w-5" viewBox="0 0 20 20"
+                            fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                                clip-rule="evenodd" />
+                        </svg>
+                        Tambah Kategori
+                    </button>
                 </div>
             </div>
         @else
@@ -101,7 +107,8 @@
                                                 </svg>
                                                 Lihat
                                             </a>
-                                            <a href="{{ route('categories.edit', $c->id) }}"
+                                            <button
+                                                onclick="openEditModal({{ $c->id }}, '{{ $c->name }}', '{{ $c->description }}')"
                                                 class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-md transition-colors duration-200 flex items-center">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1"
                                                     viewBox="0 0 20 20" fill="currentColor">
@@ -109,7 +116,7 @@
                                                         d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
                                                 </svg>
                                                 Edit
-                                            </a>
+                                            </button>
                                             <form action="{{ route('categories.destroy', $c->id) }}" method="POST"
                                                 class="inline delete-form">
                                                 @csrf @method('DELETE')
@@ -140,4 +147,24 @@
             </div>
         @endif
     </div>
+
+    <script>
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        function openEditModal(id, name, description) {
+            openModal('edit-modal');
+            const form = document.getElementById('edit-category-form');
+            form.action = `{{ route('categories.update', ':id') }}`.replace(':id', id);
+            document.getElementById('edit-id').value = id;
+            document.getElementById('edit-category-name').value = name;
+            document.getElementById('edit-category-description').value = description;
+            openModal('edit-modal');
+        }
+    </script>
 @endsection

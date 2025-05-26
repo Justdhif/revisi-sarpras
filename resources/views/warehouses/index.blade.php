@@ -1,54 +1,60 @@
 @extends('layouts.app')
 
-@section('title', 'SISFO Sarpras - Gudang')
+@section('title', 'SISFO Sarpras - Warehouse')
 
-@section('heading', 'Manajemen Gudang')
+@section('heading')
+    <a href="{{ route('warehouses.index') }}">
+        <i class="fas fa-warehouse ml-2 mr-1 text-indigo-300"></i>
+        Gudang
+    </a>
+@endsection
 
 @section('content')
+    @include('warehouses._create-modal')
+    @include('warehouses._edit-modal')
+
     <div class="container mx-auto px-4 py-8">
         <div class="flex justify-between items-center mb-8">
-            <h1 class="text-3xl font-bold text-gray-800">Manajemen Gudang</h1>
-            <a href="{{ route('warehouses.create') }}"
+            <h1 class="text-3xl font-bold text-gray-800">Daftar Warehouse</h1>
+            <button onclick="openModal('create-modal')"
                 class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-medium py-2 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 flex items-center">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd"
                         d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
                         clip-rule="evenodd" />
                 </svg>
-                Tambah Gudang
-            </a>
+                Tambah Warehouse
+            </button>
         </div>
 
         @if ($warehouses->isEmpty())
-            <!-- Empty State -->
-            <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 p-12 text-center">
-                <div class="max-w-md mx-auto">
-                    <div class="flex justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-20 w-20 text-gray-300" fill="none"
-                            viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+            <!-- Modern Empty State -->
+            <div class="flex flex-col items-center justify-center min-h-[60vh] py-12 text-center">
+                <div class="max-w-md mx-auto px-4">
+                    <div class="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-indigo-50 mb-6">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-indigo-600" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M3 10h18M3 10l-1 6a2 2 0 002 2h14a2 2 0 002-2l-1-6M3 10v-4a2 2 0 012-2h14a2 2 0 012 2v4" />
                         </svg>
                     </div>
-                    <h3 class="mt-6 text-xl font-medium text-gray-900">Belum Ada Data Gudang</h3>
-                    <p class="mt-2 text-gray-500">Anda belum memiliki data gudang. Mulai dengan menambahkan gudang baru
-                        untuk mengelola penyimpanan barang Anda.</p>
-                    <div class="mt-8">
-                        <a href="{{ route('warehouses.create') }}"
-                            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="-ml-1 mr-2 h-5 w-5" viewBox="0 0 20 20"
-                                fill="currentColor">
-                                <path fill-rule="evenodd"
-                                    d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-                                    clip-rule="evenodd" />
-                            </svg>
-                            Tambah Gudang Pertama
-                        </a>
-                    </div>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-2">Tidak ada warehouse</h2>
+                    <p class="text-gray-500 mb-8">Mulai dengan membuat warehouse pertama Anda untuk mengelola penyimpanan
+                        barang dan aset.</p>
+                    <button onclick="openModal('create-modal')"
+                        class="inline-flex items-center px-4 py-3 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="-ml-1 mr-2 h-5 w-5" viewBox="0 0 20 20"
+                            fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                                clip-rule="evenodd" />
+                        </svg>
+                        Tambah Warehouse
+                    </button>
                 </div>
             </div>
         @else
-            <!-- Warehouses Table -->
+            <!-- Warehouse Table -->
             <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
@@ -56,7 +62,7 @@
                             <tr>
                                 <th scope="col"
                                     class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Nama Gudang</th>
+                                    Nama Warehouse</th>
                                 <th scope="col"
                                     class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Lokasi</th>
@@ -68,11 +74,12 @@
                                     Deskripsi</th>
                                 <th scope="col"
                                     class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Aksi</th>
+                                    Aksi
+                                </th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
-                            @foreach ($warehouses as $warehouse)
+                            @foreach ($warehouses as $w)
                                 <tr class="hover:bg-gray-50 transition-colors duration-150">
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="flex items-center">
@@ -81,29 +88,26 @@
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-600"
                                                     fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+                                                        d="M3 10h18M3 10l-1 6a2 2 0 002 2h14a2 2 0 002-2l-1-6M3 10v-4a2 2 0 012-2h14a2 2 0 012 2v4" />
                                                 </svg>
                                             </div>
                                             <div class="ml-4">
-                                                <div class="text-sm font-medium text-gray-900">{{ $warehouse->name }}</div>
+                                                <div class="text-sm font-medium text-gray-900">{{ $w->name }}</div>
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-600">{{ $warehouse->location }}</div>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                        {{ $w->location }}
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-600">
-                                            {{ $warehouse->capacity }} <span
-                                                class="text-gray-400">unit</span></div>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                        {{ $w->capacity }}
                                     </td>
                                     <td class="px-6 py-4">
-                                        <div class="text-sm text-gray-600 max-w-md truncate">{{ $warehouse->description }}
-                                        </div>
+                                        <div class="text-sm text-gray-600 max-w-md truncate">{{ $w->description }}</div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <div class="flex justify-end space-x-2">
-                                            <a href="{{ route('warehouses.show', $warehouse->id) }}"
+                                            <a href="{{ route('warehouses.show', $w->id) }}"
                                                 class="text-amber-600 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 px-3 py-1.5 rounded-md transition-colors duration-200 flex items-center">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1"
                                                     viewBox="0 0 20 20" fill="currentColor">
@@ -114,7 +118,8 @@
                                                 </svg>
                                                 Lihat
                                             </a>
-                                            <a href="{{ route('warehouses.edit', $warehouse) }}"
+                                            <button
+                                                onclick="openEditModal({{ $w->id }}, '{{ $w->name }}', '{{ $w->location }}', '{{ $w->capacity }}', '{{ $w->description }}')"
                                                 class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-md transition-colors duration-200 flex items-center">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1"
                                                     viewBox="0 0 20 20" fill="currentColor">
@@ -122,10 +127,10 @@
                                                         d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
                                                 </svg>
                                                 Edit
-                                            </a>
-                                            <form action="{{ route('warehouses.destroy', $warehouse) }}" method="POST" class="inline delete-form">
-                                                @csrf
-                                                @method('DELETE')
+                                            </button>
+                                            <form action="{{ route('warehouses.destroy', $w->id) }}" method="POST"
+                                                class="inline delete-form">
+                                                @csrf @method('DELETE')
                                                 <button type="submit"
                                                     class="text-rose-600 hover:text-rose-900 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-md transition-colors duration-200 flex items-center">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1"
@@ -153,4 +158,25 @@
             </div>
         @endif
     </div>
+
+    <script>
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        function openEditModal(id, name, location, capacity, description) {
+            openModal('edit-modal');
+            const form = document.getElementById('edit-warehouse-form');
+            form.action = `{{ route('warehouses.update', ':id') }}`.replace(':id', id);
+            document.getElementById('edit-id').value = id;
+            document.getElementById('edit-name').value = name;
+            document.getElementById('edit-location').value = location;
+            document.getElementById('edit-capacity').value = capacity;
+            document.getElementById('edit-description').value = description;
+        }
+    </script>
 @endsection

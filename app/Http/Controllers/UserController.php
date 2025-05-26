@@ -48,14 +48,6 @@ class UserController extends Controller
     }
 
     /**
-     * Menampilkan form untuk membuat user baru.
-     */
-    public function create()
-    {
-        return view('users.create');
-    }
-
-    /**
      * Menyimpan data user baru yang dikirimkan melalui form.
      *
      * @param  \Illuminate\Http\Request  $request
@@ -121,16 +113,6 @@ class UserController extends Controller
     }
 
     /**
-     * Menampilkan form untuk mengedit data user.
-     *
-     * @param  User  $user
-     */
-    public function edit(User $user)
-    {
-        return view('users.edit', compact('user'));
-    }
-
-    /**
      * Memperbarui data user yang ada dalam database.
      *
      * @param  \Illuminate\Http\Request  $request
@@ -150,9 +132,6 @@ class UserController extends Controller
         $user->username = $validated['username'];
         $user->email = $validated['email'];
         $user->phone = $validated['phone'];
-        if ($validated['password']) {
-            $user->password = Hash::make($validated['password']);
-        }
         $user->save();
 
         // Mengarahkan ke halaman daftar user dengan pesan sukses

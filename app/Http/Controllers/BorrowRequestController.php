@@ -3,13 +3,31 @@
 namespace App\Http\Controllers;
 
 use App\Models\ItemUnit;
+use Barryvdh\DomPDF\PDF;
 use App\Models\BorrowDetail;
 use Illuminate\Http\Request;
 use App\Models\BorrowRequest;
 use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\BorrowRequestsExport;
 
 class BorrowRequestController extends Controller
 {
+    public function exportExcel()
+    {
+        return Excel::download(new BorrowRequestsExport, 'data_peminjaman.xlsx');
+    }
+
+    public function exportPdf()
+    {
+        $borrowRequests = BorrowRequest::with(['user', 'approver', 'borrowDetails.itemUnit.item'])->get();
+
+        $pdf = PDF::loadView('borrow_requests.pdf', compact('borrowRequests'))
+            ->setPaper('a4', 'landscape');
+
+        return $pdf->download('data_peminjaman.pdf');
+    }
+
     /**
      * Menampilkan semua permintaan peminjaman.
      */

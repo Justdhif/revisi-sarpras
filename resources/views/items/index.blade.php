@@ -2,12 +2,17 @@
 
 @section('title', 'SISFO Sarpras - Inventori Barang')
 
-@section('heading', 'Manajemen Inventori')
+@section('heading')
+    <a href="{{ route('items.index') }}">
+        <i class="fas fa-box ml-2 mr-1 text-indigo-300"></i>
+        Barang
+    </a>
+@endsection
 
 @section('content')
     <div class="container mx-auto px-4 py-8" x-data="inventoryFilter()">
         <div class="flex justify-between items-center mb-8">
-            <h1 class="text-3xl font-bold text-gray-800">Inventori Barang</h1>
+            <h1 class="text-3xl font-bold text-gray-800">Daftar Barang</h1>
             <div class="flex space-x-3">
                 <a href="{{ route('items.create') }}"
                     class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-medium py-2 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 flex items-center">
@@ -90,31 +95,29 @@
         </div>
 
         @if ($items->isEmpty())
-            <!-- Empty State -->
-            <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 p-12 text-center">
-                <div class="max-w-md mx-auto">
-                    <div class="flex justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-20 w-20 text-gray-300" fill="none"
-                            viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+            <!-- Modern Empty State -->
+            <div class="flex flex-col items-center justify-center min-h-[70vh] py-12 text-center">
+                <div class="max-w-md mx-auto px-4">
+                    <div class="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-indigo-50 mb-6">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-indigo-600" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round"
                                 d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                         </svg>
                     </div>
-                    <h3 class="mt-6 text-xl font-medium text-gray-900">Belum Ada Data Barang</h3>
-                    <p class="mt-2 text-gray-500">Inventori barang Anda masih kosong. Mulai dengan menambahkan barang baru
-                        untuk mengelola inventori.</p>
-                    <div class="mt-8">
-                        <a href="{{ route('items.create') }}"
-                            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="-ml-1 mr-2 h-5 w-5" viewBox="0 0 20 20"
-                                fill="currentColor">
-                                <path fill-rule="evenodd"
-                                    d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-                                    clip-rule="evenodd" />
-                            </svg>
-                            Tambah Barang Pertama
-                        </a>
-                    </div>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-2">Tidak ada barang</h2>
+                    <p class="text-gray-500 mb-8">Mulai dengan menambahkan barang pertama Anda untuk mengelola inventori.
+                    </p>
+                    <a href="{{ route('items.create') }}"
+                        class="inline-flex items-center px-4 py-3 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="-ml-1 mr-2 h-5 w-5" viewBox="0 0 20 20"
+                            fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                                clip-rule="evenodd" />
+                        </svg>
+                        Tambah Barang
+                    </a>
                 </div>
             </div>
         @else

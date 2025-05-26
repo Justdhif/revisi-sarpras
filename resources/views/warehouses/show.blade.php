@@ -2,70 +2,71 @@
 
 @section('title', 'SISFO Sarpras - Detail Gudang')
 
-@section('heading', 'Detail Gudang')
+@section('heading')
+    <a href="{{ route('warehouses.index') }}">
+        <i class="fas fa-warehouse ml-2 mr-1 text-indigo-300"></i>
+        Gudang
+    </a>
+@endsection
+
+@section('subheading', ' / Detail Gudang ' . ucfirst($warehouse->name))
 
 @section('content')
-    <div class="bg-white shadow-sm">
-        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-            <!-- Back button and title -->
-            <div class="flex items-center">
-                <a href="{{ route('warehouses.index') }}"
-                    class="mr-3 flex items-center gap-3 text-gray-400 hover:text-gray-500 transition duration-150 ease-in-out">
-                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd"
-                            d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
-                            clip-rule="evenodd" />
-                    </svg>
-                    Kembali
-                </a>
-                <h1 class="text-2xl font-semibold text-gray-900">
-                    Gudang: {{ $warehouse->name }}
-                </h1>
-            </div>
+    @include('warehouses._edit-modal')
 
-            <!-- Warehouse info -->
-            <div class="mt-1 flex flex-col sm:flex-row sm:flex-wrap sm:mt-0 sm:space-x-6">
-                <div class="mt-2 flex items-center text-sm text-gray-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400"
-                        viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd"
-                            d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
-                            clip-rule="evenodd" />
-                    </svg>
-                    Lokasi: {{ $warehouse->location ?? 'Belum ditentukan' }}
+    <div class="space-y-6">
+        <!-- Header Section with Back Button -->
+        <div class="flex flex-col sm:flex-row justify-between items-start gap-4">
+            <div>
+                <a href="{{ route('warehouses.index') }}"
+                    class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 mb-4">
+                    <i class="fas fa-arrow-left mr-2"></i> Kembali
+                </a>
+                <h1 class="text-2xl font-semibold text-gray-800">Gudang: {{ $warehouse->name }}</h1>
+                <div class="flex flex-wrap gap-4 mt-2">
+                    <div class="flex items-center text-sm text-gray-500">
+                        <i class="fas fa-map-marker-alt mr-2 text-gray-400"></i>
+                        Lokasi: {{ $warehouse->location ?? 'Belum ditentukan' }}
+                    </div>
+                    <div class="flex items-center text-sm text-gray-500">
+                        <i class="fas fa-boxes mr-2 text-gray-400"></i>
+                        Total Item: {{ $warehouse->itemUnits->count() }}
+                    </div>
                 </div>
-                <div class="mt-2 flex items-center text-sm text-gray-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400"
-                        fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+            </div>
+            <div class="flex gap-2">
+                <button
+                    onclick="openEditModal({{ $warehouse->id }}, '{{ $warehouse->name }}', '{{ $warehouse->location }}', '{{ $warehouse->capacity }}', '{{ $warehouse->description }}')"
+                    class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-md transition-colors duration-200 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                        <path
+                            d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
                     </svg>
-                    Total Item: {{ $warehouse->itemUnits->count() }}
-                </div>
+                    Edit
+                </button>
+                <form method="POST" action="{{ route('warehouses.destroy', $warehouse->id) }}" class="delete-form">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit"
+                        class="inline-flex items-center text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-4 py-2 rounded-lg">
+                        <i class="fas fa-trash mr-2"></i> Hapus
+                    </button>
+                </form>
             </div>
         </div>
-    </div>
 
-    <!-- Main Content -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <!-- Warehouse Stats -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
             <!-- Total Capacity Card -->
-            <div class="bg-white shadow overflow-hidden sm:rounded-lg">
-                <div class="px-4 py-5 sm:px-6 border-b border-gray-200 bg-gray-50">
-                    <h3 class="text-lg leading-6 font-medium text-gray-900 flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-500 mr-2" fill="none"
-                            viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                        </svg>
-                        Total Kapasitas
-                    </h3>
+            <div class="rounded-lg border border-blue-100 bg-blue-50 p-5 flex items-start">
+                <div class="rounded-full p-3 mr-4 text-lg bg-blue-100 text-blue-600">
+                    <i class="fas fa-warehouse"></i>
                 </div>
-                <div class="px-4 py-5 sm:p-6">
-                    <div class="text-3xl font-semibold text-gray-900 mb-4">{{ $warehouse->capacity }} unit</div>
-                    <div class="mt-4">
-                        <div class="flex justify-between text-sm text-gray-500 mb-1">
+                <div class="flex-1">
+                    <h3 class="text-sm font-medium text-gray-500">Total Kapasitas</h3>
+                    <p class="text-xl font-semibold mt-1">{{ $warehouse->capacity }} unit</p>
+                    <div class="mt-3">
+                        <div class="flex justify-between text-xs text-gray-500 mb-1">
                             <span>0%</span>
                             <span>100%</span>
                         </div>
@@ -78,26 +79,20 @@
             </div>
 
             <!-- Used Capacity Card -->
-            <div class="bg-white shadow overflow-hidden sm:rounded-lg">
-                <div class="px-4 py-5 sm:px-6 border-b border-gray-200 bg-gray-50">
-                    <h3 class="text-lg leading-6 font-medium text-gray-900 flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-500 mr-2" fill="none"
-                            viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                        </svg>
-                        Kapasitas Terpakai
-                    </h3>
+            <div class="rounded-lg border border-indigo-100 bg-indigo-50 p-5 flex items-start">
+                <div class="rounded-full p-3 mr-4 text-lg bg-indigo-100 text-indigo-600">
+                    <i class="fas fa-box-open"></i>
                 </div>
-                <div class="px-4 py-5 sm:p-6">
-                    <div class="text-3xl font-semibold text-gray-900 mb-4">
+                <div class="flex-1">
+                    <h3 class="text-sm font-medium text-gray-500">Kapasitas Terpakai</h3>
+                    <p class="text-xl font-semibold mt-1">
                         {{ $warehouse->used_capacity }} unit
-                        <span class="text-lg ml-2 text-indigo-600">
+                        <span class="text-sm ml-2 text-indigo-600">
                             ({{ round(($warehouse->used_capacity / $warehouse->capacity) * 100, 1) }}%)
                         </span>
-                    </div>
-                    <div class="mt-4">
-                        <div class="flex justify-between text-sm text-gray-500 mb-1">
+                    </p>
+                    <div class="mt-3">
+                        <div class="flex justify-between text-xs text-gray-500 mb-1">
                             <span>0%</span>
                             <span>100%</span>
                         </div>
@@ -110,26 +105,21 @@
             </div>
 
             <!-- Remaining Capacity Card -->
-            <div class="bg-white shadow overflow-hidden sm:rounded-lg">
-                <div class="px-4 py-5 sm:px-6 border-b border-gray-200 bg-gray-50">
-                    <h3 class="text-lg leading-6 font-medium text-gray-900 flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-500 mr-2" fill="none"
-                            viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                        </svg>
-                        Sisa Kapasitas
-                    </h3>
+            <div class="rounded-lg border border-green-100 bg-green-50 p-5 flex items-start">
+                <div class="rounded-full p-3 mr-4 text-lg bg-green-100 text-green-600">
+                    <i class="fas fa-check-circle"></i>
                 </div>
-                <div class="px-4 py-5 sm:p-6">
-                    <div class="text-3xl font-semibold text-gray-900 mb-4">
+                <div class="flex-1">
+                    <h3 class="text-sm font-medium text-gray-500">Sisa Kapasitas</h3>
+                    <p class="text-xl font-semibold mt-1">
                         {{ $warehouse->capacity - $warehouse->used_capacity }} unit
-                        <span class="text-lg ml-2 text-green-600">
-                            ({{ round((($warehouse->capacity - $warehouse->used_capacity) / $warehouse->capacity) * 100, 1) }}%)
+                        <span class="text-sm ml-2 text-green-600">
+                            ({{ round((($warehouse->capacity - $warehouse->used_capacity) / $warehouse->capacity) * 100, 1) }}
+                            %)
                         </span>
-                    </div>
-                    <div class="mt-4">
-                        <div class="flex justify-between text-sm text-gray-500 mb-1">
+                    </p>
+                    <div class="mt-3">
+                        <div class="flex justify-between text-xs text-gray-500 mb-1">
                             <span>0%</span>
                             <span>100%</span>
                         </div>
@@ -144,33 +134,36 @@
         </div>
 
         <!-- Items Section -->
-        <div class="mb-8">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
-                <h2 class="text-lg font-medium text-gray-900">
-                    Daftar Item di Gudang
-                </h2>
-                <div class="mt-4 sm:mt-0 flex items-center">
-                    <span class="px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
-                        {{ $warehouse->itemUnits->count() }} item
-                    </span>
-                    <a href="{{ route('item-units.create') }}?warehouse={{ $warehouse->id }}"
-                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
-                        <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
-                            fill="currentColor">
-                            <path fill-rule="evenodd"
-                                d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
-                                clip-rule="evenodd" />
-                        </svg>
-                        Tambah Unit Baru
-                    </a>
+        <div class="bg-white rounded-lg border border-gray-200 shadow-sm">
+            <div
+                class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                        <i class="fas fa-boxes mr-2"></i>Daftar Item di Gudang
+                    </h3>
+                    <p class="text-sm text-gray-600">Total {{ $warehouse->itemUnits->count() }} item terdaftar</p>
                 </div>
+                <a href="{{ route('item-units.create') }}?warehouse={{ $warehouse->id }}"
+                    class="inline-flex items-center bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg">
+                    <i class="fas fa-plus mr-2"></i>Tambah Unit Baru
+                </a>
             </div>
 
-            @if ($warehouse->itemUnits->count())
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            @if ($warehouse->itemUnits->isEmpty())
+                <div class="p-12 text-center">
+                    <i class="fas fa-box-open text-gray-400 text-5xl mx-auto mb-4"></i>
+                    <h3 class="text-lg font-medium text-gray-700">Gudang kosong</h3>
+                    <p class="mt-1 text-sm text-gray-500">Belum ada item yang tersimpan di gudang ini.</p>
+                    <a href="{{ route('items.create') }}"
+                        class="inline-flex items-center mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg">
+                        <i class="fas fa-plus mr-2"></i>Tambah Item Baru
+                    </a>
+                </div>
+            @else
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6">
                     @foreach ($warehouse->itemUnits as $unit)
                         <div
-                            class="bg-white shadow overflow-hidden sm:rounded-lg hover:shadow-md transition-shadow duration-200">
+                            class="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow duration-200">
                             <!-- Item Image -->
                             <div class="h-48 bg-gray-100 relative overflow-hidden">
                                 @if ($unit->item->image_url)
@@ -178,11 +171,7 @@
                                         alt="{{ $unit->item->name }}">
                                 @else
                                     <div class="w-full h-full flex items-center justify-center bg-gray-200">
-                                        <svg class="h-12 w-12 text-gray-400" xmlns="http://www.w3.org/2000/svg"
-                                            fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                        </svg>
+                                        <i class="fas fa-box-open text-gray-400 text-4xl"></i>
                                     </div>
                                 @endif
                                 <div class="absolute top-3 right-3">
@@ -199,10 +188,10 @@
                             </div>
 
                             <!-- Item Content -->
-                            <div class="px-4 py-5 sm:p-6">
+                            <div class="p-4">
                                 <div class="flex justify-between items-start">
                                     <div>
-                                        <h3 class="text-lg font-medium text-gray-900">{{ $unit->item->name }}</h3>
+                                        <h3 class="font-medium text-gray-900">{{ $unit->item->name }}</h3>
                                         <p class="text-sm text-gray-500 mt-1">SKU: {{ $unit->sku }}</p>
                                     </div>
                                     <span
@@ -218,43 +207,45 @@
                                         @if ($unit->qr_image_url)
                                             {!! QrCode::size(40)->generate($unit->sku) !!}
                                         @else
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400"
-                                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-                                            </svg>
+                                            <i class="fas fa-qrcode text-gray-400 text-xl"></i>
                                         @endif
                                     </div>
+                                </div>
+
+                                <div class="mt-4 flex space-x-2">
+                                    <a href="{{ route('item-units.show', $unit->id) }}"
+                                        class="flex-1 text-center text-sm bg-amber-50 hover:bg-amber-100 text-amber-700 py-1.5 px-3 rounded">
+                                        <i class="fas fa-eye mr-1"></i> Lihat
+                                    </a>
+                                    <a href="{{ route('item-units.edit', $unit->id) }}"
+                                        class="flex-1 text-center text-sm bg-indigo-50 hover:bg-indigo-100 text-indigo-700 py-1.5 px-3 rounded">
+                                        <i class="fas fa-edit mr-1"></i> Edit
+                                    </a>
                                 </div>
                             </div>
                         </div>
                     @endforeach
                 </div>
-            @else
-                <div class="bg-white shadow overflow-hidden sm:rounded-lg">
-                    <div class="px-4 py-12 sm:px-6 text-center">
-                        <svg class="mx-auto h-12 w-12 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none"
-                            viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                        </svg>
-                        <h3 class="mt-2 text-lg font-medium text-gray-900">Gudang kosong</h3>
-                        <p class="mt-1 text-sm text-gray-500">Belum ada item yang tersimpan di gudang ini.</p>
-                        <div class="mt-6">
-                            <a href="{{ route('items.create') }}"
-                                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
-                                <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
-                                    fill="currentColor">
-                                    <path fill-rule="evenodd"
-                                        d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
-                                        clip-rule="evenodd" />
-                                </svg>
-                                Tambah Item Baru
-                            </a>
-                        </div>
-                    </div>
-                </div>
             @endif
         </div>
     </div>
+
+    <script>
+        function openEditModal(id, name, location, capacity, description) {
+            const form = document.getElementById('edit-warehouse-form');
+            form.action = `{{ route('warehouses.update', ':id') }}`.replace(':id', id);
+            document.getElementById('edit-id').value = id;
+            document.getElementById('edit-name').value = name;
+            document.getElementById('edit-location').value = location;
+            document.getElementById('edit-capacity').value = capacity;
+            document.getElementById('edit-description').value = description;
+
+            // Show modal
+            document.getElementById('edit-modal').classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+    </script>
 @endsection

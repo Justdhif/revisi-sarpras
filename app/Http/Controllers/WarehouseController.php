@@ -20,14 +20,6 @@ class WarehouseController extends Controller
     }
 
     /**
-     * Menampilkan form untuk membuat warehouse baru.
-     */
-    public function create()
-    {
-        return view('warehouses.create');
-    }
-
-    /**
      * Menyimpan data warehouse baru ke dalam database.
      *
      * @param  \Illuminate\Http\Request  $request
@@ -61,16 +53,6 @@ class WarehouseController extends Controller
 
         // Menampilkan halaman detail warehouse
         return view('warehouses.show', compact('warehouse'));
-    }
-
-    /**
-     * Menampilkan form untuk mengedit data warehouse yang sudah ada.
-     *
-     * @param  Warehouse  $warehouse
-     */
-    public function edit(Warehouse $warehouse)
-    {
-        return view('warehouses.edit', compact('warehouse'));
     }
 
     /**

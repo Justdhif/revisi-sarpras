@@ -26,8 +26,8 @@ class ItemApiController extends Controller
             'category',
             'itemUnits' => function ($query) {
                 $query->where('status', 'available')
-                    ->where('qty', '>', 0)
-                    ->with('warehouse'); // pastikan warehouse ikut dimuat
+                    ->where('quantity', '>', 0)
+                    ->with('warehouse');
             }
         ])->find($id);
 

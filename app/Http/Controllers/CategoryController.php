@@ -17,14 +17,6 @@ class CategoryController extends Controller
     }
 
     /**
-     * Menampilkan form untuk membuat kategori baru.
-     */
-    public function create()
-    {
-        return view('categories.create');
-    }
-
-    /**
      * Menyimpan kategori baru ke database.
      */
     public function store(Request $request)
@@ -49,14 +41,6 @@ class CategoryController extends Controller
     {
         $category->load('items'); // Pastikan relasi item dimuat
         return view('categories.show', compact('category'));
-    }
-
-    /**
-     * Menampilkan form edit kategori.
-     */
-    public function edit(Category $category)
-    {
-        return view('categories.edit', compact('category'));
     }
 
     /**

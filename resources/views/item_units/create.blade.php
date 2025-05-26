@@ -2,9 +2,18 @@
 
 @section('title', 'SISFO Sarpras - Tambah Unit Barang')
 
+@section('heading')
+    <a href="{{ route('item-units.index') }}">
+        <i class="fas fa-box ml-2 mr-1 text-indigo-300"></i>
+        Unit Barang
+    </a>
+@endsection
+
+@section('subheading', ' / Tambah Unit Barang Baru')
+
 @section('content')
-    <div class="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-        <div class="sm:mx-auto sm:w-full sm:max-w-4xl">
+    <div class="min-h-screen flex flex-col justify-center">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-indigo-600" fill="none" viewBox="0 0 24 24"
                     stroke="currentColor">

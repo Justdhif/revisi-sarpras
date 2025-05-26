@@ -58,6 +58,14 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         ->name('borrow-details.create');
     Route::post('/borrow-details/store', [BorrowDetailController::class, 'store'])
         ->name('borrow-details.store');
+    Route::get('/borrow-details/{id}', [BorrowDetailController::class, 'show'])
+        ->name('borrow-details.show');
+    Route::get('/borrow-details/{id}/edit', [BorrowDetailController::class, 'edit'])
+        ->name('borrow-details.edit');
+    Route::put('/borrow-details/{id}/update', [BorrowDetailController::class, 'update'])
+        ->name('borrow-details.update');
+    Route::delete('/borrow-details/{id}', [BorrowDetailController::class, 'destroy'])
+        ->name('borrow-details.destroy');
 
     // Return Request Routes
     Route::get('/return_requests', [ReturnRequestController::class, 'index'])->name('return-requests.index');
@@ -85,6 +93,8 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/items/export/pdf', [ItemController::class, 'exportPdf'])->name('items.export.pdf');
     Route::get('item-units/export/excel', [ItemUnitController::class, 'exportExcel'])->name('item-units.exportExcel');
     Route::get('item-units/export/pdf', [ItemUnitController::class, 'exportPdf'])->name('item-units.exportPdf');
+    Route::get('/borrow-requests/export/excel', [BorrowRequestController::class, 'exportExcel'])->name('borrow-requests.exportExcel');
+    Route::get('/borrow-requests/export/pdf', [BorrowRequestController::class, 'exportPdf'])->name('borrow-requests.exportPdf');
 
     // Fallback Route
     Route::fallback(function () {

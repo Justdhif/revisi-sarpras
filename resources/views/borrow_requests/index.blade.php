@@ -2,28 +2,51 @@
 
 @section('title', 'SISFO Sarpras - Manajemen Permohonan Peminjaman')
 
-@section('heading', 'Manajemen Permohonan Peminjaman')
+@section('heading')
+    <a href="{{ route('borrow-requests.index') }}">
+        <i class="fas fa-undo-alt ml-2 mr-1 text-indigo-300"></i>
+        Peminjaman
+    </a>
+@endsection
 
 @section('content')
     <div class="container mx-auto px-4 py-8">
         <div class="flex justify-between items-center mb-8">
-            <h1 class="text-3xl font-bold text-gray-800">Manajemen Permohonan Peminjaman</h1>
+            <h1 class="text-3xl font-bold text-gray-800">Manajemen Peminjaman</h1>
+            <div class="flex space-x-3">
+                <a href="{{ route('borrow-requests.exportExcel') }}"
+                    class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-medium py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Ekspor Excel
+                </a>
+                <a href="{{ route('borrow-requests.exportPdf') }}"
+                    class="bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white font-medium py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Ekspor PDF
+                </a>
+            </div>
         </div>
 
         @if ($requests->isEmpty())
-            <!-- Empty State -->
-            <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 p-12 text-center">
-                <div class="max-w-md mx-auto">
-                    <div class="flex justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-20 w-20 text-gray-300" fill="none"
-                            viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+            <!-- Modern Empty State -->
+            <div class="flex flex-col items-center justify-center min-h-[60vh] py-12 text-center">
+                <div class="max-w-md mx-auto px-4">
+                    <div class="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-indigo-50 mb-6">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-indigo-600" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round"
                                 d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
                         </svg>
                     </div>
-                    <h3 class="mt-6 text-xl font-medium text-gray-900">Belum Ada Permohonan Peminjaman</h3>
-                    <p class="mt-2 text-gray-500">Anda belum memiliki data permohonan peminjaman. Mulai dengan membuat
-                        permohonan baru untuk meminjam barang.</p>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-2">Tidak ada permohonan peminjaman</h2>
                 </div>
             </div>
         @else
@@ -114,17 +137,17 @@
                                                 Lihat
                                             </a>
 
-                                                @if ($req->status === 'approved' && $req->returnRequest === null)
-                                                    <a href="{{ route('return_requests.create', $req->id) }}"
-                                                        class="text-amber-600 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 px-3 py-1.5 rounded-md transition-colors duration-200 flex items-center">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1"
-                                                            viewBox="0 0 20 20" fill="currentColor">
-                                                            <path fill-rule="evenodd"
-                                                                d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
-                                                                clip-rule="evenodd" />
-                                                        </svg>
-                                                        Pengembalian
-                                                    </a>
+                                            @if ($req->status === 'approved' && $req->returnRequest === null)
+                                                <a href="{{ route('return_requests.create', $req->id) }}"
+                                                    class="text-amber-600 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 px-3 py-1.5 rounded-md transition-colors duration-200 flex items-center">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1"
+                                                        viewBox="0 0 20 20" fill="currentColor">
+                                                        <path fill-rule="evenodd"
+                                                            d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
+                                                            clip-rule="evenodd" />
+                                                    </svg>
+                                                    Pengembalian
+                                                </a>
                                             @elseif ($req->returnRequest)
                                                 <span
                                                     class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
