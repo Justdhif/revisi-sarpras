@@ -13,156 +13,203 @@
     <div class="container mx-auto px-4 py-8">
         <div class="flex justify-between items-center mb-8">
             <h1 class="text-3xl font-bold text-gray-800">Manajemen Pengembalian</h1>
+            {{-- <div class="flex space-x-3">
+                <a href="{{ route('return_requests.exportExcel') }}"
+                    class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-medium py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Ekspor Excel
+                </a>
+                <a href="{{ route('return-requests.exportPdf') }}"
+                    class="bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white font-medium py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Ekspor PDF
+                </a>
+            </div> --}}
         </div>
 
-        @if ($returns->isEmpty())
-            <!-- Modern Empty State -->
-            <div class="flex flex-col items-center justify-center min-h-[60vh] py-12 text-center">
-                <div class="max-w-md mx-auto px-4">
-                    <div class="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-indigo-50 mb-6">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-indigo-600" fill="none"
-                            viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+        <!-- Filter Controls -->
+        <div class="mb-6 bg-white p-4 rounded-lg shadow border border-gray-100">
+            <div class="flex items-center justify-center gap-4">
+                <!-- Search Input -->
+                <div class="relative w-full">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                            fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                                clip-rule="evenodd" />
                         </svg>
                     </div>
-                    <h2 class="text-2xl font-bold text-gray-900 mb-2">Tidak ada permohonan pengembalian</h2>
+                    <input id="searchQuery" type="text"
+                        class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        placeholder="Cari pemohon...">
                 </div>
-            </div>
-        @else
-            <!-- Return Requests Table -->
-            <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th scope="col"
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    No
-                                </th>
-                                <th scope="col"
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Pemohon</th>
-                                <th scope="col"
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Status</th>
-                                <th scope="col"
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Catatan</th>
-                                <th scope="col"
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Tanggal</th>
-                                <th scope="col"
-                                    class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            @foreach ($returns as $return)
-                                <tr class="hover:bg-gray-50 transition-colors duration-150">
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        {{ $loop->iteration }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="flex items-center">
-                                            <div
-                                                class="flex-shrink-0 h-10 w-10 bg-indigo-100 rounded-full flex items-center justify-center">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-600"
-                                                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                                </svg>
-                                            </div>
-                                            <div class="ml-4">
-                                                <div class="text-sm font-medium text-gray-900">
-                                                    {{ $return->borrowRequest->user->username }}</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        @php
-                                            $statusColors = [
-                                                'pending' => 'bg-yellow-100 text-yellow-800',
-                                                'approved' => 'bg-green-100 text-green-800',
-                                                'rejected' => 'bg-red-100 text-red-800',
-                                            ];
-                                            $statusClass =
-                                                $statusColors[strtolower($return->status)] ??
-                                                'bg-gray-100 text-gray-800';
-                                        @endphp
-                                        <span
-                                            class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ $statusClass }}">
-                                            @if ($return->status === 'pending')
-                                                Menunggu
-                                            @elseif($return->status === 'approved')
-                                                Disetujui
-                                            @else
-                                                Ditolak
-                                            @endif
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <div class="text-sm text-gray-600 max-w-md truncate">{{ $return->notes ?? '-' }}
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-600">
-                                            {{ $return->created_at->format('d M Y') }}
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <div class="flex justify-end space-x-2">
-                                            <a href="{{ route('return_requests.show', $return->id) }}"
-                                                class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-md transition-colors duration-200 flex items-center">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1"
-                                                    viewBox="0 0 20 20" fill="currentColor">
-                                                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                                                    <path fill-rule="evenodd"
-                                                        d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
-                                                        clip-rule="evenodd" />
-                                                </svg>
-                                                Lihat
-                                            </a>
 
-                                            @if (Auth::user()->role === 'admin' && $return->status === 'pending')
-                                                <form action="{{ route('return-requests.approve', $return->id) }}"
-                                                    method="POST" class="inline">
-                                                    @csrf
-                                                    @method('PUT')
-                                                    <button type="submit"
-                                                        class="text-green-600 hover:text-green-900 bg-green-50 hover:bg-green-100 px-3 py-1.5 rounded-md transition-colors duration-200 flex items-center">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1"
-                                                            viewBox="0 0 20 20" fill="currentColor">
-                                                            <path fill-rule="evenodd"
-                                                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                                                clip-rule="evenodd" />
-                                                        </svg>
-                                                        Setujui
-                                                    </button>
-                                                </form>
-                                                <form action="{{ route('return-requests.reject', $return->id) }}"
-                                                    method="POST" class="inline">
-                                                    @csrf
-                                                    <button type="submit"
-                                                        class="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-md transition-colors duration-200 flex items-center">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1"
-                                                            viewBox="0 0 20 20" fill="currentColor">
-                                                            <path fill-rule="evenodd"
-                                                                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                                                clip-rule="evenodd" />
-                                                        </svg>
-                                                        Tolak
-                                                    </button>
-                                                </form>
-                                            @endif
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                <!-- Status Filter -->
+                <div class="w-2/3">
+                    <select id="selectedStatus"
+                        class="block w-full pl-3 pr-10 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="">Semua Status</option>
+                        <option value="pending">Menunggu</option>
+                        <option value="approved">Disetujui</option>
+                        <option value="rejected">Ditolak</option>
+                    </select>
+                </div>
+
+                <!-- Date Range Filter -->
+                <div class="w-2/3">
+                    <input type="date" id="startDate"
+                        class="block w-full pl-3 pr-10 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        placeholder="Dari Tanggal">
+                </div>
+                <div class="w-2/3">
+                    <input type="date" id="endDate"
+                        class="block w-full pl-3 pr-10 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        placeholder="Sampai Tanggal">
                 </div>
             </div>
-        @endif
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loadingIndicator" class="hidden text-center py-8">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-600"></div>
+            <p class="mt-2 text-gray-600">Memuat data...</p>
+        </div>
+
+        <!-- Returns Container (akan diisi oleh AJAX) -->
+        <div id="returnsContainer">
+            @include('return_requests.partials._returns_table', ['returns' => $returns])
+        </div>
     </div>
+
+    <!-- JavaScript untuk AJAX -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elemen filter
+            const searchQuery = document.getElementById('searchQuery');
+            const selectedStatus = document.getElementById('selectedStatus');
+            const startDate = document.getElementById('startDate');
+            const endDate = document.getElementById('endDate');
+
+            // Container untuk hasil
+            const returnsContainer = document.getElementById('returnsContainer');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+
+            // Debounce untuk pencarian
+            let debounceTimer;
+
+            // Fungsi untuk memuat data
+            function loadReturns() {
+                // Tampilkan loading indicator
+                loadingIndicator.classList.remove('hidden');
+                returnsContainer.classList.add('opacity-50');
+
+                // Siapkan parameter
+                const params = {
+                    search: searchQuery.value,
+                    status: selectedStatus.value,
+                    start_date: startDate.value,
+                    end_date: endDate.value
+                };
+
+                // Buat URL dengan parameter
+                const url = new URL('{{ route('return-requests.index') }}');
+                Object.keys(params).forEach(key => {
+                    if (params[key]) {
+                        url.searchParams.append(key, params[key]);
+                    }
+                });
+
+                // Buat request AJAX
+                fetch(url, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'text/html'
+                        }
+                    })
+                    .then(response => response.text())
+                    .then(html => {
+                        returnsContainer.innerHTML = html;
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        returnsContainer.innerHTML =
+                            '<div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 p-12 text-center text-red-500">Terjadi kesalahan saat memuat data.</div>';
+                    })
+                    .finally(() => {
+                        loadingIndicator.classList.add('hidden');
+                        returnsContainer.classList.remove('opacity-50');
+                    });
+            }
+
+            // Event listeners untuk semua filter
+            [selectedStatus, startDate, endDate].forEach(element => {
+                element.addEventListener('change', loadReturns);
+            });
+
+            // Event listener khusus untuk input pencarian dengan debounce
+            searchQuery.addEventListener('input', function() {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(loadReturns, 500);
+            });
+
+            // Event delegation untuk tombol approve/reject
+            returnsContainer.addEventListener('submit', function(e) {
+                if (e.target.closest('form')) {
+                    e.preventDefault();
+
+                    const form = e.target.closest('form');
+                    const url = form.getAttribute('action');
+                    const method = form.querySelector('input[name="_method"]') ?
+                        form.querySelector('input[name="_method"]').value : 'POST';
+
+                    if (form.classList.contains('approve-form') && !confirm(
+                            'Apakah Anda yakin ingin menyetujui pengembalian ini?')) {
+                        return;
+                    }
+
+                    if (form.classList.contains('reject-form') && !confirm(
+                            'Apakah Anda yakin ingin menolak pengembalian ini?')) {
+                        return;
+                    }
+
+                    fetch(url, {
+                            method: method,
+                            headers: {
+                                'X-CSRF-TOKEN': form.querySelector('input[name="_token"]').value,
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json'
+                            },
+                            body: new FormData(form)
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (data.success) {
+                                loadReturns(); // Muat ulang data setelah aksi
+                            } else {
+                                alert('Gagal memproses pengembalian: ' + (data.message ||
+                                    'Terjadi kesalahan'));
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert('Terjadi kesalahan saat memproses pengembalian');
+                        });
+                }
+            });
+        });
+    </script>
 @endsection

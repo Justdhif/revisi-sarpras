@@ -31,9 +31,46 @@ class BorrowRequestController extends Controller
     /**
      * Menampilkan semua permintaan peminjaman.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $requests = BorrowRequest::with('user', 'approver')->latest()->get();
+        $query = BorrowRequest::with(['user', 'approver', 'returnRequest']);
+
+        // Filter pencarian
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('user', function ($q) use ($search) {
+                    $q->where('username', 'like', "%{$search}%");
+                })
+                    ->orWhereHas('approver', function ($q) use ($search) {
+                        $q->where('username', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        // Filter status
+        if ($request->has('status') && !empty($request->status)) {
+            $query->where('status', $request->status);
+        }
+
+        // Filter tanggal
+        if ($request->has('start_date') && !empty($request->start_date)) {
+            $query->whereDate('created_at', '>=', $request->start_date);
+        }
+
+        if ($request->has('end_date') && !empty($request->end_date)) {
+            $query->whereDate('created_at', '<=', $request->end_date);
+        }
+
+        // Urutkan berdasarkan yang terbaru
+        $query->orderBy('created_at', 'desc');
+
+        $requests = $query->paginate(10);
+
+        if ($request->ajax()) {
+            return view('borrow_requests.partials._requests_table', compact('requests'));
+        }
+
         return view('borrow_requests.index', compact('requests'));
     }
 

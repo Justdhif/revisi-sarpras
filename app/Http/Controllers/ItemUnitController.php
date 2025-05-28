@@ -35,10 +35,46 @@ class ItemUnitController extends Controller
     /**
      * Menampilkan daftar semua unit barang.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $itemUnits = ItemUnit::with(['item', 'warehouse'])->latest()->get();
+        $query = ItemUnit::with(['item', 'warehouse']);
+
+        // Filter pencarian
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('sku', 'like', "%{$search}%")
+                    ->orWhereHas('item', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('warehouse', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        // Filter kondisi
+        if ($request->has('condition') && !empty($request->condition)) {
+            $query->where('condition', $request->condition);
+        }
+
+        // Filter status
+        if ($request->has('status') && !empty($request->status)) {
+            $query->where('status', $request->status);
+        }
+
+        // Filter gudang
+        if ($request->has('warehouse') && !empty($request->warehouse)) {
+            $query->where('warehouse_id', $request->warehouse);
+        }
+
+        $itemUnits = $query->paginate(10);
         $warehouses = Warehouse::all();
+
+        if ($request->ajax()) {
+            return view('item_units.partials._units_table', compact('itemUnits', 'warehouses'));
+        }
+
         return view('item_units.index', compact('itemUnits', 'warehouses'));
     }
 

@@ -11,10 +11,40 @@ class ReturnRequestController extends Controller
     /**
      * Menampilkan daftar return requests.
      */
-    public function index()
+    public function index(Request $request)
     {
-        // Mengambil semua return request dengan relasi borrow request dan user
-        $returns = ReturnRequest::with('borrowRequest.user')->latest()->get();
+        $query = ReturnRequest::with(['borrowRequest.user']);
+
+        // Filter pencarian
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $query->whereHas('borrowRequest.user', function ($q) use ($search) {
+                $q->where('username', 'like', "%{$search}%");
+            });
+        }
+
+        // Filter status
+        if ($request->has('status') && !empty($request->status)) {
+            $query->where('status', $request->status);
+        }
+
+        // Filter tanggal
+        if ($request->has('start_date') && !empty($request->start_date)) {
+            $query->whereDate('created_at', '>=', $request->start_date);
+        }
+
+        if ($request->has('end_date') && !empty($request->end_date)) {
+            $query->whereDate('created_at', '<=', $request->end_date);
+        }
+
+        // Urutkan berdasarkan yang terbaru
+        $query->orderBy('created_at', 'desc');
+
+        $returns = $query->paginate(10);
+
+        if ($request->ajax()) {
+            return view('return_requests.partials._returns_table', compact('returns'));
+        }
 
         return view('return_requests.index', compact('returns'));
     }

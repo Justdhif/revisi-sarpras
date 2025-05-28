@@ -32,10 +32,49 @@ class ItemController extends Controller
     /**
      * Menampilkan daftar barang.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $items = Item::with('category')->latest()->get();
+        $query = Item::with('category');
+
+        // Filter pencarian
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhereHas('category', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        // Filter jenis
+        if ($request->has('type') && !empty($request->type)) {
+            $query->where('type', $request->type);
+        }
+
+        // Filter kategori
+        if ($request->has('category') && !empty($request->category)) {
+            $query->where('category_id', $request->category);
+        }
+
+        // Sorting
+        if ($request->has('sort')) {
+            $sort = explode('_', $request->sort);
+            if (count($sort) == 2) {
+                $query->orderBy($sort[0], $sort[1]);
+            }
+        } else {
+            $query->orderBy('name', 'asc');
+        }
+
+        $items = $query->paginate(10);
         $categories = Category::all();
+
+        if ($request->ajax()) {
+            return view('items.partials._items_table', compact('items', 'categories'));
+        }
+
         return view('items.index', compact('items', 'categories'));
     }
 
