@@ -47,7 +47,7 @@
                 <div class="space-y-6">
                     <!-- Recent Activity Logs -->
                     <div class="bg-white rounded-lg border border-gray-200 shadow-sm">
-                        <x-dashboard.section-header title="Log Aktivitas Terbaru" />
+                        <x-dashboard.section-header title="Log Aktivitas Terbaru" link="{{ route('activity-logs.index') }}" linkText="View All" />
 
                         <div class="divide-y divide-gray-200">
                             @forelse ($recentLogs as $log)
@@ -70,7 +70,7 @@
 
                     <!-- Recent Item Units -->
                     <div class="bg-white rounded-lg border border-gray-200 shadow-sm">
-                        <x-dashboard.section-header title="Unit Barang Terbaru" />
+                        <x-dashboard.section-header title="Unit Barang Terbaru" link="{{ route('item-units.index') }}" linkText="View All" />
 
                         <div class="divide-y divide-gray-200">
                             @forelse ($recentItemUnits as $unit)
@@ -119,7 +119,7 @@
                 <div class="space-y-6">
                     <!-- Recent Borrowings -->
                     <div class="bg-white rounded-lg border border-gray-200 shadow-sm">
-                        <x-dashboard.section-header title="Peminjaman Terbaru" />
+                        <x-dashboard.section-header title="Peminjaman Terbaru" link="{{ route('borrow-requests.index') }}" linkText="View All" />
 
                         <div class="divide-y divide-gray-200">
                             @forelse ($recentBorrows as $borrow)
@@ -177,7 +177,7 @@
 
                     <!-- Recent Returns -->
                     <div class="bg-white rounded-lg border border-gray-200 shadow-sm">
-                        <x-dashboard.section-header title="Pengembalian Terbaru" />
+                        <x-dashboard.section-header title="Pengembalian Terbaru" link="{{ route('return-requests.index') }}" linkText="View All" />
 
                         <div class="divide-y divide-gray-200">
                             @forelse ($recentReturns as $return)
@@ -236,7 +236,7 @@
 
                     <!-- Recent Items -->
                     <div class="bg-white rounded-lg border border-gray-200 shadow-sm">
-                        <x-dashboard.section-header title="Daftar Barang Terbaru" />
+                        <x-dashboard.section-header title="Daftar Barang Terbaru" link="{{ route('items.index') }}" linkText="View All" />
 
                         <div class="divide-y divide-gray-200">
                             @forelse ($recentItems as $item)
