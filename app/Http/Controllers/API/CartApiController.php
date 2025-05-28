@@ -55,10 +55,7 @@ class CartApiController extends Controller
             'quantity' => $request->quantity ?? 1,
         ]);
 
-        // Update item unit sesuai jenis item
-        if ($itemType === 'consumable') {
-            $itemUnit->quantity -= $request->quantity;
-        } else {
+        if ($itemType === 'non-consumable') {
             $itemUnit->status = 'reserved';
         }
 
@@ -80,6 +77,11 @@ class CartApiController extends Controller
 
         $cart->quantity = $quantity;
         $cart->save();
+
+        if ($item->consumable) {
+            $item->quantity -= $quantity;
+            $item->save();
+        }
 
         return response()->json(['message' => 'Kuantitas diubah']);
     }

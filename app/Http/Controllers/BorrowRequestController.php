@@ -139,6 +139,8 @@ class BorrowRequestController extends Controller
                 // ✅ Validasi stok
                 if ($itemUnit->quantity < $detail->quantity) {
                     return back()->with('error', 'Stok tidak mencukupi untuk item: ' . $item->name);
+                } else {
+                    $itemUnit->quantity -= $detail->quantity;
                 }
 
                 // ✅ Update status jika stok habis
