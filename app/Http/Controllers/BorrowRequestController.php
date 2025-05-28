@@ -95,7 +95,7 @@ class BorrowRequestController extends Controller
             $item = $itemUnit->item;
 
             $warehouse = $itemUnit->warehouse;
-            $warehouse->used_capacity += $detail->quantity;
+            $warehouse->used_capacity -= $detail->quantity;
             $warehouse->save();
 
             if ($item->type === 'consumable') {

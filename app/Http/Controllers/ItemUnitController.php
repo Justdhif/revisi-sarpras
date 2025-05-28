@@ -85,7 +85,6 @@ class ItemUnitController extends Controller
         // Simpan unit barang dan update kapasitas gudang
         $unit = ItemUnit::create($validated);
         $warehouse->used_capacity += $unit->quantity;
-        $warehouse->capacity -= $warehouse->used_capacity;
         $warehouse->save();
 
         return redirect()->route('item-units.index')->with('success', 'Unit barang berhasil ditambahkan.');

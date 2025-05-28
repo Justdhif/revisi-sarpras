@@ -122,12 +122,20 @@ class ReturnRequestController extends Controller
      */
     public function approve(ReturnRequest $returnRequest)
     {
-        // Mengubah status return request menjadi approved
+        // Ubah status return request menjadi 'approved'
         $returnRequest->update(['status' => 'approved']);
 
-        // Mengubah status setiap item unit yang terkait menjadi available
         foreach ($returnRequest->returnDetails as $detail) {
+            // Ubah status unit menjadi 'available'
             $detail->itemUnit->update(['status' => 'available']);
+
+            // Ambil item terkait
+            $item = $detail->itemUnit->item;
+
+            // Ambil warehouse dari relasi item
+            $warehouse = $item->warehouse; // pastikan relasi ini ada
+
+            $warehouse->used_capacity += $detail->quantity;
         }
 
         return back()->with('success', 'Pengembalian disetujui.');

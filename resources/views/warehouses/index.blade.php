@@ -107,7 +107,7 @@
                                         {{ $w->location }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                        {{ $w->capacity }}
+                                        {{ $w->capacity - $w->used_capacity }} / {{ $w->capacity }}
                                     </td>
                                     <td class="px-6 py-4">
                                         <div class="text-sm text-gray-600 max-w-md truncate">{{ $w->description }}</div>

@@ -76,9 +76,9 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         ->name('return_requests.show');
     Route::get('/return_requests/{return_request}/edit', [ReturnRequestController::class, 'edit'])
         ->name('return_requests.edit');
-    Route::post('/return_requests/{return_request}/approve', [ReturnRequestController::class, 'approve'])
+    Route::put('/return_requests/{return_request}/approve', [ReturnRequestController::class, 'approve'])
         ->name('return-requests.approve');
-    Route::post('/return_requests/{return_request}/reject', [ReturnRequestController::class, 'reject'])
+    Route::put('/return_requests/{return_request}/reject', [ReturnRequestController::class, 'reject'])
         ->name('return-requests.reject');
 
     // Activity Logs
