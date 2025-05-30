@@ -11,6 +11,7 @@ use App\Http\Controllers\ItemUnitController;
 use App\Http\Controllers\WarehouseController;
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\BorrowDetailController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\BorrowRequestController;
 use App\Http\Controllers\ReturnRequestController;
 
@@ -44,6 +45,11 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::resource('items', ItemController::class);
     Route::resource('item-units', ItemUnitController::class);
     Route::resource('users', UserController::class);
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/search', [NotificationController::class, 'search'])->name('notifications.search');
+    Route::post('/notifications/{notification}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-as-read');
+    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllRead'])->name('notifications.mark-all-read');
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
 
     // Borrow Request Routes
     Route::resource('borrow-requests', BorrowRequestController::class);

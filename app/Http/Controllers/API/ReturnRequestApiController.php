@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Models\User;
 use App\Models\ReturnDetail;
 use Illuminate\Http\Request;
 use App\Models\BorrowRequest;
 use App\Models\ReturnRequest;
+use App\Models\CustomNotification;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Storage;
 
@@ -64,7 +66,7 @@ class ReturnRequestApiController extends Controller
             'return_details.*.item_unit_id' => 'required|exists:item_units,id',
             'return_details.*.condition' => 'required|string',
             'return_details.*.photo' => 'nullable|image|max:2048',
-            'return_details.*.quantity' => 'nullable|integer|min:1', // ✅ validasi quantity
+            'return_details.*.quantity' => 'nullable|integer|min:1',
         ]);
 
         $return = ReturnRequest::create([
@@ -88,6 +90,19 @@ class ReturnRequestApiController extends Controller
                 'condition' => $detail['condition'],
                 'quantity' => $detail['quantity'] ?? 1, // ✅ default quantity = 1
                 'photo' => $photoPath,
+            ]);
+        }
+
+        $admins = User::where('role', 'admin')->get();
+
+        foreach ($admins as $admin) {
+            CustomNotification::create([
+                'sender_id' => auth()->id(),
+                'receiver_id' => $admin->id,
+                'return_request_id' => $return->id,
+                'type' => 'return_request',
+                'title' => 'Permintaan Pengembalian Baru',
+                'body' => auth()->user()->username . ' mengajukan permintaan pengembalian.',
             ]);
         }
 

@@ -7,6 +7,7 @@ use Barryvdh\DomPDF\PDF;
 use App\Models\BorrowDetail;
 use Illuminate\Http\Request;
 use App\Models\BorrowRequest;
+use App\Models\CustomNotification;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\BorrowRequestsExport;
@@ -136,14 +137,12 @@ class BorrowRequestController extends Controller
             $warehouse->save();
 
             if ($item->type === 'consumable') {
-                // ✅ Validasi stok
                 if ($itemUnit->quantity < $detail->quantity) {
                     return back()->with('error', 'Stok tidak mencukupi untuk item: ' . $item->name);
                 } else {
                     $itemUnit->quantity -= $detail->quantity;
                 }
 
-                // ✅ Update status jika stok habis
                 if ($itemUnit->quantity === 0) {
                     $itemUnit->status = 'out_of_stock';
                 }
@@ -155,6 +154,14 @@ class BorrowRequestController extends Controller
                 $itemUnit->save();
             }
         }
+
+        CustomNotification::create([
+            'sender_id' => auth()->id(),
+            'receiver_id' => $request->user_id,
+            'type' => 'borrow_approved',
+            'title' => 'Peminjaman Disetujui',
+            'body' => 'Permintaan peminjaman kamu telah disetujui oleh admin.',
+        ]);
 
         $request->update([
             'status' => 'approved',
@@ -177,6 +184,23 @@ class BorrowRequestController extends Controller
         $request->update([
             'status' => 'rejected',
             'approved_by' => Auth::id(),
+        ]);
+
+        foreach ($request->borrowDetail as $detail) {
+            $itemUnit = $detail->itemUnit;
+            if ($itemUnit->item->type !== 'consumable') {
+                $itemUnit->status = 'available';
+                $itemUnit->save();
+            }
+        }
+
+        CustomNotification::create([
+            'sender_id' => auth()->id(),
+            'receiver_id' => $request->user_id,
+            'borrow_request_id' => $request->id,
+            'type' => 'borrow_rejected',
+            'title' => 'Peminjaman Ditolak',
+            'body' => 'Permintaan peminjaman kamu telah ditolak oleh admin.',
         ]);
 
         return back()->with('success', 'Permintaan berhasil ditolak.');

@@ -44,7 +44,8 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
-    public function carts() {
+    public function carts()
+    {
         return $this->hasMany(Cart::class);
     }
 
@@ -56,5 +57,17 @@ class User extends Authenticatable
     public function approvals()
     {
         return $this->hasMany(BorrowRequest::class, 'approved_by');
+    }
+
+    public function notifications()
+    {
+        return $this->hasMany(CustomNotification::class, 'receiver_id')
+            ->orderBy('created_at', 'desc');
+    }
+
+    public function unreadNotifications()
+    {
+        return $this->notifications()
+            ->where('is_read', false);
     }
 }

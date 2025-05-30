@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Cart;
+use App\Models\User;
 use App\Models\BorrowDetail;
-use App\Models\BorrowRequest;
 use Illuminate\Http\Request;
+use App\Models\BorrowRequest;
+use App\Models\CustomNotification;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -120,6 +122,18 @@ class BorrowRequestApiController extends Controller
                 ];
             }),
         ];
+
+        $admins = User::role('admin')->get();
+
+        foreach ($admins as $admin) {
+            CustomNotification::create([
+                'sender_id' => auth()->id(),
+                'receiver_id' => $admin->id,
+                'type' => 'borrow_request',
+                'title' => 'Permintaan Peminjaman Baru',
+                'body' => auth()->user()->username . ' mengajukan permintaan peminjaman.',
+            ]);
+        }
 
         return response()->json([
             'success' => true,

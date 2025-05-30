@@ -1,12 +1,14 @@
 <?php
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
 use App\Models\Cart;
+use App\Models\User;
 use App\Models\ItemUnit;
 use App\Models\BorrowDetail;
-use App\Models\BorrowRequest;
 use Illuminate\Http\Request;
+use App\Models\BorrowRequest;
+use App\Models\CustomNotification;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 
 class CartApiController extends Controller
@@ -131,6 +133,19 @@ class CartApiController extends Controller
         }
 
         Cart::where('user_id', Auth::id())->delete();
+
+        $admins = User::where('role', 'admin')->get();
+
+        foreach ($admins as $admin) {
+            CustomNotification::create([
+                'sender_id' => auth()->id(),
+                'receiver_id' => $admin->id,
+                'borrow_request_id' => $borrow->id,
+                'type' => 'borrow_request',
+                'title' => 'Permintaan Peminjaman Baru',
+                'body' => auth()->user()->username . ' mengajukan permintaan peminjaman.',
+            ]);
+        }
 
         return response()->json(['message' => 'Permintaan peminjaman dikirim']);
     }
