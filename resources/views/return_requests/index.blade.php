@@ -13,8 +13,8 @@
     <div class="container mx-auto px-4 py-8">
         <div class="flex justify-between items-center mb-8">
             <h1 class="text-3xl font-bold text-gray-800">Manajemen Pengembalian</h1>
-            {{-- <div class="flex space-x-3">
-                <a href="{{ route('return_requests.exportExcel') }}"
+            <div class="flex space-x-3">
+                <a href="{{ route('return-requests.exportExcel') }}"
                     class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-medium py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 flex items-center">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
                         stroke="currentColor">
@@ -32,7 +32,7 @@
                     </svg>
                     Ekspor PDF
                 </a>
-            </div> --}}
+            </div>
         </div>
 
         <!-- Filter Controls -->

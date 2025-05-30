@@ -5,9 +5,27 @@ use App\Models\ReturnDetail;
 use Illuminate\Http\Request;
 use App\Models\BorrowRequest;
 use App\Models\ReturnRequest;
+use App\Exports\ReturnRequestsExport;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ReturnRequestController extends Controller
 {
+    public function exportExcel()
+    {
+        return Excel::download(new ReturnRequestsExport, 'detail_pengembalian.xlsx');
+    }
+
+    public function exportPdf()
+    {
+        $returnDetails = ReturnDetail::with(['itemUnit.item', 'returnRequest.borrowRequest.user'])->get();
+
+        $pdf = PDF::loadView('exports.return_details_pdf', compact('returnDetails'))
+            ->setPaper('a4', 'landscape');
+
+        return $pdf->download('detail_pengembalian.pdf');
+    }
+
     /**
      * Menampilkan daftar return requests.
      */

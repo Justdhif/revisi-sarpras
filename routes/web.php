@@ -95,6 +95,8 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('item-units/export/pdf', [ItemUnitController::class, 'exportPdf'])->name('item-units.exportPdf');
     Route::get('/borrow-requests/export/excel', [BorrowRequestController::class, 'exportExcel'])->name('borrow-requests.exportExcel');
     Route::get('/borrow-requests/export/pdf', [BorrowRequestController::class, 'exportPdf'])->name('borrow-requests.exportPdf');
+    Route::get('/return-details/export/excel', [ReturnRequestController::class, 'exportExcel'])->name('return-requests.exportExcel');
+    Route::get('/return-details/export/pdf', [ReturnRequestController::class, 'exportPdf'])->name('return-requests.exportPdf');
 
     // Fallback Route
     Route::fallback(function () {
