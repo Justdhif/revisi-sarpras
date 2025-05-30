@@ -79,10 +79,64 @@
             </div>
         </div>
 
-        <!-- Loading Indicator -->
-        <div id="loadingIndicator" class="hidden text-center py-8">
-            <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-600"></div>
-            <p class="mt-2 text-gray-600">Memuat data...</p>
+        <!-- Skeleton Loader (hidden by default) -->
+        <div id="skeletonLoader" class="hidden">
+            <div class="bg-white rounded-lg shadow overflow-hidden border border-gray-200 mb-4">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Pemohon</th>
+                            <th scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Tanggal Pengembalian</th>
+                            <th scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Status</th>
+                            <th scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Penyetuju
+                            </th>
+                            <th scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <!-- Skeleton rows -->
+                        @for ($i = 0; $i < 6; $i++)
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="h-4 bg-gray-200 rounded w-1/2 animate-pulse"></div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="h-4 bg-gray-200 rounded w-1/3 animate-pulse"></div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="h-4 bg-gray-200 rounded w-1/4 animate-pulse"></div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="h-4 bg-gray-200 rounded w-1/4 animate-pulse"></div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex space-x-2">
+                                        <div class="h-7 bg-gray-200 rounded w-10 animate-pulse"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endfor
+                    </tbody>
+                </table>
+            </div>
+            <div class="flex justify-between items-center px-4 py-3 bg-white border-t border-gray-200 rounded-b-lg">
+                <div class="h-4 bg-gray-200 rounded w-1/4 animate-pulse"></div>
+                <div class="flex space-x-2">
+                    <div class="h-8 bg-gray-200 rounded w-8 animate-pulse"></div>
+                    <div class="h-8 bg-gray-200 rounded w-8 animate-pulse"></div>
+                    <div class="h-8 bg-gray-200 rounded w-8 animate-pulse"></div>
+                </div>
+            </div>
         </div>
 
         <!-- Requests Container (akan diisi oleh AJAX) -->
@@ -102,7 +156,7 @@
 
             // Container untuk hasil
             const requestsContainer = document.getElementById('requestsContainer');
-            const loadingIndicator = document.getElementById('loadingIndicator');
+            const skeletonLoader = document.getElementById('skeletonLoader');
 
             // Debounce untuk pencarian
             let debounceTimer;
@@ -110,7 +164,7 @@
             // Fungsi untuk memuat data
             function loadRequests() {
                 // Tampilkan loading indicator
-                loadingIndicator.classList.remove('hidden');
+                skeletonLoader.classList.remove('hidden');
                 requestsContainer.classList.add('opacity-50');
 
                 // Siapkan parameter
@@ -146,7 +200,7 @@
                             '<div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 p-12 text-center text-red-500">Terjadi kesalahan saat memuat data.</div>';
                     })
                     .finally(() => {
-                        loadingIndicator.classList.add('hidden');
+                        skeletonLoader.classList.add('hidden');
                         requestsContainer.classList.remove('opacity-50');
                     });
             }
