@@ -47,6 +47,10 @@ class AuthController extends Controller
 
         if ($user && $user->role === 'admin' && Hash::check($request->password, $user->password)) {
             Auth::login($user, $remember);
+            $user->update([
+                'last_logined_at' => now(),
+                'active' => true,
+            ]);
             return redirect()->route('dashboard')->with('success', 'Hai ' . $user->username . ', selamat datang!');
         }
 
@@ -64,7 +68,13 @@ class AuthController extends Controller
      */
     public function logout()
     {
+        $user = Auth::user();
+        if ($user) {
+            $user->update(['active' => false]);
+        }
+
         Auth::logout();
+
         return redirect()->route('login')->with('success', 'Berhasil logout.');
     }
 

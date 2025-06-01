@@ -239,57 +239,6 @@
                 clearTimeout(debounceTimer);
                 debounceTimer = setTimeout(loadItems, 500);
             });
-
-            // Event delegation untuk tombol delete
-            itemsContainer.addEventListener('submit', function(e) {
-                if (e.target.classList.contains('delete-form')) {
-                    e.preventDefault();
-
-                    if (!confirm('Apakah Anda yakin ingin menghapus barang ini?')) {
-                        return;
-                    }
-
-                    const form = e.target;
-                    const url = form.getAttribute('action');
-                    const method = form.querySelector('input[name="_method"]').value;
-
-                    // Tampilkan skeleton loader saat menghapus
-                    skeletonLoader.classList.remove('hidden');
-                    itemsContainer.classList.add('opacity-50');
-
-                    fetch(url, {
-                            method: 'POST',
-                            headers: {
-                                'X-CSRF-TOKEN': form.querySelector('input[name="_token"]').value,
-                                'X-Requested-With': 'XMLHttpRequest',
-                                'Accept': 'application/json'
-                            },
-                            body: new FormData(form)
-                        })
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error('Network response was not ok');
-                            }
-                            return response.json();
-                        })
-                        .then(data => {
-                            if (data.success) {
-                                loadItems(); // Muat ulang data setelah penghapusan
-                            } else {
-                                alert('Gagal menghapus barang: ' + (data.message ||
-                                    'Terjadi kesalahan'));
-                                skeletonLoader.classList.add('hidden');
-                                itemsContainer.classList.remove('opacity-50');
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                            alert('Terjadi kesalahan saat menghapus barang');
-                            skeletonLoader.classList.add('hidden');
-                            itemsContainer.classList.remove('opacity-50');
-                        });
-                }
-            });
         });
     </script>
 @endsection

@@ -18,11 +18,16 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
+        'name',
         'username',
         'email',
         'password',
         'phone',
         'role',
+        'origin',
+        'last_logined_at',
+        'active',
+        'profile_picture',
     ];
 
     /**
@@ -42,6 +47,7 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'last_logined_at' => 'datetime',
     ];
 
     public function carts()

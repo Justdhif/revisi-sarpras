@@ -12,11 +12,16 @@ return new class extends Migration {
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
+            $table->string('name');
             $table->string('username');
             $table->string('password');
             $table->string('email')->unique()->nullable();
             $table->string('phone')->nullable();
             $table->enum("role", ["user", "admin"]);
+            $table->string('origin')->nullable();
+            $table->timestamp('last_logined_at')->nullable();
+            $table->boolean('active')->default(false);
+            $table->string('profile_picture')->nullable();
             $table->rememberToken();
             $table->timestamps();
             $table->softDeletes();

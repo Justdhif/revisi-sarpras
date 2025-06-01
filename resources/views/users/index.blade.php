@@ -10,14 +10,11 @@
 @endsection
 
 @section('content')
-    @include('users._create-modal')
-    @include('users._edit-modal')
-
     <div class="container mx-auto px-4 py-8">
         <div class="flex justify-between items-center mb-8">
             <h1 class="text-3xl font-bold text-gray-800">Manajemen Pengguna</h1>
             <div class="flex space-x-3">
-                <button onclick="openModal('create-modal')"
+                <a href="{{ route('users.create') }}"
                     class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-medium py-2 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 flex items-center">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd"
@@ -25,7 +22,7 @@
                             clip-rule="evenodd" />
                     </svg>
                     Tambah Pengguna
-                </button>
+                </a>
                 <div class="flex space-x-2">
                     <a href="{{ route('users.exportExcel') }}"
                         class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-medium py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 flex items-center">
@@ -105,7 +102,13 @@
                                     Email</th>
                                 <th scope="col"
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Telepon</th>
+                                    Asal</th>
+                                <th scope="col"
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Terakhir Login</th>
+                                <th scope="col"
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Status</th>
                                 <th scope="col"
                                     class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Aksi</th>
@@ -116,13 +119,10 @@
                                 <tr class="hover:bg-gray-50 transition-colors duration-150">
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="flex items-center">
-                                            <div
-                                                class="flex-shrink-0 h-10 w-10 bg-indigo-100 rounded-full flex items-center justify-center">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-600"
-                                                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                                </svg>
+                                            <div class="flex-shrink-0 h-10 w-10 rounded-full overflow-hidden">
+                                                <!-- UI Avatars based on username -->
+                                                <img src=" {{ $user->profile_picture }}"
+                                                    alt="{{ $user->username }}" class="h-full w-full object-cover">
                                             </div>
                                             <div class="ml-4">
                                                 <div class="text-sm font-medium text-gray-900">{{ $user->username }}</div>
@@ -133,7 +133,20 @@
                                         <div class="text-sm text-gray-600">{{ $user->email }}</div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-600">{{ $user->phone }}</div>
+                                        <div class="text-sm text-gray-600">
+                                            {{ $user->origin ? $user->origin : '-' }}
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-600">
+                                            {{ $user->last_logined_at ? $user->last_logined_at->diffForHumans() : 'Belum Login' }}
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span
+                                            class="px-2 py-1 text-xs font-medium rounded-full {{ $user->active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                            {{ $user->active ? 'Aktif' : 'Tidak Aktif' }}
+                                        </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <div class="flex justify-end space-x-2">
@@ -148,11 +161,10 @@
                                                 </svg>
                                                 Lihat
                                             </a>
-                                            <button
-                                                onclick="openEditModal({{ $user->id }}, '{{ $user->username }}', '{{ $user->email }}', '{{ $user->phone }}')"
+                                            <a href="{{ route('users.edit', $user->id) }}"
                                                 class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-md transition-colors duration-200 flex items-center">
                                                 <i class="fas fa-edit mr-1"></i> Edit
-                                            </button>
+                                            </a>
                                             <form action="{{ route('users.destroy', $user->id) }}" method="POST"
                                                 class="inline delete-form">
                                                 @csrf
@@ -178,36 +190,4 @@
             </div>
         @endif
     </div>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const input = document.getElementById("searchInput");
-            input.addEventListener("keyup", function() {
-                const value = this.value.toLowerCase();
-                const rows = document.querySelectorAll("#usersTable tbody tr");
-                rows.forEach(row => {
-                    const text = row.textContent.toLowerCase();
-                    row.style.display = text.includes(value) ? "" : "none";
-                });
-            });
-        });
-
-        function openModal(id) {
-            document.getElementById(id).classList.remove('hidden');
-        }
-
-        function closeModal(id) {
-            document.getElementById(id).classList.add('hidden');
-        }
-
-        function openEditModal(id, username, email, phone) {
-            openModal('edit-modal');
-            const form = document.getElementById('edit-user-form');
-            form.action = `{{ route('users.update', ':id') }}`.replace(':id', id);
-            document.getElementById('edit-id').value = id;
-            document.getElementById('edit-username').value = username;
-            document.getElementById('edit-email').value = email;
-            document.getElementById('edit-phone').value = phone;
-        }
-    </script>
 @endsection

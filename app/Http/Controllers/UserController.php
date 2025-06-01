@@ -47,6 +47,11 @@ class UserController extends Controller
         return view('users.index', compact('users'));
     }
 
+    public function create()
+    {
+        return view('users.create');
+    }
+
     /**
      * Menyimpan data user baru yang dikirimkan melalui form.
      *
@@ -56,19 +61,25 @@ class UserController extends Controller
     {
         // Validasi inputan dari form
         $validated = $request->validate([
+            'name' => 'required|string|max:255',
             'username' => 'required|unique:users',
+            'origin' => 'nullable|string|max:255',
             'email' => 'nullable|email|unique:users',
             'phone' => 'nullable',
             'password' => 'required|confirmed|min:6',
+            'password_confirmation' => 'required|same:password',
         ]);
 
         // Membuat user baru
         User::create([
             'username' => $validated['username'],
+            'name' => $validated['name'],
+            'origin' => $validated['origin'] ?? null,
             'email' => $validated['email'],
             'phone' => $validated['phone'],
             'password' => Hash::make($validated['password']),
-            'role' => 'user'
+            'role' => 'user',
+            'profile_picture' => 'https://ui-avatars.com/api/?name=' . urlencode($validated['name']) . '&background=random&rounded=true',
         ]);
 
         // Mengarahkan ke halaman daftar user dengan pesan sukses
@@ -112,6 +123,11 @@ class UserController extends Controller
         return view('users.show', compact('user', 'activeBorrows', 'returnedBorrows', 'totalBorrowCount', 'totalItemBorrowed', 'totalItemReturned'));
     }
 
+    public function edit(User $user)
+    {
+        return view('users.edit', compact('user'));
+    }
+
     /**
      * Memperbarui data user yang ada dalam database.
      *
@@ -122,17 +138,20 @@ class UserController extends Controller
     {
         // Validasi inputan dari form
         $validated = $request->validate([
+            'name' => 'required|string|max:255',
             'username' => 'required|unique:users,username,' . $user->id,
             'email' => 'nullable|email|unique:users,email,' . $user->id,
             'phone' => 'nullable',
-            'password' => 'nullable|confirmed|min:6',
+            'origin' => 'nullable|string|max:255',
+            'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        // Memperbarui data user
-        $user->username = $validated['username'];
-        $user->email = $validated['email'];
-        $user->phone = $validated['phone'];
-        $user->save();
+        if ($request->hasFile('profile_picture')) {
+            $imagePath = $request->file('profile_picture')->store('profile_pictures', 'public');
+            $validated['profile_picture'] = 'storage/' . $imagePath;
+        }
+
+        $user->update($validated);
 
         // Mengarahkan ke halaman daftar user dengan pesan sukses
         return redirect()->route('users.index')->with('success', 'User diperbarui.');

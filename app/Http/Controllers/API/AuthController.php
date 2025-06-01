@@ -30,6 +30,11 @@ class AuthController extends Controller
             return response()->json(['message' => 'Akses hanya untuk pengguna.'], 403);
         }
 
+        $user->update([
+            'last_logined_at' => now(),
+            'active' => true,
+        ]);
+
         $token = $user->createToken('flutter-user-token')->plainTextToken;
 
         ActivityLog::create([
@@ -48,12 +53,18 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        $user = $request->user();
+
+        $user->update([
+            'active' => false,
+        ]);
+
+        $user->currentAccessToken()->delete();
 
         ActivityLog::create([
-            'user_id' => $request->user()->id,
+            'user_id' => $user->id,
             'action' => 'Logout',
-            'description' => $request->user()->username . ' logout melalui API',
+            'description' => $user->username . ' logout melalui API',
             'ip_address' => $request->ip(),
             'user_agent' => $request->userAgent(),
         ]);

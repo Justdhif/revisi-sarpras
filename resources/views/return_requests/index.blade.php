@@ -160,56 +160,6 @@
                 clearTimeout(debounceTimer);
                 debounceTimer = setTimeout(loadReturns, 500);
             });
-
-            // Event delegation untuk tombol approve/reject
-            returnsContainer.addEventListener('submit', function(e) {
-                if (e.target.closest('form')) {
-                    e.preventDefault();
-
-                    const form = e.target.closest('form');
-                    const url = form.getAttribute('action');
-                    const method = form.querySelector('input[name="_method"]') ?
-                        form.querySelector('input[name="_method"]').value : 'POST';
-
-                    if (form.classList.contains('approve-form') && !confirm(
-                            'Apakah Anda yakin ingin menyetujui pengembalian ini?')) {
-                        return;
-                    }
-
-                    if (form.classList.contains('reject-form') && !confirm(
-                            'Apakah Anda yakin ingin menolak pengembalian ini?')) {
-                        return;
-                    }
-
-                    fetch(url, {
-                            method: method,
-                            headers: {
-                                'X-CSRF-TOKEN': form.querySelector('input[name="_token"]').value,
-                                'X-Requested-With': 'XMLHttpRequest',
-                                'Accept': 'application/json'
-                            },
-                            body: new FormData(form)
-                        })
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error('Network response was not ok');
-                            }
-                            return response.json();
-                        })
-                        .then(data => {
-                            if (data.success) {
-                                loadReturns(); // Muat ulang data setelah aksi
-                            } else {
-                                alert('Gagal memproses pengembalian: ' + (data.message ||
-                                    'Terjadi kesalahan'));
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                            alert('Terjadi kesalahan saat memproses pengembalian');
-                        });
-                }
-            });
         });
     </script>
 @endsection
