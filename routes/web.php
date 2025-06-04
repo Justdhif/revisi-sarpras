@@ -45,11 +45,13 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::resource('items', ItemController::class);
     Route::resource('item-units', ItemUnitController::class);
     Route::resource('users', UserController::class);
+
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
-    Route::get('/notifications/search', [NotificationController::class, 'search'])->name('notifications.search');
-    Route::post('/notifications/{notification}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-as-read');
-    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllRead'])->name('notifications.mark-all-read');
-    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
+    Route::get('/notifications/{id}', [NotificationController::class, 'show'])->name('notifications.show');
+    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.markAll');
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
+    Route::get('/notifications/create', [NotificationController::class, 'create'])->name('notifications.create');
+    Route::post('/notifications/send', [NotificationController::class, 'send'])->name('notifications.send');
 
     // Borrow Request Routes
     Route::resource('borrow-requests', BorrowRequestController::class);

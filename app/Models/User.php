@@ -64,16 +64,4 @@ class User extends Authenticatable
     {
         return $this->hasMany(BorrowRequest::class, 'approved_by');
     }
-
-    public function notifications()
-    {
-        return $this->hasMany(CustomNotification::class, 'receiver_id')
-            ->orderBy('created_at', 'desc');
-    }
-
-    public function unreadNotifications()
-    {
-        return $this->notifications()
-            ->where('is_read', false);
-    }
 }

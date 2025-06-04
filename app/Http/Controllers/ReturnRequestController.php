@@ -5,9 +5,11 @@ use App\Models\ReturnDetail;
 use Illuminate\Http\Request;
 use App\Models\BorrowRequest;
 use App\Models\ReturnRequest;
-use App\Exports\ReturnRequestsExport;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\ReturnRequestsExport;
+use App\Notifications\ReturnApprovedNotification;
+use App\Notifications\ReturnRejectedNotification;
 
 class ReturnRequestController extends Controller
 {
@@ -181,10 +183,12 @@ class ReturnRequestController extends Controller
             $item = $detail->itemUnit->item;
 
             // Ambil warehouse dari relasi item
-            $warehouse = $item->warehouse; // pastikan relasi ini ada
+            $warehouse = $item->warehouse;
 
             $warehouse->used_capacity += $detail->quantity;
         }
+
+        $returnRequest->user->notify(new ReturnApprovedNotification($returnRequest));
 
         return back()->with('success', 'Pengembalian disetujui.');
     }
@@ -196,8 +200,8 @@ class ReturnRequestController extends Controller
      */
     public function reject(ReturnRequest $returnRequest)
     {
-        // Mengubah status return request menjadi rejected
         $returnRequest->update(['status' => 'rejected']);
+        $returnRequest->user->notify(new ReturnRejectedNotification($returnRequest));
 
         return back()->with('error', 'Pengembalian ditolak.');
     }

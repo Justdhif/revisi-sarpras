@@ -11,6 +11,8 @@ use App\Models\CustomNotification;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\BorrowRequestsExport;
+use App\Notifications\BorrowApprovedNotification;
+use App\Notifications\BorrowRejectedNotification;
 
 class BorrowRequestController extends Controller
 {
@@ -155,13 +157,7 @@ class BorrowRequestController extends Controller
             }
         }
 
-        CustomNotification::create([
-            'sender_id' => auth()->id(),
-            'receiver_id' => $request->user_id,
-            'type' => 'borrow_approved',
-            'title' => 'Peminjaman Disetujui',
-            'body' => 'Permintaan peminjaman kamu telah disetujui oleh admin.',
-        ]);
+        $request->user->notify(new BorrowApprovedNotification($request));
 
         $request->update([
             'status' => 'approved',
@@ -194,14 +190,7 @@ class BorrowRequestController extends Controller
             }
         }
 
-        CustomNotification::create([
-            'sender_id' => auth()->id(),
-            'receiver_id' => $request->user_id,
-            'borrow_request_id' => $request->id,
-            'type' => 'borrow_rejected',
-            'title' => 'Peminjaman Ditolak',
-            'body' => 'Permintaan peminjaman kamu telah ditolak oleh admin.',
-        ]);
+        $request->user->notify(new BorrowRejectedNotification($request));
 
         return back()->with('success', 'Permintaan berhasil ditolak.');
     }

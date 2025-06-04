@@ -79,4 +79,31 @@ class AuthController extends Controller
             'user' => $user,
         ]);
     }
+
+    public function update(Request $request)
+    {
+        $user = auth()->user();
+
+        $request->validate([
+            'name' => 'required|string',
+            'username' => 'required|string|unique:users,username,' . $user->id,
+            'email' => 'nullable|email|unique:users,email,' . $user->id,
+            'phone' => 'nullable|string',
+            'origin' => 'nullable|string',
+            'profile_picture' => 'nullable|image|max:2048',
+        ]);
+
+        if ($request->hasFile('profile_picture')) {
+            $path = $request->file('profile_picture')->store('profile_pictures', 'public');
+            $user->profile_picture = $path;
+        }
+
+        $user->update($request->only('name', 'username', 'email', 'phone', 'origin'));
+        $user->save();
+
+        return response()->json([
+            'message' => 'Profil berhasil diperbarui',
+            'data' => $user,
+        ]);
+    }
 }

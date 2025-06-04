@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Models\User;
 use App\Models\ReturnDetail;
+use App\Notifications\UserRequestedReturnNotification;
 use Illuminate\Http\Request;
 use App\Models\BorrowRequest;
 use App\Models\ReturnRequest;
@@ -96,14 +97,7 @@ class ReturnRequestApiController extends Controller
         $admins = User::where('role', 'admin')->get();
 
         foreach ($admins as $admin) {
-            CustomNotification::create([
-                'sender_id' => auth()->id(),
-                'receiver_id' => $admin->id,
-                'return_request_id' => $return->id,
-                'type' => 'return_request',
-                'title' => 'Permintaan Pengembalian Baru',
-                'body' => auth()->user()->username . ' mengajukan permintaan pengembalian.',
-            ]);
+            $admin->notify(new UserRequestedReturnNotification($return));
         }
 
         return response()->json([

@@ -6,6 +6,7 @@ use App\Http\Controllers\API\CartApiController;
 use App\Http\Controllers\Api\ItemApiController;
 use App\Http\Controllers\Api\ItemUnitApiController;
 use App\Http\Controllers\Api\BorrowDetailApiController;
+use App\Http\Controllers\Api\NotificationApiController;
 use App\Http\Controllers\Api\ReturnDetailApiController;
 use App\Http\Controllers\Api\BorrowRequestApiController;
 use App\Http\Controllers\Api\ReturnRequestApiController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\Api\ReturnRequestApiController;
 Route::post('/login', [AuthController::class, 'login']);
 
 Route::middleware(['auth:sanctum', 'role:user'])->group(function () {
+
     Route::get('/cart', [CartApiController::class, 'index']);
     Route::post('/cart', [CartApiController::class, 'store']);
     Route::put('/cart/{id}/quantity', [CartApiController::class, 'updateQuantity']);
@@ -40,6 +42,12 @@ Route::middleware(['auth:sanctum', 'role:user'])->group(function () {
     Route::get('/return-details/{returnRequestId}', [ReturnDetailApiController::class, 'index']);
     Route::post('/return-details', [ReturnDetailApiController::class, 'store']);
 
+    Route::get('/notifications', [NotificationApiController::class, 'index']);
+    Route::get('/notifications/{id}', [NotificationApiController::class, 'show']);
+    Route::post('/notifications/mark-all-as-read', [NotificationApiController::class, 'markAllAsRead']);
+
     Route::get('/profile', [AuthController::class, 'profile']);
+    Route::put('/profile', [AuthController::class, 'update']);
+
     Route::post('/logout', [AuthController::class, 'logout']);
 });

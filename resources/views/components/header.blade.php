@@ -27,59 +27,6 @@
                 x-text="now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })"></span>
         </div>
 
-        @php
-            $unreadNotifications = App\Models\CustomNotification::where('receiver_id', 1)
-                ->where('is_read', operator: 0)
-                ->take(5)
-                ->get();
-            $unreadCount = $unreadNotifications->count();
-        @endphp
-
-        <!-- Notification Dropdown -->
-        <div class="relative" x-data="{ notifOpen: false }">
-            <button @click="notifOpen = !notifOpen" class="relative focus:outline-none">
-                <i class="fas fa-bell text-lg text-muted-foreground"></i>
-                @if ($unreadCount > 0)
-                {{-- ketika jumlah notifikasi diatas 5 buat menjadi 5+ --}}
-                    @if ($unreadCount > 5)
-                        <span
-                            class="absolute -top-1 -right-2 bg-red-600 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center">
-                            5+
-                        </span>
-                    @else
-                        <span
-                            class="absolute -top-1 -right-2 bg-red-600 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center">
-                            {{ $unreadCount }}
-                        </span>
-                    @endif
-                @endif
-            </button>
-
-            <!-- Dropdown -->
-            <div x-show="notifOpen" @click.away="notifOpen = false" x-transition
-                class="absolute right-0 mt-2 w-80 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 z-50">
-                <div class="p-4 border-b font-semibold text-sm text-muted-foreground">Notifikasi Terbaru</div>
-                <ul class="max-h-64 overflow-y-auto divide-y">
-                    @forelse ($unreadNotifications as $notification)
-                        <li>
-                            <a href=""
-                                class="block px-4 py-3 hover:bg-gray-100 text-sm text-gray-700">
-                                <div class="font-medium">{{ $notification->title ?? 'Notifikasi' }}</div>
-                                <div class="text-xs text-muted-foreground">
-                                    {{ $notification->created_at->diffForHumans() }}</div>
-                            </a>
-                        </li>
-                    @empty
-                        <li class="px-4 py-3 text-sm text-muted-foreground">Tidak ada notifikasi baru.</li>
-                    @endforelse
-                </ul>
-                <div class="px-4 py-2 text-center">
-                    <a href=""
-                        class="text-blue-600 text-sm font-medium hover:underline">Lihat Semua</a>
-                </div>
-            </div>
-        </div>
-
         <!-- Profile Dropdown -->
         <div class="relative" x-data="{ open: false }">
             <button @click="open = !open" class="flex items-center gap-2 focus:outline-none">
