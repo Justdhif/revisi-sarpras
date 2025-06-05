@@ -20,9 +20,4 @@ class Warehouse extends Model
     {
         return $this->hasMany(ItemUnit::class);
     }
-
-    public function hasCapacity($amount = 1)
-    {
-        return ($this->used_capacity + $amount) <= $this->capacity;
-    }
 }

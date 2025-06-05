@@ -10,7 +10,7 @@
 @endsection
 
 @section('content')
-    <div class="container mx-auto px-4 py-8">
+    <div class="container mx-auto px-4 py-8" x-data="itemFilter()" x-init="init()">
         <div class="flex justify-between items-center mb-8">
             <h1 class="text-3xl font-bold text-gray-800">Daftar Barang</h1>
             <div class="flex space-x-3">
@@ -57,14 +57,14 @@
                                 clip-rule="evenodd" />
                         </svg>
                     </div>
-                    <input id="searchQuery" type="text"
+                    <input x-model="searchQuery" @input.debounce.500ms="filterItems()" type="text"
                         class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                         placeholder="Cari barang...">
                 </div>
 
                 <!-- Type Filter -->
                 <div class="w-2/3">
-                    <select id="selectedType"
+                    <select x-model="selectedType" @change="filterItems()"
                         class="block w-full pl-3 pr-10 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         <option value="">Semua Tipe</option>
                         <option value="consumable">Consumable</option>
@@ -74,7 +74,7 @@
 
                 <!-- Category Filter -->
                 <div class="w-2/3">
-                    <select id="selectedCategory"
+                    <select x-model="selectedCategory" @change="filterItems()"
                         class="block w-full pl-3 pr-10 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         <option value="">Semua Kategori</option>
                         @foreach ($categories as $category)
@@ -85,7 +85,7 @@
 
                 <!-- Sort Options -->
                 <div class="w-2/3">
-                    <select id="sortOption"
+                    <select x-model="sortOption" @change="filterItems()"
                         class="block w-full pl-3 pr-10 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         <option value="name_asc">Nama A-Z</option>
                         <option value="name_desc">Nama Z-A</option>
@@ -94,9 +94,9 @@
             </div>
         </div>
 
-        <!-- Skeleton Loader (hidden by default) -->
-        <div id="skeletonLoader" class="hidden">
-            <div class="bg-white rounded-lg shadow overflow-hidden border border-gray-200 mb-4">
+        <!-- Loading State -->
+        <div x-show="isLoading" class="mb-6">
+            <div class="bg-white rounded-lg shadow overflow-hidden border border-gray-200">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
@@ -111,12 +111,10 @@
                                 Kategori</th>
                             <th scope="col"
                                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Gambar
-                            </th>
+                                Gambar</th>
                             <th scope="col"
                                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Deskripsi
-                            </th>
+                                Deskripsi</th>
                             <th scope="col"
                                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi
                             </th>
@@ -124,7 +122,7 @@
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                         <!-- Skeleton rows -->
-                        @for ($i = 0; $i < 6; $i++)
+                        <template x-for="i in 6" :key="i">
                             <tr>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="h-4 bg-gray-200 rounded w-3/4 animate-pulse"></div>
@@ -149,96 +147,144 @@
                                     </div>
                                 </td>
                             </tr>
-                        @endfor
+                        </template>
                     </tbody>
                 </table>
-            </div>
-            <div class="flex justify-between items-center px-4 py-3 bg-white border-t border-gray-200 rounded-b-lg">
-                <div class="h-4 bg-gray-200 rounded w-1/4 animate-pulse"></div>
-                <div class="flex space-x-2">
-                    <div class="h-8 bg-gray-200 rounded w-8 animate-pulse"></div>
-                    <div class="h-8 bg-gray-200 rounded w-8 animate-pulse"></div>
-                    <div class="h-8 bg-gray-200 rounded w-8 animate-pulse"></div>
+                <div class="flex justify-between items-center px-4 py-3 bg-white border-t border-gray-200 rounded-b-lg">
+                    <div class="h-4 bg-gray-200 rounded w-1/4 animate-pulse"></div>
+                    <div class="flex space-x-2">
+                        <div class="h-8 bg-gray-200 rounded w-8 animate-pulse"></div>
+                        <div class="h-8 bg-gray-200 rounded w-8 animate-pulse"></div>
+                        <div class="h-8 bg-gray-200 rounded w-8 animate-pulse"></div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Items Container (akan diisi oleh AJAX) -->
-        <div id="itemsContainer">
-            @include('items.partials._items_table', ['items' => $items])
+        <!-- Items Container -->
+        <div x-show="!isLoading">
+            <div x-show="items.length === 0"
+                class="flex flex-col items-center justify-center min-h-[70vh] py-12 text-center">
+                <div class="max-w-md mx-auto px-4">
+                    <div class="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-indigo-50 mb-6">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-indigo-600" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                        </svg>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-2">Tidak ada barang</h2>
+                    <p class="text-gray-500 mb-8">Mulai dengan menambahkan barang pertama Anda untuk mengelola inventori.
+                    </p>
+                    <a href="{{ route('items.create') }}"
+                        class="inline-flex items-center px-4 py-3 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="-ml-1 mr-2 h-5 w-5" viewBox="0 0 20 20"
+                            fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                                clip-rule="evenodd" />
+                        </svg>
+                        Tambah Barang
+                    </a>
+                </div>
+            </div>
+
+            <!-- Include the items table partial -->
+            @include('items.partials._items_table')
         </div>
     </div>
 
-    <!-- JavaScript untuk AJAX -->
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Elemen filter
-            const searchQuery = document.getElementById('searchQuery');
-            const selectedType = document.getElementById('selectedType');
-            const selectedCategory = document.getElementById('selectedCategory');
-            const sortOption = document.getElementById('sortOption');
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('itemFilter', () => ({
+                searchQuery: '',
+                selectedType: '',
+                selectedCategory: '',
+                sortOption: 'name_asc',
+                isLoading: false,
+                items: [],
+                pagination: {
+                    current_page: 1,
+                    last_page: 1,
+                    from: 0,
+                    to: 0,
+                    total: 0,
+                    links: []
+                },
 
-            // Container untuk hasil
-            const itemsContainer = document.getElementById('itemsContainer');
-            const skeletonLoader = document.getElementById('skeletonLoader');
+                init() {
+                    // Load initial data
+                    this.filterItems();
+                },
 
-            // Debounce untuk pencarian
-            let debounceTimer;
+                filterItems() {
+                    this.isLoading = true;
 
-            // Fungsi untuk memuat data
-            function loadItems() {
-                // Tampilkan skeleton loader
-                skeletonLoader.classList.remove('hidden');
-                itemsContainer.classList.add('opacity-50');
+                    const params = {
+                        search: this.searchQuery,
+                        type: this.selectedType,
+                        category: this.selectedCategory,
+                        sort: this.sortOption,
+                        page: this.pagination.current_page
+                    };
 
-                // Siapkan parameter
-                const params = {
-                    search: searchQuery.value,
-                    type: selectedType.value,
-                    category: selectedCategory.value,
-                    sort: sortOption.value
-                };
-
-                // Buat URL dengan parameter
-                const url = new URL('{{ route('items.index') }}');
-                Object.keys(params).forEach(key => {
-                    if (params[key]) {
-                        url.searchParams.append(key, params[key]);
-                    }
-                });
-
-                // Buat request AJAX
-                fetch(url, {
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'Accept': 'text/html'
-                        }
-                    })
-                    .then(response => response.text())
-                    .then(html => {
-                        itemsContainer.innerHTML = html;
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        itemsContainer.innerHTML =
-                            '<div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 p-12 text-center text-red-500">Terjadi kesalahan saat memuat data.</div>';
-                    })
-                    .finally(() => {
-                        skeletonLoader.classList.add('hidden');
-                        itemsContainer.classList.remove('opacity-50');
+                    // Remove empty params
+                    Object.keys(params).forEach(key => {
+                        if (!params[key]) delete params[key];
                     });
-            }
 
-            // Event listeners untuk semua filter
-            [searchQuery, selectedType, selectedCategory, sortOption].forEach(element => {
-                element.addEventListener('change', loadItems);
-            });
+                    const queryString = new URLSearchParams(params).toString();
 
-            // Event listener khusus untuk input pencarian dengan debounce
-            searchQuery.addEventListener('input', function() {
-                clearTimeout(debounceTimer);
-                debounceTimer = setTimeout(loadItems, 500);
-            });
+                    fetch(`{{ route('items.index') }}?${queryString}`, {
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json'
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            this.items = data.data;
+                            this.pagination = {
+                                current_page: data.current_page,
+                                last_page: data.last_page,
+                                from: data.from,
+                                to: data.to,
+                                total: data.total,
+                                links: data.links
+                            };
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                        })
+                        .finally(() => {
+                            this.isLoading = false;
+                        });
+                },
+
+                previousPage() {
+                    if (this.pagination.current_page > 1) {
+                        this.pagination.current_page--;
+                        this.filterItems();
+                    }
+                },
+
+                nextPage() {
+                    if (this.pagination.current_page < this.pagination.last_page) {
+                        this.pagination.current_page++;
+                        this.filterItems();
+                    }
+                },
+
+                goToPage(url) {
+                    if (!url) return;
+
+                    const page = new URL(url).searchParams.get('page');
+                    if (page) {
+                        this.pagination.current_page = parseInt(page);
+                        this.filterItems();
+                    }
+                }
+            }));
         });
     </script>
 @endsection

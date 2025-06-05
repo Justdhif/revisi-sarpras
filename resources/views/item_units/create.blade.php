@@ -183,7 +183,7 @@
                                     <option value="{{ $warehouse->id }}"
                                         {{ old('warehouse_id') == $warehouse->id ? 'selected' : '' }}>
                                         {{ $warehouse->name }} (Kapasitas tersedia:
-                                        {{ $warehouse->capacity - $warehouse->used_capacity }} unit)
+                                        {{ $warehouse->capacity - $warehouse->itemUnits->sum('quantity') }} unit)
                                     </option>
                                 @endforeach
                             </select>

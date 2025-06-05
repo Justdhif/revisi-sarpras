@@ -72,10 +72,18 @@ class ItemController extends Controller
         $categories = Category::all();
 
         if ($request->ajax()) {
-            return view('items.partials._items_table', compact('items', 'categories'));
+            return response()->json([
+                'data' => $items->items(),
+                'current_page' => $items->currentPage(),
+                'last_page' => $items->lastPage(),
+                'from' => $items->firstItem(),
+                'to' => $items->lastItem(),
+                'total' => $items->total(),
+                'links' => $items->links()->elements,
+            ]);
         }
 
-        return view('items.index', compact('items', 'categories'));
+        return view('items.index', compact('categories'));
     }
 
     /**
@@ -115,7 +123,7 @@ class ItemController extends Controller
      */
     public function show(Item $item)
     {
-        $item->load(['category', 'itemUnits.warehouse']); // Memuat relasi
+        $item->load(['category', 'itemUnits.warehouse']);
         return view('items.show', compact('item'));
     }
 
@@ -142,6 +150,11 @@ class ItemController extends Controller
         ]);
 
         if ($request->hasFile('image_url')) {
+            // Delete old image if exists
+            if ($item->image_url && file_exists(public_path($item->image_url))) {
+                unlink(public_path($item->image_url));
+            }
+
             $imagePath = $request->file('image_url')->store('items', 'public');
             $validated['image_url'] = 'storage/' . $imagePath;
         }
@@ -156,8 +169,13 @@ class ItemController extends Controller
      */
     public function destroy(Item $item)
     {
-        $item->delete();
+        // Delete associated image if exists
+        if ($item->image_url && file_exists(public_path($item->image_url))) {
+            unlink(public_path($item->image_url));
+        }
+
         $item->itemUnits()->delete();
+        $item->delete();
 
         return redirect()->route('items.index')->with('success', 'Barang berhasil dihapus.');
     }

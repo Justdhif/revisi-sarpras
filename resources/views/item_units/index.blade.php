@@ -10,7 +10,7 @@
 @endsection
 
 @section('content')
-    <div class="container mx-auto px-4 py-8">
+    <div class="container mx-auto px-4 py-8" x-data="unitFilter()" x-init="init()">
         <div class="flex justify-between items-center mb-8">
             <h1 class="text-3xl font-bold text-gray-800">Daftar Unit Barang</h1>
             <div class="flex space-x-3">
@@ -59,14 +59,14 @@
                                 clip-rule="evenodd" />
                         </svg>
                     </div>
-                    <input id="searchQuery" type="text"
+                    <input x-model="searchQuery" @input.debounce.500ms="filterUnits()" type="text"
                         class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                         placeholder="Cari unit...">
                 </div>
 
                 <!-- Condition Filter -->
                 <div class="w-2/3">
-                    <select id="selectedCondition"
+                    <select x-model="selectedCondition" @change="filterUnits()"
                         class="block w-full pl-3 pr-10 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         <option value="">Semua Kondisi</option>
                         <option value="new">Baru</option>
@@ -78,7 +78,7 @@
 
                 <!-- Status Filter -->
                 <div class="w-2/3">
-                    <select id="selectedStatus"
+                    <select x-model="selectedStatus" @change="filterUnits()"
                         class="block w-full pl-3 pr-10 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         <option value="">Semua Status</option>
                         <option value="available">Tersedia</option>
@@ -89,7 +89,7 @@
 
                 <!-- Warehouse Filter -->
                 <div class="w-2/3">
-                    <select id="selectedWarehouse"
+                    <select x-model="selectedWarehouse" @change="filterUnits()"
                         class="block w-full pl-3 pr-10 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         <option value="">Semua Gudang</option>
                         @foreach ($warehouses as $warehouse)
@@ -100,14 +100,15 @@
             </div>
         </div>
 
-        <!-- Skeleton Loader (hidden by default) -->
-        <div id="skeletonLoader" class="hidden">
-            <div class="bg-white rounded-lg shadow overflow-hidden border border-gray-200 mb-4">
+        <!-- Loading State -->
+        <div x-show="isLoading" class="mb-6">
+            <div class="bg-white rounded-lg shadow overflow-hidden border border-gray-200">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
                             <th scope="col"
-                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SKU</th>
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SKU
+                            </th>
                             <th scope="col"
                                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Barang</th>
@@ -116,24 +117,20 @@
                                 Kondisi</th>
                             <th scope="col"
                                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Status
-                            </th>
+                                Status</th>
+                            <th scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kode
+                                QR</th>
                             <th scope="col"
                                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Kode QR
-                            </th>
-                            <th scope="col"
-                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Kuantitas
-                            </th>
+                                Kuantitas</th>
                             <th scope="col"
                                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi
                             </th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
-                        <!-- Skeleton rows -->
-                        @for ($i = 0; $i < 6; $i++)
+                        <template x-for="i in 6" :key="i">
                             <tr>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="h-4 bg-gray-200 rounded w-3/4 animate-pulse"></div>
@@ -161,139 +158,175 @@
                                     </div>
                                 </td>
                             </tr>
-                        @endfor
+                        </template>
                     </tbody>
                 </table>
-            </div>
-            <div class="flex justify-between items-center px-4 py-3 bg-white border-t border-gray-200 rounded-b-lg">
-                <div class="h-4 bg-gray-200 rounded w-1/4 animate-pulse"></div>
-                <div class="flex space-x-2">
-                    <div class="h-8 bg-gray-200 rounded w-8 animate-pulse"></div>
-                    <div class="h-8 bg-gray-200 rounded w-8 animate-pulse"></div>
-                    <div class="h-8 bg-gray-200 rounded w-8 animate-pulse"></div>
+                <div class="flex justify-between items-center px-4 py-3 bg-white border-t border-gray-200 rounded-b-lg">
+                    <div class="h-4 bg-gray-200 rounded w-1/4 animate-pulse"></div>
+                    <div class="flex space-x-2">
+                        <div class="h-8 bg-gray-200 rounded w-8 animate-pulse"></div>
+                        <div class="h-8 bg-gray-200 rounded w-8 animate-pulse"></div>
+                        <div class="h-8 bg-gray-200 rounded w-8 animate-pulse"></div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Items Container (akan diisi oleh AJAX) -->
-        <div id="unitsContainer">
-            @include('item_units.partials._units_table', ['itemUnits' => $itemUnits])
+        <!-- Units Container -->
+        <div x-show="!isLoading">
+            <div x-show="units.length === 0"
+                class="flex flex-col items-center justify-center min-h-[70vh] py-12 text-center">
+                <div class="max-w-md mx-auto px-4">
+                    <div class="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-indigo-50 mb-6">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-indigo-600" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                        </svg>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-2">Tidak ada unit barang</h2>
+                    <p class="text-gray-500 mb-8">Mulai dengan menambahkan unit barang pertama Anda untuk mengelola
+                        inventori.</p>
+                    <a href="{{ route('item-units.create') }}"
+                        class="inline-flex items-center px-4 py-3 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="-ml-1 mr-2 h-5 w-5" viewBox="0 0 20 20"
+                            fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                                clip-rule="evenodd" />
+                        </svg>
+                        Tambah Unit
+                    </a>
+                </div>
+            </div>
+
+            <!-- Include the units table partial -->
+            @include('item_units.partials._units_table')
         </div>
     </div>
 
-    <!-- JavaScript untuk AJAX -->
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Elemen filter
-            const searchQuery = document.getElementById('searchQuery');
-            const selectedCondition = document.getElementById('selectedCondition');
-            const selectedStatus = document.getElementById('selectedStatus');
-            const selectedWarehouse = document.getElementById('selectedWarehouse');
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('unitFilter', () => ({
+                searchQuery: '',
+                selectedCondition: '',
+                selectedStatus: '',
+                selectedWarehouse: '',
+                isLoading: false,
+                units: [],
+                pagination: {
+                    current_page: 1,
+                    last_page: 1,
+                    from: 0,
+                    to: 0,
+                    total: 0,
+                    links: []
+                },
 
-            // Container untuk hasil
-            const unitsContainer = document.getElementById('unitsContainer');
-            const skeletonLoader = document.getElementById('skeletonLoader');
+                init() {
+                    this.filterUnits();
+                },
 
-            // Debounce untuk pencarian
-            let debounceTimer;
+                filterUnits() {
+                    this.isLoading = true;
 
-            // Fungsi untuk memuat data
-            function loadUnits() {
-                // Tampilkan loading indicator
-                skeletonLoader.classList.remove('hidden');
-                unitsContainer.classList.add('opacity-50');
+                    const params = {
+                        search: this.searchQuery,
+                        condition: this.selectedCondition,
+                        status: this.selectedStatus,
+                        warehouse: this.selectedWarehouse,
+                        page: this.pagination.current_page
+                    };
 
-                // Siapkan parameter
-                const params = {
-                    search: searchQuery.value,
-                    condition: selectedCondition.value,
-                    status: selectedStatus.value,
-                    warehouse: selectedWarehouse.value
-                };
-
-                // Buat URL dengan parameter
-                const url = new URL('{{ route('item-units.index') }}');
-                Object.keys(params).forEach(key => {
-                    if (params[key]) {
-                        url.searchParams.append(key, params[key]);
-                    }
-                });
-
-                // Buat request AJAX
-                fetch(url, {
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'Accept': 'text/html'
-                        }
-                    })
-                    .then(response => response.text())
-                    .then(html => {
-                        unitsContainer.innerHTML = html;
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        unitsContainer.innerHTML =
-                            '<div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 p-12 text-center text-red-500">Terjadi kesalahan saat memuat data.</div>';
-                    })
-                    .finally(() => {
-                        skeletonLoader.classList.add('hidden');
-                        unitsContainer.classList.remove('opacity-50');
+                    // Remove empty params
+                    Object.keys(params).forEach(key => {
+                        if (!params[key]) delete params[key];
                     });
-            }
 
-            // Event listeners untuk semua filter
-            [selectedCondition, selectedStatus, selectedWarehouse].forEach(element => {
-                element.addEventListener('change', loadUnits);
-            });
+                    const queryString = new URLSearchParams(params).toString();
 
-            // Event listener khusus untuk input pencarian dengan debounce
-            searchQuery.addEventListener('input', function() {
-                clearTimeout(debounceTimer);
-                debounceTimer = setTimeout(loadUnits, 500);
-            });
+                    fetch(`{{ route('item-units.index') }}?${queryString}`, {
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json'
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            this.units = data.data;
+                            this.pagination = {
+                                current_page: data.current_page,
+                                last_page: data.last_page,
+                                from: data.from,
+                                to: data.to,
+                                total: data.total,
+                                links: data.links
+                            };
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                        })
+                        .finally(() => {
+                            this.isLoading = false;
+                        });
+                },
 
-            // Event delegation untuk tombol delete
-            unitsContainer.addEventListener('submit', function(e) {
-                if (e.target.classList.contains('delete-form')) {
-                    e.preventDefault();
+                previousPage() {
+                    if (this.pagination.current_page > 1) {
+                        this.pagination.current_page--;
+                        this.filterUnits();
+                    }
+                },
 
+                nextPage() {
+                    if (this.pagination.current_page < this.pagination.last_page) {
+                        this.pagination.current_page++;
+                        this.filterUnits();
+                    }
+                },
+
+                goToPage(url) {
+                    if (!url) return;
+
+                    const page = new URL(url).searchParams.get('page');
+                    if (page) {
+                        this.pagination.current_page = parseInt(page);
+                        this.filterUnits();
+                    }
+                },
+
+                async deleteUnit(unitId) {
                     if (!confirm('Apakah Anda yakin ingin menghapus unit barang ini?')) {
                         return;
                     }
 
-                    const form = e.target;
-                    const url = form.getAttribute('action');
-                    const method = form.querySelector('input[name="_method"]').value;
-
-                    fetch(url, {
-                            method: 'POST',
+                    try {
+                        const response = await fetch(`{{ route('item-units.index') }}/${unitId}`, {
+                            method: 'DELETE',
                             headers: {
-                                'X-CSRF-TOKEN': form.querySelector('input[name="_token"]').value,
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
                                 'X-Requested-With': 'XMLHttpRequest',
                                 'Accept': 'application/json'
-                            },
-                            body: new FormData(form)
-                        })
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error('Network response was not ok');
                             }
-                            return response.json();
-                        })
-                        .then(data => {
-                            if (data.success) {
-                                loadUnits(); // Muat ulang data setelah penghapusan
-                            } else {
-                                alert('Gagal menghapus unit barang: ' + (data.message ||
-                                    'Terjadi kesalahan'));
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                            alert('Terjadi kesalahan saat menghapus unit barang');
                         });
+
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+
+                        const data = await response.json();
+                        if (data.success) {
+                            this.filterUnits(); // Refresh the list
+                        } else {
+                            alert('Gagal menghapus unit barang: ' + (data.message ||
+                                'Terjadi kesalahan'));
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        alert('Terjadi kesalahan saat menghapus unit barang');
+                    }
                 }
-            });
+            }));
         });
     </script>
 @endsection
