@@ -7,6 +7,7 @@ use Barryvdh\DomPDF\PDF;
 use App\Models\BorrowDetail;
 use Illuminate\Http\Request;
 use App\Models\BorrowRequest;
+use App\Models\StockMovement;
 use App\Models\CustomNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;

@@ -5,7 +5,9 @@ use App\Models\ReturnDetail;
 use Illuminate\Http\Request;
 use App\Models\BorrowRequest;
 use App\Models\ReturnRequest;
+use App\Models\StockMovement;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\ReturnRequestsExport;
 use App\Notifications\ReturnApprovedNotification;
@@ -178,17 +180,45 @@ class ReturnRequestController extends Controller
      */
     public function approve(ReturnRequest $returnRequest)
     {
-        // Ubah status return request menjadi 'approved'
-        $returnRequest->update(['status' => 'approved']);
+        DB::beginTransaction();
 
-        foreach ($returnRequest->returnDetails as $detail) {
-            // Ubah status unit menjadi 'available'
-            $detail->itemUnit->update(['status' => 'available']);
+        try {
+            // Ubah status return request menjadi 'approved'
+            $returnRequest->update(['status' => 'approved']);
+
+            foreach ($returnRequest->returnDetails as $detail) {
+                $itemUnit = $detail->itemUnit;
+                $item = $itemUnit->item;
+
+                // Catat stock movement sebagai masuk
+                StockMovement::create([
+                    'item_unit_id' => $itemUnit->id,
+                    'type' => 'in',
+                    'quantity' => $detail->quantity,
+                    'description' => 'Persetujuan pengembalian',
+                    'movement_date' => now(),
+                ]);
+
+                if ($item->type === 'consumable') {
+                    $itemUnit->quantity += $detail->quantity;
+                    $itemUnit->status = 'available';
+                    $itemUnit->save();
+                } else {
+                    // Barang non-consumable hanya ubah status
+                    $itemUnit->update(['status' => 'available']);
+                }
+            }
+
+            // Kirim notifikasi ke user
+            $returnRequest->user->notify(new ReturnApprovedNotification($returnRequest));
+
+            DB::commit();
+            return back()->with('success', 'Pengembalian disetujui.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
-
-        $returnRequest->user->notify(new ReturnApprovedNotification($returnRequest));
-
-        return back()->with('success', 'Pengembalian disetujui.');
     }
 
     /**
