@@ -16,11 +16,16 @@ use App\Http\Controllers\BorrowRequestController;
 use App\Http\Controllers\ReturnRequestController;
 use App\Http\Controllers\StockMovementController;
 
-// Authentication Routes
+/*
+|--------------------------------------------------------------------------
+| Authentication Routes
+|--------------------------------------------------------------------------
+*/
 Route::get('/', function () {
     return redirect()->route('login');
 });
 
+// Guest Routes
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.post');
@@ -28,89 +33,154 @@ Route::middleware('guest')->group(function () {
 
 Route::post('logout', [AuthController::class, 'logout'])->name('logout');
 
-// Admin Routes
+/*
+|--------------------------------------------------------------------------
+| Admin Routes
+|--------------------------------------------------------------------------
+*/
 Route::middleware(['auth', 'role:admin'])->group(function () {
+    /*
+    |----------------------------------------------------------------------
+    | Dashboard & Home
+    |----------------------------------------------------------------------
+    */
     Route::get('/home', [HomeController::class, 'index'])->name('home');
-    Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
-    Route::post('/cart', [CartController::class, 'store'])->name('cart.store');
-    Route::patch('/cart/{id}/quantity', [CartController::class, 'updateQuantity'])->name('cart.updateQuantity');
-    Route::delete('/cart/{id}', [CartController::class, 'destroy'])->name('cart.destroy');
-    Route::post('/cart/submit', [CartController::class, 'submit'])->name('cart.submit');
-
-    // Dashboard
     Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('dashboard');
 
-    // Resource Routes
-    Route::resource('categories', CategoryController::class);
-    Route::resource('warehouses', WarehouseController::class);
-    Route::resource('items', ItemController::class);
-    Route::resource('item-units', ItemUnitController::class);
-    Route::resource('users', UserController::class);
+    /*
+    |----------------------------------------------------------------------
+    | Cart Management
+    |----------------------------------------------------------------------
+    */
+    Route::prefix('cart')->group(function () {
+        Route::get('/', [CartController::class, 'index'])->name('cart.index');
+        Route::post('/', [CartController::class, 'store'])->name('cart.store');
+        Route::patch('/{id}/quantity', [CartController::class, 'updateQuantity'])->name('cart.updateQuantity');
+        Route::delete('/{id}', [CartController::class, 'destroy'])->name('cart.destroy');
+        Route::post('/submit', [CartController::class, 'submit'])->name('cart.submit');
+    });
 
-    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
-    Route::get('/notifications/{id}', [NotificationController::class, 'show'])->name('notifications.show');
-    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.markAll');
-    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
-    Route::get('/notifications/create', [NotificationController::class, 'create'])->name('notifications.create');
-    Route::post('/notifications/send', [NotificationController::class, 'send'])->name('notifications.send');
+    /*
+    |----------------------------------------------------------------------
+    | Resource Controllers
+    |----------------------------------------------------------------------
+    */
+    Route::resources([
+        'categories' => CategoryController::class,
+        'warehouses' => WarehouseController::class,
+        'items' => ItemController::class,
+        'item-units' => ItemUnitController::class,
+        'users' => UserController::class,
+        'borrow-requests' => BorrowRequestController::class,
+    ]);
 
-    // Borrow Request Routes
-    Route::resource('borrow-requests', BorrowRequestController::class);
-    Route::put('/borrow-requests/{id}/approve', [BorrowRequestController::class, 'approve'])
-        ->name('borrow-requests.approve');
-    Route::post('/borrow-requests/{id}/reject', [BorrowRequestController::class, 'reject'])
-        ->name('borrow-requests.reject');
+    /*
+    |----------------------------------------------------------------------
+    | Notification Management
+    |----------------------------------------------------------------------
+    */
+    Route::prefix('notifications')->group(function () {
+        Route::get('/', [NotificationController::class, 'index'])->name('notifications.index');
+        Route::get('/{id}', [NotificationController::class, 'show'])->name('notifications.show');
+        Route::post('/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.markAll');
+        Route::get('/unread-count', [NotificationController::class, 'unreadCount']);
+        Route::get('/create', [NotificationController::class, 'create'])->name('notifications.create');
+        Route::post('/send', [NotificationController::class, 'send'])->name('notifications.send');
+    });
 
-    // Borrow Detail Routes
-    Route::get('/borrow-details', [BorrowDetailController::class, 'index'])->name('borrow-details.index');
-    Route::get('/borrow-details/create/{borrowRequestId}', [BorrowDetailController::class, 'create'])
-        ->name('borrow-details.create');
-    Route::post('/borrow-details/store', [BorrowDetailController::class, 'store'])
-        ->name('borrow-details.store');
-    Route::get('/borrow-details/{id}', [BorrowDetailController::class, 'show'])
-        ->name('borrow-details.show');
-    Route::get('/borrow-details/{id}/edit', [BorrowDetailController::class, 'edit'])
-        ->name('borrow-details.edit');
-    Route::put('/borrow-details/{id}/update', [BorrowDetailController::class, 'update'])
-        ->name('borrow-details.update');
-    Route::delete('/borrow-details/{id}', [BorrowDetailController::class, 'destroy'])
-        ->name('borrow-details.destroy');
+    /*
+    |----------------------------------------------------------------------
+    | Borrow Request Management
+    |----------------------------------------------------------------------
+    */
+    Route::prefix('borrow-requests')->group(function () {
+        Route::put('/{id}/approve', [BorrowRequestController::class, 'approve'])->name('borrow-requests.approve');
+        Route::post('/{id}/reject', [BorrowRequestController::class, 'reject'])->name('borrow-requests.reject');
+    });
 
-    // Return Request Routes
-    Route::get('/return_requests', [ReturnRequestController::class, 'index'])->name('return-requests.index');
-    Route::get('/return_requests/create/{borrowRequest}', [ReturnRequestController::class, 'create'])
-        ->name('return_requests.create');
-    Route::post('/return_requests', [ReturnRequestController::class, 'store'])->name('return_requests.store');
-    Route::get('/return_requests/{return_request}', [ReturnRequestController::class, 'show'])
-        ->name('return_requests.show');
-    Route::get('/return_requests/{return_request}/edit', [ReturnRequestController::class, 'edit'])
-        ->name('return_requests.edit');
-    Route::put('/return_requests/{return_request}/approve', [ReturnRequestController::class, 'approve'])
-        ->name('return-requests.approve');
-    Route::put('/return_requests/{return_request}/reject', [ReturnRequestController::class, 'reject'])
-        ->name('return-requests.reject');
+    /*
+    |----------------------------------------------------------------------
+    | Borrow Detail Management
+    |----------------------------------------------------------------------
+    */
+    Route::prefix('borrow-details')->group(function () {
+        Route::get('/', [BorrowDetailController::class, 'index'])->name('borrow-details.index');
+        Route::get('/create/{borrowRequestId}', [BorrowDetailController::class, 'create'])->name('borrow-details.create');
+        Route::post('/store', [BorrowDetailController::class, 'store'])->name('borrow-details.store');
+        Route::get('/{id}', [BorrowDetailController::class, 'show'])->name('borrow-details.show');
+        Route::get('/{id}/edit', [BorrowDetailController::class, 'edit'])->name('borrow-details.edit');
+        Route::put('/{id}/update', [BorrowDetailController::class, 'update'])->name('borrow-details.update');
+        Route::delete('/{id}', [BorrowDetailController::class, 'destroy'])->name('borrow-details.destroy');
+    });
 
-    Route::get('/stock-movements', [StockMovementController::class, 'index'])->name('stock_movements.index');
-    Route::post('/stock-movements', [StockMovementController::class, 'store'])->name('stock_movements.store');
+    /*
+    |----------------------------------------------------------------------
+    | Return Request Management
+    |----------------------------------------------------------------------
+    */
+    Route::prefix('return_requests')->group(function () {
+        Route::get('/', [ReturnRequestController::class, 'index'])->name('return-requests.index');
+        Route::get('/create/{borrowRequest}', [ReturnRequestController::class, 'create'])->name('return_requests.create');
+        Route::post('/', [ReturnRequestController::class, 'store'])->name('return_requests.store');
+        Route::get('/{return_request}', [ReturnRequestController::class, 'show'])->name('return_requests.show');
+        Route::get('/{return_request}/edit', [ReturnRequestController::class, 'edit'])->name('return_requests.edit');
+        Route::put('/{return_request}/approve', [ReturnRequestController::class, 'approve'])->name('return-requests.approve');
+        Route::put('/{return_request}/reject', [ReturnRequestController::class, 'reject'])->name('return-requests.reject');
+    });
 
-    // Activity Logs
-    Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
+    /*
+    |----------------------------------------------------------------------
+    | Stock Movement
+    |----------------------------------------------------------------------
+    */
+    Route::prefix('stock-movements')->group(function () {
+        Route::get('/', [StockMovementController::class, 'index'])->name('stock_movements.index');
+        Route::post('/', [StockMovementController::class, 'store'])->name('stock_movements.store');
+    });
 
-    // Export Routes
-    Route::get('activity-logs/export/excel', [ActivityLogController::class, 'exportExcel'])->name('activity-logs.exportExcel');
-    Route::get('activity-logs/export/pdf', [ActivityLogController::class, 'exportPdf'])->name('activity-logs.exportPdf');
-    Route::get('/users/export/excel', [UserController::class, 'exportExcel'])->name('users.exportExcel');
-    Route::get('/users/export/pdf', [UserController::class, 'exportPdf'])->name('users.exportPdf');
-    Route::get('/items/export/excel', [ItemController::class, 'exportExcel'])->name('items.export.excel');
-    Route::get('/items/export/pdf', [ItemController::class, 'exportPdf'])->name('items.export.pdf');
-    Route::get('item-units/export/excel', [ItemUnitController::class, 'exportExcel'])->name('item-units.exportExcel');
-    Route::get('item-units/export/pdf', [ItemUnitController::class, 'exportPdf'])->name('item-units.exportPdf');
-    Route::get('/borrow-requests/export/excel', [BorrowRequestController::class, 'exportExcel'])->name('borrow-requests.exportExcel');
-    Route::get('/borrow-requests/export/pdf', [BorrowRequestController::class, 'exportPdf'])->name('borrow-requests.exportPdf');
-    Route::get('/return-details/export/excel', [ReturnRequestController::class, 'exportExcel'])->name('return-requests.exportExcel');
-    Route::get('/return-details/export/pdf', [ReturnRequestController::class, 'exportPdf'])->name('return-requests.exportPdf');
+    /*
+    |----------------------------------------------------------------------
+    | Activity Logs
+    |----------------------------------------------------------------------
+    */
+    Route::prefix('activity-logs')->group(function () {
+        Route::get('/', [ActivityLogController::class, 'index'])->name('activity-logs.index');
+        Route::get('/export/excel', [ActivityLogController::class, 'exportExcel'])->name('activity-logs.exportExcel');
+        Route::get('/export/pdf', [ActivityLogController::class, 'exportPdf'])->name('activity-logs.exportPdf');
+    });
 
-    // Fallback Route
+    /*
+    |----------------------------------------------------------------------
+    | Export Routes
+    |----------------------------------------------------------------------
+    */
+    Route::prefix('exports')->group(function () {
+        // User Exports
+        Route::get('/users/excel', [UserController::class, 'exportExcel'])->name('users.exportExcel');
+        Route::get('/users/pdf', [UserController::class, 'exportPdf'])->name('users.exportPdf');
+
+        // Item Exports
+        Route::get('/items/excel', [ItemController::class, 'exportExcel'])->name('items.export.excel');
+        Route::get('/items/pdf', [ItemController::class, 'exportPdf'])->name('items.export.pdf');
+
+        // Item Unit Exports
+        Route::get('/item-units/excel', [ItemUnitController::class, 'exportExcel'])->name('item-units.exportExcel');
+        Route::get('/item-units/pdf', [ItemUnitController::class, 'exportPdf'])->name('item-units.exportPdf');
+
+        // Borrow Request Exports
+        Route::get('/borrow-requests/excel', [BorrowRequestController::class, 'exportExcel'])->name('borrow-requests.exportExcel');
+        Route::get('/borrow-requests/pdf', [BorrowRequestController::class, 'exportPdf'])->name('borrow-requests.exportPdf');
+
+        // Return Request Exports
+        Route::get('/return-details/excel', [ReturnRequestController::class, 'exportExcel'])->name('return-requests.exportExcel');
+        Route::get('/return-details/pdf', [ReturnRequestController::class, 'exportPdf'])->name('return-requests.exportPdf');
+    });
+
+    /*
+    |----------------------------------------------------------------------
+    | Fallback Route
+    |----------------------------------------------------------------------
+    */
     Route::fallback(function () {
         return response()->view('errors.404', [], 404);
     });
