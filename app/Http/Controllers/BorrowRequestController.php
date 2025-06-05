@@ -134,10 +134,6 @@ class BorrowRequestController extends Controller
             $itemUnit = $detail->itemUnit;
             $item = $itemUnit->item;
 
-            $warehouse = $itemUnit->warehouse;
-            $warehouse->used_capacity -= $detail->quantity;
-            $warehouse->save();
-
             if ($item->type === 'consumable') {
                 if ($itemUnit->quantity < $detail->quantity) {
                     return back()->with('error', 'Stok tidak mencukupi untuk item: ' . $item->name);

@@ -28,10 +28,10 @@ class WarehouseController extends Controller
     {
         // Validasi inputan dari form
         $request->validate([
-            'name' => 'required|string|max:255', // Nama warehouse tidak boleh kosong dan memiliki panjang maksimal 255 karakter
-            'location' => 'required|string', // Lokasi warehouse tidak boleh kosong
-            'capacity' => 'required|integer|min:1', // Kapasitas harus berupa angka positif
-            'description' => 'nullable|string', // Deskripsi opsional
+            'name' => 'required|string|max:255',
+            'location' => 'required|string',
+            'capacity' => 'required|integer|min:1',
+            'description' => 'nullable|string',
         ]);
 
         // Membuat warehouse baru dengan data yang sudah tervalidasi

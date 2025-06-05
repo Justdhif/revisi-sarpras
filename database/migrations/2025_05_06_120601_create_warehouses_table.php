@@ -16,7 +16,6 @@ return new class extends Migration {
             $table->text("location");
             $table->text('description')->nullable();
             $table->integer("capacity");
-            $table->unsignedInteger('used_capacity')->default(0);
             $table->timestamps();
         });
     }

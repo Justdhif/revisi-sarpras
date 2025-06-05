@@ -178,14 +178,6 @@ class ReturnRequestController extends Controller
         foreach ($returnRequest->returnDetails as $detail) {
             // Ubah status unit menjadi 'available'
             $detail->itemUnit->update(['status' => 'available']);
-
-            // Ambil item terkait
-            $item = $detail->itemUnit->item;
-
-            // Ambil warehouse dari relasi item
-            $warehouse = $item->warehouse;
-
-            $warehouse->used_capacity += $detail->quantity;
         }
 
         $returnRequest->user->notify(new ReturnApprovedNotification($returnRequest));

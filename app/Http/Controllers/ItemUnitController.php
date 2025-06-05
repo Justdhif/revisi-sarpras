@@ -85,7 +85,7 @@ class ItemUnitController extends Controller
     public function create()
     {
         $items = Item::all();
-        $warehouses = Warehouse::whereRaw('capacity > used_capacity')->get();
+        $warehouses = Warehouse::where('capacity', '>', ItemUnit::sum('quantity'))->get();
         return view('item_units.create', compact('items', 'warehouses'));
     }
 
@@ -111,17 +111,16 @@ class ItemUnitController extends Controller
 
         // Cek kapasitas gudang
         $warehouse = Warehouse::findOrFail($request->warehouse_id);
-        if (($warehouse->used_capacity + $validated['quantity']) > $warehouse->capacity) {
+        // count quantity semua item unit yang ada di gudang
+        $totalQuantity = $warehouse->itemUnits()->sum('quantity');
+        if ($warehouse->capacity - $totalQuantity < $validated['quantity']) {
             return back()->with('error', 'Kapasitas gudang tidak mencukupi.')->withInput();
         }
 
         // Generate QR code untuk SKU
         $validated['qr_image_url'] = $this->generateAndSaveQr($validated['sku']);
 
-        // Simpan unit barang dan update kapasitas gudang
         $unit = ItemUnit::create($validated);
-        $warehouse->used_capacity += $unit->quantity;
-        $warehouse->save();
 
         return redirect()->route('item-units.index')->with('success', 'Unit barang berhasil ditambahkan.');
     }
