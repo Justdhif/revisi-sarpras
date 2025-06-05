@@ -20,7 +20,9 @@ class AdminSeeder extends Seeder
             'email' => 'admin@sarpras.com',
             'password' => Hash::make('Admin123'),
             'role' => 'admin',
+            'phone' => '1234567890',
             'origin' => 'Sarpras System',
+            'profile_picture' => 'https://ui-avatars.com/api/?name=Admin%20Sarpras&background=random&rounded=true',
         ]);
     }
 }
