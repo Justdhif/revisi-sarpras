@@ -39,12 +39,37 @@ class UserController extends Controller
     /**
      * Menampilkan daftar user.
      */
-    public function index()
+    public function index(Request $request)
     {
-        // Mengambil seluruh data user untuk ditampilkan
-        $users = User::all();
+        $query = User::query();
 
-        return view('users.index', compact('users'));
+        // Filter pencarian
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('username', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('origin', 'like', "%{$search}%");
+            });
+        }
+
+        $users = $query->orderBy('username')->paginate(10);
+
+        if ($request->ajax()) {
+            return response()->json([
+                'data' => $users->items(),
+                'current_page' => $users->currentPage(),
+                'last_page' => $users->lastPage(),
+                'from' => $users->firstItem(),
+                'to' => $users->lastItem(),
+                'total' => $users->total(),
+                'links' => $users->links()->elements,
+            ]);
+        }
+
+        return view('users.index', [
+            'users' => $users
+        ]);
     }
 
     public function create()

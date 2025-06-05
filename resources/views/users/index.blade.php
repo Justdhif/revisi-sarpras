@@ -10,7 +10,7 @@
 @endsection
 
 @section('content')
-    <div class="container mx-auto px-4 py-8">
+    <div class="container mx-auto px-4 py-8" x-data="userFilter()" x-init="init()">
         <div class="flex justify-between items-center mb-8">
             <h1 class="text-3xl font-bold text-gray-800">Manajemen Pengguna</h1>
             <div class="flex space-x-3">
@@ -46,6 +46,7 @@
             </div>
         </div>
 
+        <!-- Search Input -->
         <div class="mb-6">
             <div class="relative">
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -56,15 +57,82 @@
                             clip-rule="evenodd" />
                     </svg>
                 </div>
-                <input type="text" id="searchInput"
+                <input x-model="searchQuery" @input.debounce.500ms="filterUsers()" type="text"
                     class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                     placeholder="Cari pengguna...">
             </div>
         </div>
 
-        @if ($users->isEmpty())
-            <!-- Modern Empty State -->
-            <div class="flex flex-col items-center justify-center min-h-[70vh] py-12 text-center">
+        <!-- Loading State -->
+        <div x-show="isLoading" class="mb-6">
+            <div class="bg-white rounded-lg shadow overflow-hidden border border-gray-200">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Pengguna</th>
+                            <th scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email
+                            </th>
+                            <th scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Asal
+                            </th>
+                            <th scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Terakhir Login</th>
+                            <th scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Status</th>
+                            <th scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <template x-for="i in 6" :key="i">
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="h-4 bg-gray-200 rounded w-1/2 animate-pulse"></div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="h-4 bg-gray-200 rounded w-3/4 animate-pulse"></div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="h-4 bg-gray-200 rounded w-1/3 animate-pulse"></div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="h-4 bg-gray-200 rounded w-1/4 animate-pulse"></div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="h-4 bg-gray-200 rounded w-1/4 animate-pulse"></div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex space-x-2">
+                                        <div class="h-7 bg-gray-200 rounded w-10 animate-pulse"></div>
+                                        <div class="h-7 bg-gray-200 rounded w-10 animate-pulse"></div>
+                                        <div class="h-7 bg-gray-200 rounded w-10 animate-pulse"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+                <div class="flex justify-between items-center px-4 py-3 bg-white border-t border-gray-200 rounded-b-lg">
+                    <div class="h-4 bg-gray-200 rounded w-1/4 animate-pulse"></div>
+                    <div class="flex space-x-2">
+                        <div class="h-8 bg-gray-200 rounded w-8 animate-pulse"></div>
+                        <div class="h-8 bg-gray-200 rounded w-8 animate-pulse"></div>
+                        <div class="h-8 bg-gray-200 rounded w-8 animate-pulse"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Users Container -->
+        <div x-show="!isLoading">
+            <div x-show="users.length === 0"
+                class="flex flex-col items-center justify-center min-h-[70vh] py-12 text-center">
                 <div class="max-w-md mx-auto px-4">
                     <div class="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-indigo-50 mb-6">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-indigo-600" fill="none"
@@ -75,7 +143,7 @@
                     </div>
                     <h2 class="text-2xl font-bold text-gray-900 mb-2">Tidak ada pengguna</h2>
                     <p class="text-gray-500 mb-8">Mulai dengan menambahkan pengguna baru untuk mengelola sistem.</p>
-                    <button onclick="openModal('create-modal')"
+                    <a href="{{ route('users.create') }}"
                         class="inline-flex items-center px-4 py-3 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                         <svg xmlns="http://www.w3.org/2000/svg" class="-ml-1 mr-2 h-5 w-5" viewBox="0 0 20 20"
                             fill="currentColor">
@@ -84,110 +152,143 @@
                                 clip-rule="evenodd" />
                         </svg>
                         Tambah Pengguna
-                    </button>
+                    </a>
                 </div>
             </div>
-        @else
-            <!-- Users Table -->
-            <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200" id="usersTable">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th scope="col"
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Pengguna</th>
-                                <th scope="col"
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Email</th>
-                                <th scope="col"
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Asal</th>
-                                <th scope="col"
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Terakhir Login</th>
-                                <th scope="col"
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Status</th>
-                                <th scope="col"
-                                    class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            @foreach ($users as $user)
-                                <tr class="hover:bg-gray-50 transition-colors duration-150">
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="flex items-center">
-                                            <div class="flex-shrink-0 h-10 w-10 rounded-full overflow-hidden">
-                                                <!-- UI Avatars based on username -->
-                                                <img src=" {{ $user->profile_picture }}"
-                                                    alt="{{ $user->username }}" class="h-full w-full object-cover">
-                                            </div>
-                                            <div class="ml-4">
-                                                <div class="text-sm font-medium text-gray-900">{{ $user->username }}</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-600">{{ $user->email }}</div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-600">
-                                            {{ $user->origin ? $user->origin : '-' }}
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-600">
-                                            {{ $user->last_logined_at ? $user->last_logined_at->diffForHumans() : 'Belum Login' }}
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span
-                                            class="px-2 py-1 text-xs font-medium rounded-full {{ $user->active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                                            {{ $user->active ? 'Aktif' : 'Tidak Aktif' }}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <div class="flex justify-end space-x-2">
-                                            <a href="{{ route('users.show', $user->id) }}"
-                                                class="text-amber-600 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 px-3 py-1.5 rounded-md transition-colors duration-200 flex items-center">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1"
-                                                    viewBox="0 0 20 20" fill="currentColor">
-                                                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                                                    <path fill-rule="evenodd"
-                                                        d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
-                                                        clip-rule="evenodd" />
-                                                </svg>
-                                                Lihat
-                                            </a>
-                                            <a href="{{ route('users.edit', $user->id) }}"
-                                                class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-md transition-colors duration-200 flex items-center">
-                                                <i class="fas fa-edit mr-1"></i> Edit
-                                            </a>
-                                            <form action="{{ route('users.destroy', $user->id) }}" method="POST"
-                                                class="inline delete-form">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit"
-                                                    class="text-rose-600 hover:text-rose-900 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-md transition-colors duration-200 flex items-center">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1"
-                                                        viewBox="0 0 20 20" fill="currentColor">
-                                                        <path fill-rule="evenodd"
-                                                            d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                                                            clip-rule="evenodd" />
-                                                    </svg>
-                                                    Hapus
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        @endif
+
+            <!-- Include the users table partial -->
+            @include('users.partials._users_table')
+        </div>
     </div>
+
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('userFilter', () => ({
+                searchQuery: '',
+                isLoading: false,
+                users: [],
+                pagination: {
+                    current_page: 1,
+                    last_page: 1,
+                    from: 0,
+                    to: 0,
+                    total: 0,
+                    links: []
+                },
+
+                init() {
+                    this.filterUsers();
+                },
+
+                formatDate(dateString) {
+                    if (!dateString) return 'Belum Login';
+                    const date = new Date(dateString);
+                    return date.toLocaleDateString('id-ID', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                },
+
+                filterUsers() {
+                    this.isLoading = true;
+
+                    const params = {
+                        search: this.searchQuery,
+                        page: this.pagination.current_page
+                    };
+
+                    // Remove empty params
+                    Object.keys(params).forEach(key => {
+                        if (!params[key]) delete params[key];
+                    });
+
+                    const queryString = new URLSearchParams(params).toString();
+
+                    fetch(`{{ route('users.index') }}?${queryString}`, {
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json'
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            this.users = data.data;
+                            this.pagination = {
+                                current_page: data.current_page,
+                                last_page: data.last_page,
+                                from: data.from,
+                                to: data.to,
+                                total: data.total,
+                                links: data.links
+                            };
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                        })
+                        .finally(() => {
+                            this.isLoading = false;
+                        });
+                },
+
+                previousPage() {
+                    if (this.pagination.current_page > 1) {
+                        this.pagination.current_page--;
+                        this.filterUsers();
+                    }
+                },
+
+                nextPage() {
+                    if (this.pagination.current_page < this.pagination.last_page) {
+                        this.pagination.current_page++;
+                        this.filterUsers();
+                    }
+                },
+
+                goToPage(url) {
+                    if (!url) return;
+
+                    const page = new URL(url).searchParams.get('page');
+                    if (page) {
+                        this.pagination.current_page = parseInt(page);
+                        this.filterUsers();
+                    }
+                },
+
+                async deleteUser(userId) {
+                    if (!confirm('Apakah Anda yakin ingin menghapus pengguna ini?')) {
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch(`{{ route('users.index') }}/${userId}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json'
+                            }
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+
+                        const data = await response.json();
+                        if (data.success) {
+                            this.filterUsers(); // Refresh the list
+                        } else {
+                            alert('Gagal menghapus pengguna: ' + (data.message ||
+                                'Terjadi kesalahan'));
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        alert('Terjadi kesalahan saat menghapus pengguna');
+                    }
+                }
+            }));
+        });
+    </script>
 @endsection
