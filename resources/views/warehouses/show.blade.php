@@ -86,9 +86,9 @@
                 <div class="flex-1">
                     <h3 class="text-sm font-medium text-gray-500">Kapasitas Terpakai</h3>
                     <p class="text-xl font-semibold mt-1">
-                        {{ $warehouse->used_capacity }} unit
+                        {{ $warehouse->itemUnits->sum('quantity') }} unit
                         <span class="text-sm ml-2 text-indigo-600">
-                            ({{ round(($warehouse->used_capacity / $warehouse->capacity) * 100, 1) }}%)
+                            ({{ round(($warehouse->itemUnits->sum('quantity') / $warehouse->capacity) * 100, 1) }}%)
                         </span>
                     </p>
                     <div class="mt-3">
@@ -98,7 +98,7 @@
                         </div>
                         <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
                             <div class="h-full bg-gradient-to-r from-indigo-400 to-indigo-600 rounded-full"
-                                style="width: {{ ($warehouse->used_capacity / $warehouse->capacity) * 100 }}%"></div>
+                                style="width: {{ ($warehouse->itemUnits->sum('quantity') / $warehouse->capacity) * 100 }}%"></div>
                         </div>
                     </div>
                 </div>
