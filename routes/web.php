@@ -14,6 +14,7 @@ use App\Http\Controllers\BorrowDetailController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\BorrowRequestController;
 use App\Http\Controllers\ReturnRequestController;
+use App\Http\Controllers\StockMovementController;
 
 // Authentication Routes
 Route::get('/', function () {
@@ -88,6 +89,9 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         ->name('return-requests.approve');
     Route::put('/return_requests/{return_request}/reject', [ReturnRequestController::class, 'reject'])
         ->name('return-requests.reject');
+
+    Route::get('/stock-movements', [StockMovementController::class, 'index'])->name('stock_movements.index');
+    Route::post('/stock-movements', [StockMovementController::class, 'store'])->name('stock_movements.store');
 
     // Activity Logs
     Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');

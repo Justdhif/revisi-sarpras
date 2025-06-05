@@ -8,6 +8,7 @@ use App\Models\BorrowDetail;
 use Illuminate\Http\Request;
 use App\Models\BorrowRequest;
 use App\Models\CustomNotification;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\BorrowRequestsExport;
@@ -36,17 +37,17 @@ class BorrowRequestController extends Controller
      */
     public function index(Request $request)
     {
-        $query = BorrowRequest::with(['user', 'approver', 'returnRequest']);
+        $query = BorrowRequest::with(['requester', 'approver']);
 
         // Filter pencarian
         if ($request->has('search') && !empty($request->search)) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->whereHas('user', function ($q) use ($search) {
-                    $q->where('username', 'like', "%{$search}%");
+                $q->whereHas('requester', function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%");
                 })
                     ->orWhereHas('approver', function ($q) use ($search) {
-                        $q->where('username', 'like', "%{$search}%");
+                        $q->where('name', 'like', "%{$search}%");
                     });
             });
         }
@@ -60,21 +61,27 @@ class BorrowRequestController extends Controller
         if ($request->has('start_date') && !empty($request->start_date)) {
             $query->whereDate('created_at', '>=', $request->start_date);
         }
-
         if ($request->has('end_date') && !empty($request->end_date)) {
             $query->whereDate('created_at', '<=', $request->end_date);
         }
 
-        // Urutkan berdasarkan yang terbaru
-        $query->orderBy('created_at', 'desc');
-
-        $requests = $query->paginate(10);
+        $requests = $query->orderBy('created_at', 'desc')->paginate(10);
 
         if ($request->ajax()) {
-            return view('borrow_requests.partials._requests_table', compact('requests'));
+            return response()->json([
+                'data' => $requests->items(),
+                'current_page' => $requests->currentPage(),
+                'last_page' => $requests->lastPage(),
+                'from' => $requests->firstItem(),
+                'to' => $requests->lastItem(),
+                'total' => $requests->total(),
+                'links' => $requests->links()->elements,
+            ]);
         }
 
-        return view('borrow_requests.index', compact('requests'));
+        return view('borrow_requests.index', [
+            'requests' => $requests
+        ]);
     }
 
     /**
@@ -130,37 +137,65 @@ class BorrowRequestController extends Controller
     {
         $request = BorrowRequest::with('borrowDetail.itemUnit.item')->findOrFail($id);
 
-        foreach ($request->borrowDetail as $detail) {
-            $itemUnit = $detail->itemUnit;
-            $item = $itemUnit->item;
+        DB::beginTransaction();
+        try {
+            foreach ($request->borrowDetail as $detail) {
+                $itemUnit = $detail->itemUnit;
+                $item = $itemUnit->item;
 
-            if ($item->type === 'consumable') {
-                if ($itemUnit->quantity < $detail->quantity) {
-                    return back()->with('error', 'Stok tidak mencukupi untuk item: ' . $item->name);
-                } else {
+                if ($item->type === 'consumable') {
+                    if ($itemUnit->quantity < $detail->quantity) {
+                        DB::rollBack();
+                        return back()->with('error', 'Stok tidak mencukupi untuk item: ' . $item->name);
+                    }
                     $itemUnit->quantity -= $detail->quantity;
+
+                    // Simpan stock movement keluar
+                    StockMovement::create([
+                        'item_unit_id' => $itemUnit->id,
+                        'type' => 'out',
+                        'quantity' => $detail->quantity,
+                        'description' => 'Persetujuan peminjaman',
+                        'movement_date' => now(),
+                    ]);
+
+                    if ($itemUnit->quantity === 0) {
+                        $itemUnit->status = 'out_of_stock';
+                    }
+                    $itemUnit->save();
+
+                } else {
+                    // Untuk barang non-consumable langsung ubah status jadi borrowed
+                    $itemUnit->status = 'borrowed';
+                    $itemUnit->save();
+
+                    // Catat stock movement sebagai 'out' untuk peminjaman barang non-consumable juga
+                    StockMovement::create([
+                        'item_unit_id' => $itemUnit->id,
+                        'type' => 'out',
+                        'quantity' => $detail->quantity,
+                        'description' => 'Persetujuan peminjaman',
+                        'movement_date' => now(),
+                    ]);
                 }
-
-                if ($itemUnit->quantity === 0) {
-                    $itemUnit->status = 'out_of_stock';
-                }
-
-                $itemUnit->save();
-
-            } else {
-                $itemUnit->status = 'borrowed';
-                $itemUnit->save();
             }
+
+            // Update status borrow request dan approved_by
+            $request->update([
+                'status' => 'approved',
+                'approved_by' => Auth::id(),
+            ]);
+
+            // Kirim notifikasi ke user
+            $request->user->notify(new BorrowApprovedNotification($request));
+
+            DB::commit();
+            return back()->with('success', 'Permintaan berhasil disetujui.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
-
-        $request->user->notify(new BorrowApprovedNotification($request));
-
-        $request->update([
-            'status' => 'approved',
-            'approved_by' => Auth::id(),
-        ]);
-
-        return back()->with('success', 'Permintaan berhasil disetujui.');
     }
 
     /**

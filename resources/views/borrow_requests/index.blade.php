@@ -10,7 +10,7 @@
 @endsection
 
 @section('content')
-    <div class="container mx-auto px-4 py-8">
+    <div class="container mx-auto px-4 py-8" x-data="requestFilter()" x-init="init()">
         <div class="flex justify-between items-center mb-8">
             <h1 class="text-3xl font-bold text-gray-800">Manajemen Peminjaman</h1>
             <div class="flex space-x-3">
@@ -48,14 +48,14 @@
                                 clip-rule="evenodd" />
                         </svg>
                     </div>
-                    <input id="searchQuery" type="text"
+                    <input x-model="searchQuery" @input.debounce.500ms="filterRequests()" type="text"
                         class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                         placeholder="Cari pemohon atau penyetuju...">
                 </div>
 
                 <!-- Status Filter -->
                 <div class="w-2/3">
-                    <select id="selectedStatus"
+                    <select x-model="selectedStatus" @change="filterRequests()"
                         class="block w-full pl-3 pr-10 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         <option value="">Semua Status</option>
                         <option value="pending">Menunggu</option>
@@ -67,21 +67,21 @@
 
                 <!-- Date Range Filter -->
                 <div class="w-2/3">
-                    <input type="date" id="startDate"
+                    <input x-model="startDate" @change="filterRequests()" type="date"
                         class="block w-full pl-3 pr-10 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                         placeholder="Dari Tanggal">
                 </div>
                 <div class="w-2/3">
-                    <input type="date" id="endDate"
+                    <input x-model="endDate" @change="filterRequests()" type="date"
                         class="block w-full pl-3 pr-10 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                         placeholder="Sampai Tanggal">
                 </div>
             </div>
         </div>
 
-        <!-- Skeleton Loader (hidden by default) -->
-        <div id="skeletonLoader" class="hidden">
-            <div class="bg-white rounded-lg shadow overflow-hidden border border-gray-200 mb-4">
+        <!-- Loading State -->
+        <div x-show="isLoading" class="mb-6">
+            <div class="bg-white rounded-lg shadow overflow-hidden border border-gray-200">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
@@ -96,16 +96,14 @@
                                 Status</th>
                             <th scope="col"
                                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Penyetuju
-                            </th>
+                                Penyetuju</th>
                             <th scope="col"
                                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi
                             </th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
-                        <!-- Skeleton rows -->
-                        @for ($i = 0; $i < 6; $i++)
+                        <template x-for="i in 6" :key="i">
                             <tr>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="h-4 bg-gray-200 rounded w-1/2 animate-pulse"></div>
@@ -125,96 +123,165 @@
                                     </div>
                                 </td>
                             </tr>
-                        @endfor
+                        </template>
                     </tbody>
                 </table>
-            </div>
-            <div class="flex justify-between items-center px-4 py-3 bg-white border-t border-gray-200 rounded-b-lg">
-                <div class="h-4 bg-gray-200 rounded w-1/4 animate-pulse"></div>
-                <div class="flex space-x-2">
-                    <div class="h-8 bg-gray-200 rounded w-8 animate-pulse"></div>
-                    <div class="h-8 bg-gray-200 rounded w-8 animate-pulse"></div>
-                    <div class="h-8 bg-gray-200 rounded w-8 animate-pulse"></div>
+                <div class="flex justify-between items-center px-4 py-3 bg-white border-t border-gray-200 rounded-b-lg">
+                    <div class="h-4 bg-gray-200 rounded w-1/4 animate-pulse"></div>
+                    <div class="flex space-x-2">
+                        <div class="h-8 bg-gray-200 rounded w-8 animate-pulse"></div>
+                        <div class="h-8 bg-gray-200 rounded w-8 animate-pulse"></div>
+                        <div class="h-8 bg-gray-200 rounded w-8 animate-pulse"></div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Requests Container (akan diisi oleh AJAX) -->
-        <div id="requestsContainer">
-            @include('borrow_requests.partials._requests_table', ['requests' => $requests])
+        <!-- Requests Container -->
+        <div x-show="!isLoading">
+            <div x-show="requests.length === 0"
+                class="flex flex-col items-center justify-center min-h-[70vh] py-12 text-center">
+                <div class="max-w-md mx-auto px-4">
+                    <div class="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-indigo-50 mb-6">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-indigo-600" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                        </svg>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-2">Tidak ada permintaan peminjaman</h2>
+                    <p class="text-gray-500 mb-8">Belum ada permintaan peminjaman yang dibuat.</p>
+                </div>
+            </div>
+
+            <!-- Include the requests table partial -->
+            @include('borrow_requests.partials._requests_table')
         </div>
     </div>
 
-    <!-- JavaScript untuk AJAX -->
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Elemen filter
-            const searchQuery = document.getElementById('searchQuery');
-            const selectedStatus = document.getElementById('selectedStatus');
-            const startDate = document.getElementById('startDate');
-            const endDate = document.getElementById('endDate');
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('requestFilter', () => ({
+                searchQuery: '',
+                selectedStatus: '',
+                startDate: '',
+                endDate: '',
+                isLoading: false,
+                requests: [],
+                pagination: {
+                    current_page: 1,
+                    last_page: 1,
+                    from: 0,
+                    to: 0,
+                    total: 0,
+                    links: []
+                },
 
-            // Container untuk hasil
-            const requestsContainer = document.getElementById('requestsContainer');
-            const skeletonLoader = document.getElementById('skeletonLoader');
+                init() {
+                    this.filterRequests();
+                },
 
-            // Debounce untuk pencarian
-            let debounceTimer;
+                filterRequests() {
+                    this.isLoading = true;
 
-            // Fungsi untuk memuat data
-            function loadRequests() {
-                // Tampilkan loading indicator
-                skeletonLoader.classList.remove('hidden');
-                requestsContainer.classList.add('opacity-50');
+                    const params = {
+                        search: this.searchQuery,
+                        status: this.selectedStatus,
+                        start_date: this.startDate,
+                        end_date: this.endDate,
+                        page: this.pagination.current_page
+                    };
 
-                // Siapkan parameter
-                const params = {
-                    search: searchQuery.value,
-                    status: selectedStatus.value,
-                    start_date: startDate.value,
-                    end_date: endDate.value
-                };
-
-                // Buat URL dengan parameter
-                const url = new URL('{{ route('borrow-requests.index') }}');
-                Object.keys(params).forEach(key => {
-                    if (params[key]) {
-                        url.searchParams.append(key, params[key]);
-                    }
-                });
-
-                // Buat request AJAX
-                fetch(url, {
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'Accept': 'text/html'
-                        }
-                    })
-                    .then(response => response.text())
-                    .then(html => {
-                        requestsContainer.innerHTML = html;
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        requestsContainer.innerHTML =
-                            '<div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 p-12 text-center text-red-500">Terjadi kesalahan saat memuat data.</div>';
-                    })
-                    .finally(() => {
-                        skeletonLoader.classList.add('hidden');
-                        requestsContainer.classList.remove('opacity-50');
+                    // Remove empty params
+                    Object.keys(params).forEach(key => {
+                        if (!params[key]) delete params[key];
                     });
-            }
 
-            // Event listeners untuk semua filter
-            [selectedStatus, startDate, endDate].forEach(element => {
-                element.addEventListener('change', loadRequests);
-            });
+                    const queryString = new URLSearchParams(params).toString();
 
-            // Event listener khusus untuk input pencarian dengan debounce
-            searchQuery.addEventListener('input', function() {
-                clearTimeout(debounceTimer);
-                debounceTimer = setTimeout(loadRequests, 500);
-            });
+                    fetch(`{{ route('borrow-requests.index') }}?${queryString}`, {
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json'
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            this.requests = data.data;
+                            this.pagination = {
+                                current_page: data.current_page,
+                                last_page: data.last_page,
+                                from: data.from,
+                                to: data.to,
+                                total: data.total,
+                                links: data.links
+                            };
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                        })
+                        .finally(() => {
+                            this.isLoading = false;
+                        });
+                },
+
+                previousPage() {
+                    if (this.pagination.current_page > 1) {
+                        this.pagination.current_page--;
+                        this.filterRequests();
+                    }
+                },
+
+                nextPage() {
+                    if (this.pagination.current_page < this.pagination.last_page) {
+                        this.pagination.current_page++;
+                        this.filterRequests();
+                    }
+                },
+
+                goToPage(url) {
+                    if (!url) return;
+
+                    const page = new URL(url).searchParams.get('page');
+                    if (page) {
+                        this.pagination.current_page = parseInt(page);
+                        this.filterRequests();
+                    }
+                },
+
+                async deleteRequest(requestId) {
+                    if (!confirm('Apakah Anda yakin ingin menghapus permintaan peminjaman ini?')) {
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch(
+                            `{{ route('borrow-requests.index') }}/${requestId}`, {
+                                method: 'DELETE',
+                                headers: {
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                    'Accept': 'application/json'
+                                }
+                            });
+
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+
+                        const data = await response.json();
+                        if (data.success) {
+                            this.filterRequests(); // Refresh the list
+                        } else {
+                            alert('Gagal menghapus permintaan: ' + (data.message ||
+                                'Terjadi kesalahan'));
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        alert('Terjadi kesalahan saat menghapus permintaan');
+                    }
+                }
+            }));
         });
     </script>
 @endsection
