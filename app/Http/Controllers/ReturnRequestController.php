@@ -33,13 +33,13 @@ class ReturnRequestController extends Controller
      */
     public function index(Request $request)
     {
-        $query = ReturnRequest::with(['borrowRequest.user']);
+        $query = ReturnRequest::with(['borrowRequest.requester', 'borrowRequest.item']);
 
         // Filter pencarian
         if ($request->has('search') && !empty($request->search)) {
             $search = $request->search;
-            $query->whereHas('borrowRequest.user', function ($q) use ($search) {
-                $q->where('username', 'like', "%{$search}%");
+            $query->whereHas('borrowRequest.requester', function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%");
             });
         }
 
@@ -50,23 +50,29 @@ class ReturnRequestController extends Controller
 
         // Filter tanggal
         if ($request->has('start_date') && !empty($request->start_date)) {
-            $query->whereDate('created_at', '>=', $request->start_date);
+            $query->whereDate('return_date', '>=', $request->start_date);
         }
-
         if ($request->has('end_date') && !empty($request->end_date)) {
-            $query->whereDate('created_at', '<=', $request->end_date);
+            $query->whereDate('return_date', '<=', $request->end_date);
         }
 
-        // Urutkan berdasarkan yang terbaru
-        $query->orderBy('created_at', 'desc');
-
-        $returns = $query->paginate(10);
+        $returns = $query->orderBy('created_at', 'desc')->paginate(10);
 
         if ($request->ajax()) {
-            return view('return_requests.partials._returns_table', compact('returns'));
+            return response()->json([
+                'data' => $returns->items(),
+                'current_page' => $returns->currentPage(),
+                'last_page' => $returns->lastPage(),
+                'from' => $returns->firstItem(),
+                'to' => $returns->lastItem(),
+                'total' => $returns->total(),
+                'links' => $returns->links()->elements,
+            ]);
         }
 
-        return view('return_requests.index', compact('returns'));
+        return view('return_requests.index', [
+            'returns' => $returns
+        ]);
     }
 
     /**
