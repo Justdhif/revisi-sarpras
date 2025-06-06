@@ -12,7 +12,6 @@ return new class extends Migration {
     {
         Schema::create('origins', function (Blueprint $table) {
             $table->id();
-            $table->enum('type', ['siswa', 'guru', 'admin']);
             $table->string('name');
             $table->timestamps();
         });

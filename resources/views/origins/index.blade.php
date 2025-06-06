@@ -44,7 +44,8 @@
                         </svg>
                     </div>
                     <h2 class="text-2xl font-bold text-gray-900 mb-2">Tidak ada origin</h2>
-                    <p class="text-gray-500 mb-8">Mulai dengan menambahkan origin pertama Anda untuk melacak asal produk.</p>
+                    <p class="text-gray-500 mb-8">Mulai dengan menambahkan origin pertama Anda untuk melacak asal produk.
+                    </p>
                     <button onclick="openModal('create-modal')"
                         class="inline-flex items-center px-4 py-3 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                         <svg xmlns="http://www.w3.org/2000/svg" class="-ml-1 mr-2 h-5 w-5" viewBox="0 0 20 20"
@@ -65,14 +66,15 @@
                             <tr>
                                 <th scope="col"
                                     class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    ID
+                                    No
                                 </th>
                                 <th scope="col"
                                     class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Tipe</th>
+                                    Nama Asal</th>
                                 <th scope="col"
                                     class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Nama</th>
+                                    Jumlah
+                                </th>
                                 <th scope="col"
                                     class="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Aksi
@@ -83,16 +85,28 @@
                             @foreach ($origins as $origin)
                                 <tr class="hover:bg-gray-50 transition-colors duration-150">
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        {{ $origin->id }}
+                                        {{ $loop->iteration }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                                            {{ $origin->type === 'local' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800' }}">
-                                            {{ ucfirst($origin->type) }}
-                                        </span>
+                                        <div class="flex items-center">
+                                            <div
+                                                class="flex-shrink-0 h-10 w-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-600"
+                                                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                                                </svg>
+                                            </div>
+                                            <div class="ml-4">
+                                                <div class="text-sm font-medium text-gray-900">{{ $origin->name }}</div>
+                                            </div>
+                                        </div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm font-medium text-gray-900">{{ $origin->name }}</div>
+                                        <div
+                                            class="text-sm font-medium text-gray-900 {{ $userOriginCount == 0 ? 'text-red-600' : '' }}">
+                                            {{ $userOriginCount }} Orang
+                                        </div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <div class="flex justify-end space-x-2">

@@ -9,7 +9,7 @@ class Origin extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['type', 'name'];
+    protected $fillable = ['name'];
 
     public function users()
     {

@@ -10,28 +10,28 @@ class OriginController extends Controller
     public function index()
     {
         $origins = Origin::latest()->paginate(10);
-        return view('origins.index', compact('origins'));
+        // Jumlah user dri origin tersebut
+        $userOriginCount = Origin::with('users')->count();
+        return view('origins.index', compact('origins', 'userOriginCount'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'type' => 'required|in:siswa,guru',
             'name' => 'required|string|max:255',
         ]);
 
-        Origin::create($request->only(['type', 'name']));
+        Origin::create($request->only(['name']));
         return redirect()->route('origins.index')->with('success', 'Origin berhasil ditambahkan.');
     }
 
     public function update(Request $request, Origin $origin)
     {
         $request->validate([
-            'type' => 'required|in:siswa,guru',
             'name' => 'required|string|max:255',
         ]);
 
-        $origin->update($request->only(['type', 'name']));
+        $origin->update($request->only(['name']));
         return redirect()->route('origins.index')->with('success', 'Origin berhasil diperbarui.');
     }
 

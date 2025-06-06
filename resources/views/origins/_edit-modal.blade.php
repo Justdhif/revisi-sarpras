@@ -25,24 +25,6 @@
                 <input type="hidden" id="edit-id" name="id">
 
                 <div>
-                    <label for="edit-origin-type" class="block text-sm font-medium text-gray-700 mb-2">Tipe user
-                        <span class="text-red-500">*</span></label>
-                    <div class="relative">
-                        <select id="edit-origin-type" name="type" required
-                            class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all duration-200 outline-none appearance-none text-gray-700 shadow-sm hover:border-gray-300">
-                            <option value="siswa">Siswa</option>
-                            <option value="guru">Guru</option>
-                        </select>
-                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                            <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
-                            </svg>
-                        </div>
-                    </div>
-                </div>
-
-                <div>
                     <label for="edit-origin-name" class="block text-sm font-medium text-gray-700 mb-2">Nama Asal
                         <span class="text-red-500">*</span></label>
                     <div class="relative">

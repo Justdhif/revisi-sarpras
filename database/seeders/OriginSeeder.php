@@ -14,7 +14,6 @@ class OriginSeeder extends Seeder
     public function run(): void
     {
         Origin::create([
-            'type' => 'admin',
             'name' => 'Admin Sarpras',
         ]);
     }
