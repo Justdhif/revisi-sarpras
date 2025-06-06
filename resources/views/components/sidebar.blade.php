@@ -8,7 +8,6 @@
         </h1>
     </div>
 
-    <!-- Scrollable Navigation Menu -->
     <div class="sidebar-scrollable h-[calc(100vh-64px)] overflow-y-auto py-4 px-3">
         <!-- Dashboard Link -->
         <div class="space-y-1">
@@ -38,13 +37,13 @@
         </div>
 
         <!-- Inventory Management Section -->
-        <div class="mt-6" x-data="{ itemsOpen: {{ request()->routeIs('items.*', 'item-units.*') ? 'true' : 'false' }} }">
+        <div class="mt-6" x-data="{ itemsOpen: {{ request()->routeIs('items.*', 'item-units.*', 'stock_movements.*') ? 'true' : 'false' }} }">
             <h3 class="px-3 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Manajemen
                 Inventori</h3>
             <div class="space-y-1">
                 <button @click="itemsOpen = !itemsOpen"
                     class="w-full flex items-center justify-between px-3 py-2 text-sm rounded-md font-medium transition-colors
-                        {{ request()->routeIs('items.*', 'item-units.*') ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50 hover:text-accent-foreground' }}">
+                        {{ request()->routeIs('items.*', 'item-units.*', 'stock_movements.*') ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50 hover:text-accent-foreground' }}">
                     <span class="flex items-center">
                         <i class="fas fa-box-open w-5 mr-3 text-muted-foreground"></i> Barang
                     </span>
@@ -63,6 +62,10 @@
                         class="block px-3 py-1.5 text-sm rounded-md font-medium transition-colors
                             {{ request()->routeIs('item-units.*') ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50 hover:text-accent-foreground' }}">
                         <i class="fas fa-boxes w-5 mr-2 text-muted-foreground"></i> Daftar Unit
+                    </a>
+                    <a href="{{ route('stock_movements.index') }}"
+                        class="block px-3 py-1.5 text-sm rounded-md font-medium transition-colors {{ request()->routeIs('stock_movements.*') ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50 hover:text-accent-foreground' }}">
+                        <i class="fas fa-history w-5 mr-2 text-muted-foreground"></i> Riwayat Stok
                     </a>
                 </div>
             </div>
