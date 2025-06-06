@@ -6,6 +6,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\OriginController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ItemUnitController;
 use App\Http\Controllers\WarehouseController;
@@ -38,7 +39,7 @@ Route::post('logout', [AuthController::class, 'logout'])->name('logout');
 | Admin Routes
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'role:admin'])->group(function () {
+Route::middleware(['auth', 'role:super-admin'])->group(function () {
     /*
     |----------------------------------------------------------------------
     | Dashboard & Home
@@ -72,6 +73,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         'item-units' => ItemUnitController::class,
         'users' => UserController::class,
         'borrow-requests' => BorrowRequestController::class,
+        'origins' => OriginController::class
     ]);
 
     /*

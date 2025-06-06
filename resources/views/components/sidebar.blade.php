@@ -98,6 +98,12 @@
                         {{ request()->routeIs('users.*') ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50 hover:text-accent-foreground' }}">
                     <i class="fas fa-users w-5 mr-3 text-muted-foreground"></i> Pengguna
                 </a>
+                <a href="{{ route('origins.index') }}"
+                    class="flex items-center px-3 py-2 text-sm rounded-md font-medium transition-colors
+                        {{ request()->routeIs('origins.*') ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50 hover:text-accent-foreground' }}">
+                    <i class="fas fa-map-marker-alt w-5 mr-3 text-muted-foreground"></i>
+                    Asal
+                </a>
             </div>
         </div>
 

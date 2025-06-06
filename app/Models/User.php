@@ -24,7 +24,7 @@ class User extends Authenticatable
         'password',
         'phone',
         'role',
-        'origin',
+        'origin_id',
         'last_logined_at',
         'active',
         'profile_picture',
@@ -63,5 +63,10 @@ class User extends Authenticatable
     public function approvals()
     {
         return $this->hasMany(BorrowRequest::class, 'approved_by');
+    }
+
+    public function origin()
+    {
+        return $this->belongsTo(Origin::class);
     }
 }

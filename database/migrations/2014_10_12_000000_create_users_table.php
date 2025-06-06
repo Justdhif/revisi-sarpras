@@ -17,8 +17,8 @@ return new class extends Migration {
             $table->string('password');
             $table->string('email')->unique()->nullable();
             $table->string('phone')->nullable();
-            $table->enum("role", ["user", "admin"]);
-            $table->string('origin')->nullable();
+            $table->enum("role", ["user", "super-admin", "staff"]);
+            $table->foreignId('origin_id')->nullable()->constrained('origins')->nullOnDelete();
             $table->timestamp('last_logined_at')->nullable();
             $table->boolean('active')->default(false);
             $table->string('profile_picture')->nullable();

@@ -45,7 +45,7 @@ class AuthController extends Controller
 
         $user = User::where('email', $request->email)->first();
 
-        if ($user && $user->role === 'admin' && Hash::check($request->password, $user->password)) {
+        if ($user && $user->role === 'super-admin' && Hash::check($request->password, $user->password)) {
             Auth::login($user, $remember);
             $user->update([
                 'last_logined_at' => now(),
