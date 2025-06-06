@@ -1,129 +1,271 @@
 @extends('layouts.app')
 
+@section('title', 'SISFO Sarpras - Stock Movements')
+
+@section('heading')
+    <a href="{{ route('stock_movements.index') }}">
+        <i class="fas fa-exchange-alt ml-2 mr-1 text-indigo-300"></i>
+        Stock Movements
+    </a>
+@endsection
+
 @section('content')
-    <div class="container mx-auto p-4">
-        <h1 class="text-2xl font-bold mb-4">Stock Movements</h1>
+    @include('stock_movements.partials._create-modal')
+    {{-- @include('stock_movements._edit-modal') --}}
 
-        @if (session('success'))
-            <div class="bg-green-200 text-green-800 p-2 mb-4 rounded">{{ session('success') }}</div>
-        @endif
+    <div class="container mx-auto px-4 py-8" x-data="movementFilter()" x-init="init()">
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">Stock Movements</h1>
 
-        <form method="GET" action="{{ route('stock_movements.index') }}" class="mb-6 flex flex-wrap gap-4">
-            <div>
-                <label for="start_date" class="block mb-1 font-semibold">Start Date</label>
-                <input type="date" name="start_date" id="start_date" value="{{ request('start_date') }}"
-                    class="border rounded p-2">
-            </div>
-            <div>
-                <label for="end_date" class="block mb-1 font-semibold">End Date</label>
-                <input type="date" name="end_date" id="end_date" value="{{ request('end_date') }}"
-                    class="border rounded p-2">
-            </div>
-            <div>
-                <label for="type" class="block mb-1 font-semibold">Type</label>
-                <select name="type" id="type" class="border rounded p-2">
-                    <option value="" {{ request('type') == '' ? 'selected' : '' }}>All</option>
-                    <option value="in" {{ request('type') == 'in' ? 'selected' : '' }}>Stock In</option>
-                    <option value="out" {{ request('type') == 'out' ? 'selected' : '' }}>Stock Out</option>
-                    <option value="damaged" {{ request('type') == 'damaged' ? 'selected' : '' }}>Damaged</option>
-                </select>
-            </div>
-            <div class="self-end">
-                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Filter</button>
-            </div>
-        </form>
-
-        <table class="min-w-full border-collapse border border-gray-300">
-            <thead>
-                <tr class="bg-gray-100">
-                    <th class="border border-gray-300 px-4 py-2">Date</th>
-                    <th class="border border-gray-300 px-4 py-2">Item</th>
-                    <th class="border border-gray-300 px-4 py-2">Unit</th>
-                    <th class="border border-gray-300 px-4 py-2">Type</th>
-                    <th class="border border-gray-300 px-4 py-2">Quantity</th>
-                    <th class="border border-gray-300 px-4 py-2">Description</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($movements as $movement)
-                    <tr>
-                        <td class="border border-gray-300 px-4 py-2">{{ $movement->movement_date }}</td>
-                        <td class="border border-gray-300 px-4 py-2">{{ $movement->itemUnit->item->name }}</td>
-                        <td class="border border-gray-300 px-4 py-2">{{ $movement->itemUnit->name }}</td>
-                        <td class="border border-gray-300 px-4 py-2 capitalize">{{ $movement->type }}</td>
-                        <td class="border border-gray-300 px-4 py-2 text-right">{{ $movement->quantity }}</td>
-                        <td class="border border-gray-300 px-4 py-2">{{ $movement->description ?? '-' }}</td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="6" class="border border-gray-300 px-4 py-2 text-center">No records found.</td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
-
-        <div class="mt-4">
-            {{ $movements->withQueryString()->links() }}
+            <button onclick="openModal('create-modal')"
+                class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-medium py-2 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd"
+                        d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                        clip-rule="evenodd" />
+                </svg>
+                Tambah Movement
+            </button>
         </div>
 
-        <hr class="my-6">
+        <!-- Filter Controls -->
+        <div class="mb-6 bg-white p-4 rounded-lg shadow border border-gray-100">
+            <div class="flex items-center justify-center gap-4">
+                <!-- Search Input -->
+                <div class="relative w-full">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                            fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <input x-model="searchQuery" @input.debounce.500ms="filterMovements()" type="text"
+                        class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        placeholder="Search items...">
+                </div>
 
-        <h2 class="text-xl font-semibold mb-4">Add Stock Movement</h2>
+                <!-- Type Filter -->
+                <div class="w-2/3">
+                    <select x-model="selectedType" @change="filterMovements()"
+                        class="block w-full pl-3 pr-10 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="">All Types</option>
+                        <option value="in">Stock In</option>
+                        <option value="out">Stock Out</option>
+                        <option value="damaged">Damaged</option>
+                    </select>
+                </div>
 
-        <form method="POST" action="{{ route('stock_movements.store') }}" class="max-w-lg space-y-4">
-            @csrf
+                <!-- Date Filters -->
+                <div class="w-2/3">
+                    <input type="date" x-model="startDate" @change="filterMovements()"
+                        class="block w-full pl-3 pr-10 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        placeholder="Start Date">
+                </div>
 
-            <div>
-                <label for="item_unit_id" class="block mb-1 font-semibold">Item Unit</label>
-                <select name="item_unit_id" id="item_unit_id" required class="border rounded p-2 w-full">
-                    <option value="">-- Select Item Unit --</option>
-                    @foreach (\App\Models\ItemUnit::with('item')->get() as $unit)
-                        <option value="{{ $unit->id }}">{{ $unit->item->name }} - {{ $unit->sku }}</option>
-                    @endforeach
-                </select>
-                @error('item_unit_id')
-                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                @enderror
+                <div class="w-2/3">
+                    <input type="date" x-model="endDate" @change="filterMovements()"
+                        class="block w-full pl-3 pr-10 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        placeholder="End Date">
+                </div>
+
+                <!-- Sort Options -->
+                <div class="w-2/3">
+                    <select x-model="sortOption" @change="filterMovements()"
+                        class="block w-full pl-3 pr-10 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="item_asc">Nama Item A-Z</option>
+                        <option value="item_desc">Nama Item Z-A</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div x-show="isLoading" class="mb-6">
+            <div class="bg-white rounded-lg shadow overflow-hidden border border-gray-200">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date
+                            </th>
+                            <th scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item
+                            </th>
+                            <th scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit
+                            </th>
+                            <th scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type
+                            </th>
+                            <th scope="col"
+                                class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Quantity</th>
+                            <th scope="col"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Description</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <template x-for="i in 6" :key="i">
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="h-4 bg-gray-200 rounded w-3/4 animate-pulse"></div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="h-4 bg-gray-200 rounded w-3/4 animate-pulse"></div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="h-4 bg-gray-200 rounded w-1/2 animate-pulse"></div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="h-4 bg-gray-200 rounded w-1/3 animate-pulse"></div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right">
+                                    <div class="h-4 bg-gray-200 rounded w-1/4 animate-pulse"></div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="h-4 bg-gray-200 rounded w-1/4 animate-pulse"></div>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+                <div class="flex justify-between items-center px-4 py-3 bg-white border-t border-gray-200 rounded-b-lg">
+                    <div class="h-4 bg-gray-200 rounded w-1/4 animate-pulse"></div>
+                    <div class="flex space-x-2">
+                        <div class="h-8 bg-gray-200 rounded w-8 animate-pulse"></div>
+                        <div class="h-8 bg-gray-200 rounded w-8 animate-pulse"></div>
+                        <div class="h-8 bg-gray-200 rounded w-8 animate-pulse"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Movements Container -->
+        <div x-show="!isLoading">
+            <div x-show="movements.length === 0"
+                class="flex flex-col items-center justify-center min-h-[70vh] py-12 text-center">
+                <div class="max-w-md mx-auto px-4">
+                    <div class="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-indigo-50 mb-6">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-indigo-600" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                        </svg>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-2">No movements found</h2>
+                    <p class="text-gray-500 mb-8">No stock movement records available for the selected filters.</p>
+                </div>
             </div>
 
-            <div>
-                <label for="type" class="block mb-1 font-semibold">Type</label>
-                <select name="type" id="type" required class="border rounded p-2 w-full">
-                    <option value="">-- Select Type --</option>
-                    <option value="in">Stock In</option>
-                    <option value="out">Stock Out</option>
-                    <option value="damaged">Damaged</option>
-                </select>
-                @error('type')
-                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <div>
-                <label for="quantity" class="block mb-1 font-semibold">Quantity</label>
-                <input type="number" name="quantity" id="quantity" value="{{ old('quantity', 1) }}" min="1"
-                    required class="border rounded p-2 w-full" />
-                @error('quantity')
-                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <div>
-                <label for="movement_date" class="block mb-1 font-semibold">Movement Date</label>
-                <input type="date" name="movement_date" id="movement_date"
-                    value="{{ old('movement_date', date('Y-m-d')) }}" required class="border rounded p-2 w-full" />
-                @error('movement_date')
-                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <div>
-                <label for="description" class="block mb-1 font-semibold">Description (optional)</label>
-                <textarea name="description" id="description" rows="3" class="border rounded p-2 w-full">{{ old('description') }}</textarea>
-            </div>
-
-            <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Add
-                Movement</button>
-        </form>
+            <!-- Include the movements table partial -->
+            @include('stock_movements.partials._movements_table')
+        </div>
     </div>
+
+    <script>
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+            // Set today's date as default
+            document.getElementById('modal-movement-date').valueAsDate = new Date();
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('movementFilter', () => ({
+                searchQuery: '',
+                selectedType: '',
+                startDate: '',
+                endDate: '',
+                isLoading: false,
+                movements: [],
+                pagination: {
+                    current_page: 1,
+                    last_page: 1,
+                    from: 0,
+                    to: 0,
+                    total: 0,
+                    links: []
+                },
+
+                init() {
+                    // Load initial data
+                    this.filterMovements();
+                },
+
+                filterMovements() {
+                    this.isLoading = true;
+
+                    const params = {
+                        search: this.searchQuery,
+                        type: this.selectedType,
+                        start_date: this.startDate,
+                        end_date: this.endDate,
+                        page: this.pagination.current_page
+                    };
+
+                    // Remove empty params
+                    Object.keys(params).forEach(key => {
+                        if (!params[key]) delete params[key];
+                    });
+
+                    const queryString = new URLSearchParams(params).toString();
+
+                    fetch(`{{ route('stock_movements.index') }}?${queryString}`, {
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json'
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            this.movements = data.data;
+                            this.pagination = {
+                                current_page: data.current_page,
+                                last_page: data.last_page,
+                                from: data.from,
+                                to: data.to,
+                                total: data.total,
+                                links: data.links
+                            };
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                        })
+                        .finally(() => {
+                            this.isLoading = false;
+                        });
+                },
+
+                previousPage() {
+                    if (this.pagination.current_page > 1) {
+                        this.pagination.current_page--;
+                        this.filterMovements();
+                    }
+                },
+
+                nextPage() {
+                    if (this.pagination.current_page < this.pagination.last_page) {
+                        this.pagination.current_page++;
+                        this.filterMovements();
+                    }
+                },
+
+                goToPage(url) {
+                    if (!url) return;
+
+                    const page = new URL(url).searchParams.get('page');
+                    if (page) {
+                        this.pagination.current_page = parseInt(page);
+                        this.filterMovements();
+                    }
+                }
+            }));
+        });
+    </script>
 @endsection
