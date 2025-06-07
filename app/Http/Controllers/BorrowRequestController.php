@@ -8,7 +8,6 @@ use App\Models\BorrowDetail;
 use Illuminate\Http\Request;
 use App\Models\BorrowRequest;
 use App\Models\StockMovement;
-use App\Models\CustomNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
@@ -18,179 +17,78 @@ use App\Notifications\BorrowRejectedNotification;
 
 class BorrowRequestController extends Controller
 {
+    const PAGINATION_COUNT = 10;
+    const EXPORT_FILENAME = 'data_peminjaman';
+
     public function exportExcel()
     {
-        return Excel::download(new BorrowRequestsExport, 'data_peminjaman.xlsx');
+        $filename = self::EXPORT_FILENAME . '-' . now()->format('Y-m-d') . '.xlsx';
+        return Excel::download(new BorrowRequestsExport, $filename);
     }
 
     public function exportPdf()
     {
         $borrowRequests = BorrowRequest::with(['user', 'approver', 'borrowDetails.itemUnit.item'])->get();
+        $filename = self::EXPORT_FILENAME . '-' . now()->format('Y-m-d') . '.pdf';
 
         $pdf = PDF::loadView('borrow_requests.pdf', compact('borrowRequests'))
             ->setPaper('a4', 'landscape');
 
-        return $pdf->download('data_peminjaman.pdf');
+        return $pdf->download($filename);
     }
 
-    /**
-     * Menampilkan semua permintaan peminjaman.
-     */
     public function index(Request $request)
     {
-        $query = BorrowRequest::with(['requester', 'approver']);
-
-        // Filter pencarian
-        if ($request->has('search') && !empty($request->search)) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->whereHas('requester', function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%");
-                })
-                    ->orWhereHas('approver', function ($q) use ($search) {
-                        $q->where('name', 'like', "%{$search}%");
-                    });
-            });
-        }
-
-        // Filter status
-        if ($request->has('status') && !empty($request->status)) {
-            $query->where('status', $request->status);
-        }
-
-        // Filter tanggal
-        if ($request->has('start_date') && !empty($request->start_date)) {
-            $query->whereDate('created_at', '>=', $request->start_date);
-        }
-        if ($request->has('end_date') && !empty($request->end_date)) {
-            $query->whereDate('created_at', '<=', $request->end_date);
-        }
-
-        $requests = $query->orderBy('created_at', 'desc')->paginate(10);
+        $query = $this->buildFilterQuery($request);
+        $requests = $query->orderBy('created_at', 'desc')->paginate(self::PAGINATION_COUNT);
 
         if ($request->ajax()) {
-            return response()->json([
-                'data' => $requests->items(),
-                'current_page' => $requests->currentPage(),
-                'last_page' => $requests->lastPage(),
-                'from' => $requests->firstItem(),
-                'to' => $requests->lastItem(),
-                'total' => $requests->total(),
-                'links' => $requests->links()->elements,
-            ]);
+            return $this->ajaxResponse($requests);
         }
 
-        return view('borrow_requests.index', [
-            'requests' => $requests
-        ]);
+        return view('borrow_requests.index', ['requests' => $requests]);
     }
 
-    /**
-     * Menampilkan detail dari permintaan peminjaman.
-     */
     public function show(BorrowRequest $borrowRequest)
     {
-        // Pastikan eager loading diproses
-        $borrowRequest->load(['user', 'borrowDetail.itemUnit.item']);
-
+        $borrowRequest->load(['user', 'borrowDetails.itemUnit.item']);
         return view('borrow_requests.show', compact('borrowRequest'));
     }
 
-    /**
-     * Menampilkan form edit permintaan peminjaman.
-     */
     public function edit(BorrowRequest $borrowRequest)
     {
         return view('borrow_requests.edit', compact('borrowRequest'));
     }
 
-    /**
-     * Memperbarui data permintaan peminjaman.
-     */
     public function update(Request $request, BorrowRequest $borrowRequest)
     {
-        $request->validate([
+        $validated = $request->validate([
             'return_date_expected' => 'required|date',
             'notes' => 'nullable|string',
         ]);
 
-        $borrowRequest->update($request->only('return_date_expected', 'notes'));
+        $borrowRequest->update($validated);
 
-        return redirect()->route('borrow-requests.index')->with('success', 'Permintaan berhasil diperbarui.');
+        return redirect()->route('borrow-requests.index')
+            ->with('success', 'Permintaan berhasil diperbarui.');
     }
 
-    /**
-     * Menghapus permintaan peminjaman dari database.
-     */
     public function destroy(BorrowRequest $borrowRequest)
     {
         $borrowRequest->delete();
         return back()->with('success', 'Permintaan berhasil dihapus.');
     }
 
-    /**
-     * Menyetujui permintaan peminjaman.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\RedirectResponse
-     */
     public function approve($id)
     {
-        $request = BorrowRequest::with('borrowDetail.itemUnit.item')->findOrFail($id);
+        $request = BorrowRequest::with('borrowDetails.itemUnit.item')->findOrFail($id);
 
         DB::beginTransaction();
         try {
-            foreach ($request->borrowDetail as $detail) {
-                $itemUnit = $detail->itemUnit;
-                $item = $itemUnit->item;
-
-                if ($item->type === 'consumable') {
-                    if ($itemUnit->quantity < $detail->quantity) {
-                        DB::rollBack();
-                        return back()->with('error', 'Stok tidak mencukupi untuk item: ' . $item->name);
-                    }
-                    $itemUnit->quantity -= $detail->quantity;
-
-                    // Simpan stock movement keluar
-                    StockMovement::create([
-                        'item_unit_id' => $itemUnit->id,
-                        'type' => 'out',
-                        'quantity' => $detail->quantity,
-                        'description' => 'Persetujuan peminjaman',
-                        'movement_date' => now(),
-                    ]);
-
-                    if ($itemUnit->quantity === 0) {
-                        $itemUnit->status = 'out_of_stock';
-                    }
-                    $itemUnit->save();
-
-                } else {
-                    // Untuk barang non-consumable langsung ubah status jadi borrowed
-                    $itemUnit->status = 'borrowed';
-                    $itemUnit->save();
-
-                    // Catat stock movement sebagai 'out' untuk peminjaman barang non-consumable juga
-                    StockMovement::create([
-                        'item_unit_id' => $itemUnit->id,
-                        'type' => 'out',
-                        'quantity' => $detail->quantity,
-                        'description' => 'Persetujuan peminjaman',
-                        'movement_date' => now(),
-                    ]);
-                }
-            }
-
-            // Update status borrow request dan approved_by
-            $request->update([
-                'status' => 'approved',
-                'approved_by' => Auth::id(),
-            ]);
-
-            // Kirim notifikasi ke user
-            $request->user->notify(new BorrowApprovedNotification($request));
-
+            $this->processApproval($request);
             DB::commit();
+
+            $request->user->notify(new BorrowApprovedNotification($request));
             return back()->with('success', 'Permintaan berhasil disetujui.');
 
         } catch (\Exception $e) {
@@ -199,31 +97,119 @@ class BorrowRequestController extends Controller
         }
     }
 
-    /**
-     * Menolak permintaan peminjaman.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\RedirectResponse
-     */
     public function reject($id)
     {
-        $request = BorrowRequest::findOrFail($id);
+        $request = BorrowRequest::with('borrowDetails.itemUnit')->findOrFail($id);
 
         $request->update([
             'status' => 'rejected',
             'approved_by' => Auth::id(),
         ]);
 
-        foreach ($request->borrowDetail as $detail) {
-            $itemUnit = $detail->itemUnit;
-            if ($itemUnit->item->type !== 'consumable') {
-                $itemUnit->status = 'available';
-                $itemUnit->save();
-            }
-        }
-
+        $this->returnNonConsumableItems($request);
         $request->user->notify(new BorrowRejectedNotification($request));
 
         return back()->with('success', 'Permintaan berhasil ditolak.');
+    }
+
+    private function buildFilterQuery(Request $request)
+    {
+        $query = BorrowRequest::with(['requester', 'approver']);
+
+        if ($request->filled('search')) {
+            $query->whereHas('requester', fn($q) => $q->where('name', 'like', "%{$request->search}%"))
+                ->orWhereHas('approver', fn($q) => $q->where('name', 'like', "%{$request->search}%"));
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('start_date')) {
+            $query->whereDate('created_at', '>=', $request->start_date);
+        }
+
+        if ($request->filled('end_date')) {
+            $query->whereDate('created_at', '<=', $request->end_date);
+        }
+
+        return $query;
+    }
+
+    private function ajaxResponse($requests)
+    {
+        return response()->json([
+            'data' => $requests->items(),
+            'current_page' => $requests->currentPage(),
+            'last_page' => $requests->lastPage(),
+            'from' => $requests->firstItem(),
+            'to' => $requests->lastItem(),
+            'total' => $requests->total(),
+            'links' => $requests->links()->elements,
+        ]);
+    }
+
+    private function processApproval(BorrowRequest $request)
+    {
+        foreach ($request->borrowDetails as $detail) {
+            $this->processBorrowDetail($detail);
+        }
+
+        $request->update([
+            'status' => 'approved',
+            'approved_by' => Auth::id(),
+        ]);
+    }
+
+    private function processBorrowDetail(BorrowDetail $detail)
+    {
+        $itemUnit = $detail->itemUnit;
+        $item = $itemUnit->item;
+
+        if ($item->type === 'consumable') {
+            $this->handleConsumableItem($detail, $itemUnit);
+        } else {
+            $this->handleNonConsumableItem($itemUnit);
+        }
+
+        $this->recordStockMovement($itemUnit, $detail->quantity);
+    }
+
+    private function handleConsumableItem(BorrowDetail $detail, ItemUnit $itemUnit)
+    {
+        if ($itemUnit->quantity < $detail->quantity) {
+            throw new \Exception('Stok tidak mencukupi untuk item: ' . $itemUnit->item->name);
+        }
+
+        $itemUnit->quantity -= $detail->quantity;
+        $itemUnit->status = $itemUnit->quantity === 0 ? 'out_of_stock' : 'available';
+        $itemUnit->save();
+    }
+
+    private function handleNonConsumableItem(ItemUnit $itemUnit)
+    {
+        $itemUnit->status = 'borrowed';
+        $itemUnit->save();
+    }
+
+    private function recordStockMovement(ItemUnit $itemUnit, $quantity)
+    {
+        StockMovement::create([
+            'item_unit_id' => $itemUnit->id,
+            'type' => 'out',
+            'quantity' => $quantity,
+            'description' => 'Persetujuan peminjaman',
+            'movement_date' => now(),
+        ]);
+    }
+
+    private function returnNonConsumableItems(BorrowRequest $request)
+    {
+        foreach ($request->borrowDetails as $detail) {
+            if ($detail->itemUnit->item->type !== 'consumable') {
+                $detail->itemUnit->status = 'available';
+                $detail->itemUnit->save();
+            }
+        }
     }
 }

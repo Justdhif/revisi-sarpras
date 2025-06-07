@@ -47,4 +47,9 @@ class ItemUnit extends Model
     {
         return $this->hasMany(Cart::class);
     }
+
+    public function stockMovements()
+    {
+        return $this->hasMany(StockMovement::class);
+    }
 }

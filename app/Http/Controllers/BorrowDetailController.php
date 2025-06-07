@@ -9,11 +9,6 @@ use Illuminate\Http\Request;
 
 class BorrowDetailController extends Controller
 {
-    /**
-     * Menampilkan daftar detail peminjaman.
-     *
-     * @return \Illuminate\View\View
-     */
     public function index()
     {
         $borrowDetails = BorrowDetail::with([
@@ -25,17 +20,59 @@ class BorrowDetailController extends Controller
         return view('borrow_details.index', compact('borrowDetails'));
     }
 
-    /**
-     * Menampilkan form untuk menambahkan item ke dalam permintaan peminjaman.
-     *
-     * @param  int  $borrowRequestId
-     * @return \Illuminate\View\View
-     */
     public function create($borrowRequestId)
     {
         $borrowRequest = BorrowRequest::with('user')->findOrFail($borrowRequestId);
+        $itemUnits = $this->getAvailableItemUnits();
 
-        $itemUnits = ItemUnit::with('item')
+        return view('borrow_details.create', compact('borrowRequest', 'itemUnits'));
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'borrow_request_id' => 'required|exists:borrow_requests,id',
+            'item_unit_id' => 'required|exists:item_units,id',
+            'quantity' => 'required|integer|min:1',
+        ]);
+
+        $unit = ItemUnit::findOrFail($validated['item_unit_id']);
+
+        if (!$this->validateItemAvailability($unit, $validated['quantity'])) {
+            return back()->with('error', $this->getAvailabilityErrorMessage($unit));
+        }
+
+        $this->updateItemStatus($unit, $validated['quantity']);
+        BorrowDetail::create($validated);
+
+        return redirect()
+            ->route('borrow-requests.show', $validated['borrow_request_id'])
+            ->with('success', 'Barang berhasil ditambahkan ke peminjaman.');
+    }
+
+    public function show(string $id)
+    {
+        // Implementation pending
+    }
+
+    public function edit(string $id)
+    {
+        // Implementation pending
+    }
+
+    public function update(Request $request, string $id)
+    {
+        // Implementation pending
+    }
+
+    public function destroy(string $id)
+    {
+        // Implementation pending
+    }
+
+    private function getAvailableItemUnits()
+    {
+        return ItemUnit::with('item')
             ->where('status', 'available')
             ->whereHas('item', function ($query) {
                 $query->where(function ($q) {
@@ -47,96 +84,33 @@ class BorrowDetailController extends Controller
                 });
             })
             ->get();
-
-        return view('borrow_details.create', compact('borrowRequest', 'itemUnits'));
     }
 
-    /**
-     * Menyimpan data peminjaman barang ke dalam database.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function store(Request $request)
+    private function validateItemAvailability(ItemUnit $unit, int $quantity): bool
     {
-        $request->validate([
-            'borrow_request_id' => 'required|exists:borrow_requests,id',
-            'item_unit_id' => 'required|exists:item_units,id',
-            'quantity' => 'required|integer|min:1',
-        ]);
-
-        $unit = ItemUnit::findOrFail($request->item_unit_id);
-        $item = $unit->item;
-
-        if ($item->type === 'consumable') {
-            // Validasi stok barang habis pakai
-            if ($unit->quantity === null || $unit->quantity < $request->quantity) {
-                return back()->with('error', 'Stok tidak mencukupi untuk item: ' . $item->name);
-            }
-
-            $unit->quantity -= $request->quantity;
-
-            // Tandai barang tidak tersedia jika stok habis
-            if ($unit->quantity === 0) {
-                $unit->status = 'unavailable';
-            }
-
-            $unit->save();
-        } else {
-            // Validasi barang tidak habis pakai harus tersedia
-            if ($unit->status !== 'available') {
-                return back()->with('error', 'Item tidak tersedia untuk dipinjam.');
-            }
-
-            $unit->status = 'borrowed';
-            $unit->save();
+        if ($unit->item->type === 'consumable') {
+            return $unit->quantity !== null && $unit->quantity >= $quantity;
         }
 
-        BorrowDetail::create($request->only('borrow_request_id', 'item_unit_id', 'quantity'));
-
-        return redirect()
-            ->route('borrow-requests.show', $request->borrow_request_id)
-            ->with('success', 'Barang berhasil ditambahkan ke peminjaman.');
+        return $unit->status === 'available';
     }
 
-    /**
-     * Placeholder untuk menampilkan detail peminjaman tertentu.
-     *
-     * @param  string  $id
-     */
-    public function show(string $id)
+    private function getAvailabilityErrorMessage(ItemUnit $unit): string
     {
-        //
+        return $unit->item->type === 'consumable'
+            ? 'Stok tidak mencukupi untuk item: ' . $unit->item->name
+            : 'Item tidak tersedia untuk dipinjam.';
     }
 
-    /**
-     * Placeholder untuk menampilkan form edit peminjaman.
-     *
-     * @param  string  $id
-     */
-    public function edit(string $id)
+    private function updateItemStatus(ItemUnit $unit, int $quantity): void
     {
-        //
-    }
+        if ($unit->item->type === 'consumable') {
+            $unit->quantity -= $quantity;
+            $unit->status = $unit->quantity === 0 ? 'unavailable' : 'available';
+        } else {
+            $unit->status = 'borrowed';
+        }
 
-    /**
-     * Placeholder untuk memperbarui data peminjaman.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  string  $id
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Placeholder untuk menghapus data peminjaman.
-     *
-     * @param  string  $id
-     */
-    public function destroy(string $id)
-    {
-        //
+        $unit->save();
     }
 }

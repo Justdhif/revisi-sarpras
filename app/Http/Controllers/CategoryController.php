@@ -7,67 +7,51 @@ use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
-    /**
-     * Menampilkan daftar kategori dengan pagination.
-     */
+    const PAGINATION_COUNT = 10;
+
     public function index()
     {
-        $categories = Category::latest()->paginate(10);
+        $categories = Category::latest()->paginate(self::PAGINATION_COUNT);
         return view('categories.index', compact('categories'));
     }
 
-    /**
-     * Menyimpan kategori baru ke database.
-     */
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
         ]);
 
-        Category::create([
-            'name' => $request->name,
-            'description' => $request->description,
-        ]);
+        Category::create($validated);
 
-        return redirect()->route('categories.index')->with('success', 'Kategori berhasil ditambahkan!');
+        return redirect()->route('categories.index')
+            ->with('success', 'Kategori berhasil ditambahkan!');
     }
 
-    /**
-     * Menampilkan detail kategori beserta item terkait.
-     */
     public function show(Category $category)
     {
-        $category->load('items'); // Pastikan relasi item dimuat
+        $category->load('items');
         return view('categories.show', compact('category'));
     }
 
-    /**
-     * Memperbarui data kategori.
-     */
     public function update(Request $request, Category $category)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
         ]);
 
-        $category->update([
-            'name' => $request->name,
-            'description' => $request->description,
-        ]);
+        $category->update($validated);
 
-        return redirect()->route('categories.index')->with('success', 'Kategori berhasil diperbarui!');
+        return redirect()->route('categories.index')
+            ->with('success', 'Kategori berhasil diperbarui!');
     }
 
-    /**
-     * Menghapus kategori dari database.
-     */
     public function destroy(Category $category)
     {
         $category->delete();
 
-        return redirect()->route('categories.index')->with('success', 'Kategori berhasil dihapus!');
+        return redirect()->route('categories.index')
+            ->with('success', 'Kategori berhasil dihapus!');
     }
 }

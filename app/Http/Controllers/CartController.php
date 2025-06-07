@@ -1,127 +1,175 @@
 <?php
 
-
 namespace App\Http\Controllers;
 
 use App\Models\Cart;
+use App\Models\Item;
 use App\Models\ItemUnit;
 use App\Models\BorrowDetail;
-use Illuminate\Http\Request;
 use App\Models\BorrowRequest;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class CartController extends Controller
 {
     public function index()
     {
-        $carts = Cart::with('item', 'itemUnit')->where('user_id', Auth::id())->get();
+        $carts = $this->getUserCart();
         return view('cart.index', compact('carts'));
     }
 
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'item_id' => 'required|exists:items,id',
             'item_unit_id' => 'required|exists:item_units,id',
+            'quantity' => 'nullable|integer|min:1',
         ]);
 
-        // validasi jika quantity tidak sesuai
-        $itemUnit = ItemUnit::findOrFail($request->item_unit_id);
-        if ($itemUnit->quantity < $request->quantity || $itemUnit->status === 'borrowed') {
-            return redirect()->back()->with('error', 'Stok tidak mencukupi / item sedang dipinjam');
+        $itemUnit = ItemUnit::findOrFail($validated['item_unit_id']);
+
+        if (!$this->validateItemAvailability($itemUnit, $validated['quantity'] ?? 1)) {
+            return redirect()->back()
+                ->with('error', 'Stok tidak mencukupi / item sedang dipinjam');
         }
 
-        $exists = Cart::where('user_id', Auth::id())
-            ->where('item_id', $request->item_id)
-            ->where('item_unit_id', $request->item_unit_id)
-            ->exists();
-
-        if ($exists) {
-            return redirect()->back()->with('error', 'Item sudah ada di keranjang');
+        if ($this->itemAlreadyInCart($validated['item_id'], $validated['item_unit_id'])) {
+            return redirect()->back()
+                ->with('error', 'Item sudah ada di keranjang');
         }
 
-        Cart::create([
-            'user_id' => Auth::id(),
-            'item_id' => $request->item_id,
-            'item_unit_id' => $request->item_unit_id,
-            'quantity' => $request->quantity ?? 1,
-        ]);
+        $this->addToCart($validated, $itemUnit);
 
-        $itemUnit->status = 'reserved';
-        $itemUnit->save();
-
-        return redirect()->back()->with('success', 'Ditambahkan ke keranjang');
+        return redirect()->back()
+            ->with('success', 'Ditambahkan ke keranjang');
     }
 
     public function updateQuantity(Request $request, $id)
     {
-        $cart = Cart::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
-
+        $cart = $this->findUserCartItem($id);
         $quantity = (int) $request->input('quantity');
-        $item = $cart->item;
 
-        // Validasi stok tersedia (hanya untuk item disposable)
-        if ($item->consumable) {
-            if ($quantity > $item->quantity) {
-                return redirect()->back()->with('error', 'Stok tidak mencukupi');
-            }
+        if (!$this->validateStockAvailability($cart->item, $quantity)) {
+            return redirect()->back()
+                ->with('error', 'Stok tidak mencukupi');
         }
 
-        $cart->quantity = $quantity;
-        $cart->save();
+        $cart->update(['quantity' => $quantity]);
 
-        return redirect()->back()->with('success', 'Kuantitas diubah');
+        return redirect()->back()
+            ->with('success', 'Kuantitas diubah');
     }
 
     public function destroy($id)
     {
-        $cart = Cart::where('id', $id)
-            ->where('user_id', Auth::id())
-            ->firstOrFail();
+        $cart = $this->findUserCartItem($id);
+        $this->removeFromCart($cart);
 
-        // Jika ada item_unit_id, update status unit ke 'available'
-        if ($cart->item_unit_id && $cart->itemUnit) {
-            $cart->itemUnit->status = 'available';
-            $cart->itemUnit->save();
-        }
-
-        $cart->delete();
-
-        return redirect()->back()->with('success', 'Dihapus dari keranjang');
+        return redirect()->back()
+            ->with('success', 'Dihapus dari keranjang');
     }
 
     public function submit(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'borrow_date_expected' => 'required|date',
             'return_date_expected' => 'required|date|after_or_equal:borrow_date_expected',
             'reason' => 'required|string',
+            'notes' => 'nullable|string',
         ]);
 
-        $carts = Cart::where('user_id', Auth::id())->get();
+        $carts = $this->getUserCart();
 
         if ($carts->isEmpty()) {
-            return redirect()->back()->with('error', 'Keranjang kosong.');
+            return redirect()->back()
+                ->with('error', 'Keranjang kosong.');
         }
 
-        $borrow = BorrowRequest::create([
+        $borrowRequest = $this->createBorrowRequest($validated);
+        $this->createBorrowDetails($borrowRequest, $carts);
+        $this->clearUserCart();
+
+        return redirect()->back()
+            ->with('success', 'Permintaan peminjaman dikirim.');
+    }
+
+    private function getUserCart()
+    {
+        return Cart::with('item', 'itemUnit')
+            ->where('user_id', Auth::id())
+            ->get();
+    }
+
+    private function validateItemAvailability(ItemUnit $itemUnit, int $quantity): bool
+    {
+        return $itemUnit->quantity >= $quantity &&
+            $itemUnit->status !== 'borrowed';
+    }
+
+    private function itemAlreadyInCart(int $itemId, int $itemUnitId): bool
+    {
+        return Cart::where('user_id', Auth::id())
+            ->where('item_id', $itemId)
+            ->where('item_unit_id', $itemUnitId)
+            ->exists();
+    }
+
+    private function addToCart(array $data, ItemUnit $itemUnit): void
+    {
+        Cart::create([
             'user_id' => Auth::id(),
-            'borrow_date_expected' => $request->borrow_date_expected,
-            'return_date_expected' => $request->return_date_expected,
-            'reason' => $request->reason,
-            'notes' => $request->notes,
+            'item_id' => $data['item_id'],
+            'item_unit_id' => $data['item_unit_id'],
+            'quantity' => $data['quantity'] ?? 1,
         ]);
 
+        $itemUnit->update(['status' => 'reserved']);
+    }
+
+    private function findUserCartItem($id)
+    {
+        return Cart::where('id', $id)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
+    }
+
+    private function validateStockAvailability(Item $item, int $quantity): bool
+    {
+        return !$item->consumable || $quantity <= $item->quantity;
+    }
+
+    private function removeFromCart(Cart $cart): void
+    {
+        if ($cart->itemUnit) {
+            $cart->itemUnit->update(['status' => 'available']);
+        }
+        $cart->delete();
+    }
+
+    private function createBorrowRequest(array $data): BorrowRequest
+    {
+        return BorrowRequest::create([
+            'user_id' => Auth::id(),
+            'borrow_date_expected' => $data['borrow_date_expected'],
+            'return_date_expected' => $data['return_date_expected'],
+            'reason' => $data['reason'],
+            'notes' => $data['notes'],
+        ]);
+    }
+
+    private function createBorrowDetails(BorrowRequest $borrowRequest, $carts): void
+    {
         foreach ($carts as $cart) {
             BorrowDetail::create([
-                'borrow_request_id' => $borrow->id,
+                'borrow_request_id' => $borrowRequest->id,
                 'item_unit_id' => $cart->item_unit_id,
                 'quantity' => $cart->quantity,
             ]);
         }
+    }
 
+    private function clearUserCart(): void
+    {
         Cart::where('user_id', Auth::id())->delete();
-
-        return redirect()->back()->with('success', 'Permintaan peminjaman dikirim.');
     }
 }

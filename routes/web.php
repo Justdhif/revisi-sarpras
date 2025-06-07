@@ -42,10 +42,9 @@ Route::post('logout', [AuthController::class, 'logout'])->name('logout');
 Route::middleware(['auth', 'role:super-admin'])->group(function () {
     /*
     |----------------------------------------------------------------------
-    | Dashboard & Home
+    | Dashboard
     |----------------------------------------------------------------------
     */
-    Route::get('/home', [HomeController::class, 'index'])->name('home');
     Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('dashboard');
 
     /*

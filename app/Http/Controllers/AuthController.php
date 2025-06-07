@@ -18,153 +18,137 @@ use Illuminate\Support\Facades\Cache;
 
 class AuthController extends Controller
 {
-    /**
-     * Menampilkan halaman login.
-     *
-     * @return \Illuminate\View\View
-     */
+    const TREND_DAYS = 30;
+    const RECENT_ITEMS_COUNT = 5;
+    const CACHE_HOURS = 6;
+
     public function showLogin()
     {
         return view('auth.login');
     }
 
-    /**
-     * Memproses autentikasi login user.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse
-     */
     public function login(Request $request)
     {
-        $request->validate([
+        $credentials = $request->validate([
             'email' => 'required|string',
             'password' => 'required|string',
         ]);
 
         $remember = $request->has('remember');
+        $user = User::where('email', $credentials['email'])->first();
 
-        $user = User::where('email', $request->email)->first();
-
-        if ($user && $user->role === 'super-admin' && Hash::check($request->password, $user->password)) {
-            Auth::login($user, $remember);
-            $user->update([
-                'last_logined_at' => now(),
-                'active' => true,
-            ]);
-            return redirect()->route('dashboard')->with('success', 'Hai ' . $user->username . ', selamat datang!');
+        if (!$user) {
+            return back()->with('error', 'Email atau password salah!');
         }
 
-        if ($user && $user->role === 'user') {
+        if ($user->role === 'super-admin' && Hash::check($credentials['password'], $user->password)) {
+            $this->handleSuccessfulLogin($user, $remember);
+            return redirect()->route('dashboard')
+                ->with('success', 'Hai ' . $user->username . ', selamat datang!');
+        }
+
+        if ($user->role === 'user') {
             return redirect()->back()->with('error', 'Akun mu bukan sebagai admin');
         }
 
         return back()->with('error', 'Email atau password salah!');
     }
 
-    /**
-     * Logout user dari sistem.
-     *
-     * @return \Illuminate\Http\RedirectResponse
-     */
     public function logout()
     {
-        $user = Auth::user();
-        if ($user) {
+        if ($user = Auth::user()) {
             $user->update(['active' => false]);
         }
 
         Auth::logout();
-
         return redirect()->route('login')->with('success', 'Berhasil logout.');
     }
 
-    /**
-     * Menampilkan data statistik dan ringkasan pada dashboard.
-     *
-     * @return \Illuminate\View\View
-     */
     public function dashboard()
     {
-        // Statistik utama dengan trend
-        $totalUsers = User::where('role', 'user')->count();
-        $totalUsersTrend = $this->calculateTrend(User::class, 'user');
+        $stats = $this->getDashboardStatistics();
+        $recentData = $this->getRecentData();
 
-        $totalItems = Item::count();
-        $totalItemsTrend = $this->calculateTrend(Item::class);
-
-        $totalBorrows = BorrowRequest::count();
-        $totalBorrowsTrend = $this->calculateTrend(BorrowRequest::class);
-
-        $totalReturns = ReturnRequest::count();
-        $totalReturnsTrend = $this->calculateTrend(ReturnRequest::class);
-
-        // Data terbaru untuk ditampilkan
-        $recentLogs = ActivityLog::latest()->take(5)->get();
-        $recentBorrows = BorrowRequest::with('user')->latest()->take(5)->get();
-        $recentReturns = ReturnRequest::with('borrowRequest.user')->latest()->take(5)->get();
-        $recentItems = Item::with('category')->latest()->take(5)->get();
-        $recentItemUnits = ItemUnit::with('item.category')->latest()->take(5)->get();
-        $sku = ItemUnit::pluck('sku');
-
-        return view('dashboard', compact(
-            'totalUsers',
-            'totalUsersTrend',
-            'totalItems',
-            'totalItemsTrend',
-            'totalBorrows',
-            'totalBorrowsTrend',
-            'totalReturns',
-            'totalReturnsTrend',
-            'recentLogs',
-            'recentBorrows',
-            'recentReturns',
-            'recentItems',
-            'recentItemUnits',
-            'sku'
-        ));
+        return view('dashboard', array_merge($stats, $recentData));
     }
 
-    /**
-     * Menghitung persentase trend perubahan data
-     *
-     * @param string $model Class model yang akan dihitung
-     * @param mixed $condition Kondisi tambahan untuk query
-     * @param int $days Jumlah hari untuk periode perbandingan (default 30 hari)
-     * @return string
-     */
-    private function calculateTrend($model, $condition = null, $days = 30)
+    private function handleSuccessfulLogin(User $user, bool $remember)
     {
-        return Cache::remember("trend-{$model}-{$condition}", now()->addHours(6), function () use ($model, $condition, $days) {
-            $currentPeriod = now()->subDays($days)->toDateString();
-            $previousPeriod = now()->subDays($days * 2)->toDateString();
+        Auth::login($user, $remember);
+        $user->update([
+            'last_logined_at' => now(),
+            'active' => true,
+        ]);
+    }
 
-            $query = $model::query();
+    private function getDashboardStatistics()
+    {
+        return [
+            'totalUsers' => User::where('role', 'user')->count(),
+            'totalUsersTrend' => $this->calculateTrend(User::class, 'user'),
 
-            // Handle special case for User model with role condition
-            if ($model === User::class && $condition === 'user') {
-                $query->where('role', 'user');
+            'totalItems' => Item::count(),
+            'totalItemsTrend' => $this->calculateTrend(Item::class),
+
+            'totalBorrows' => BorrowRequest::count(),
+            'totalBorrowsTrend' => $this->calculateTrend(BorrowRequest::class),
+
+            'totalReturns' => ReturnRequest::count(),
+            'totalReturnsTrend' => $this->calculateTrend(ReturnRequest::class),
+        ];
+    }
+
+    private function getRecentData()
+    {
+        return [
+            'recentLogs' => ActivityLog::latest()->take(self::RECENT_ITEMS_COUNT)->get(),
+            'recentBorrows' => BorrowRequest::with('user')->latest()->take(self::RECENT_ITEMS_COUNT)->get(),
+            'recentReturns' => ReturnRequest::with('borrowRequest.user')->latest()->take(self::RECENT_ITEMS_COUNT)->get(),
+            'recentItems' => Item::with('category')->latest()->take(self::RECENT_ITEMS_COUNT)->get(),
+            'recentItemUnits' => ItemUnit::with('item.category')->latest()->take(self::RECENT_ITEMS_COUNT)->get(),
+            'sku' => ItemUnit::pluck('sku'),
+        ];
+    }
+
+    private function calculateTrend(string $model, ?string $condition = null, int $days = self::TREND_DAYS)
+    {
+        return Cache::remember(
+            "trend-{$model}-{$condition}",
+            now()->addHours(self::CACHE_HOURS),
+            function () use ($model, $condition, $days) {
+                $currentPeriod = now()->subDays($days);
+                $previousPeriod = now()->subDays($days * 2);
+
+                $query = $model::query();
+
+                if ($model === User::class && $condition === 'user') {
+                    $query->where('role', 'user');
+                } elseif ($condition) {
+                    $query->where('status', $condition);
+                }
+
+                $currentCount = $query->clone()
+                    ->where('created_at', '>=', $currentPeriod)
+                    ->count();
+
+                $previousCount = $query->clone()
+                    ->whereBetween('created_at', [$previousPeriod, $currentPeriod])
+                    ->count();
+
+                return $this->calculatePercentageChange($currentCount, $previousCount);
             }
-            // Apply condition if provided for other models
-            elseif ($condition) {
-                $query->where('status', $condition);
-            }
+        );
+    }
 
-            $currentCount = $query->clone()
-                ->where('created_at', '>=', $currentPeriod)
-                ->count();
+    private function calculatePercentageChange(int $current, int $previous): string
+    {
+        if ($previous === 0) {
+            return $current > 0 ? '+100%' : '0%';
+        }
 
-            $previousCount = $query->clone()
-                ->whereBetween('created_at', [$previousPeriod, $currentPeriod])
-                ->count();
+        $percentage = (($current - $previous) / $previous) * 100;
+        $formatted = number_format(abs($percentage), 1) . '%';
 
-            if ($previousCount == 0) {
-                return $currentCount > 0 ? '+100%' : '0%';
-            }
-
-            $percentage = (($currentCount - $previousCount) / $previousCount) * 100;
-            $formatted = number_format(abs($percentage), 1) . '%';
-
-            return ($percentage >= 0 ? '+' : '-') . $formatted;
-        });
+        return ($percentage >= 0 ? '+' : '-') . $formatted;
     }
 }
