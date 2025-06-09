@@ -45,10 +45,12 @@
                                             d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                                     </svg>
                                 </div>
-                                <input type="text" name="sku" id="sku" required
-                                    class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-3 border"
-                                    value="{{ old('sku') }}" placeholder="Kode identifikasi unit">
+                                <input type="text" name="sku" id="sku" required readonly
+                                    class="bg-gray-100 focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-3 border"
+                                    value="{{ old('sku', 'SKU-' . strtoupper(Str::random(8))) }}"
+                                    placeholder="Kode SKU akan digenerate otomatis">
                             </div>
+                            <p class="mt-1 text-sm text-gray-500">Kode SKU digenerate otomatis oleh sistem</p>
                         </div>
 
                         <div>
@@ -58,7 +60,7 @@
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none"
                                         viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                            d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z" />
                                     </svg>
                                 </div>
                                 <input type="number" name="quantity" id="quantity" min="1"
@@ -96,14 +98,9 @@
                                             d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                                     </svg>
                                 </div>
-                                <select name="status" id="status" required
-                                    class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-3 border appearance-none bg-white">
-                                    @foreach (['available' => 'Tersedia', 'borrowed' => 'Dipinjam', 'unknown' => 'Tidak Diketahui'] as $value => $label)
-                                        <option value="{{ $value }}" {{ old('status') == $value ? 'selected' : '' }}>
-                                            {{ $label }}
-                                        </option>
-                                    @endforeach
-                                </select>
+                                <input type="text" name="status" id="status" required readonly
+                                    class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-3 border appearance-none bg-white"
+                                    value="available">
                             </div>
                         </div>
                     </div>
@@ -134,7 +131,7 @@
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none"
                                         viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z" />
                                     </svg>
                                 </div>
                                 <input type="date" name="acquisition_date" id="acquisition_date" required
@@ -233,4 +230,16 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const skuField = document.getElementById('sku');
+
+            // Generate SKU if empty (fallback if server-side generation fails)
+            if (!skuField.value || skuField.value === '') {
+                const randomPart = Math.random().toString(36).substring(2, 10).toUpperCase();
+                skuField.value = 'SKU-' + randomPart;
+            }
+        });
+    </script>
 @endsection

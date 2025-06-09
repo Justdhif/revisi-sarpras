@@ -173,7 +173,7 @@ class ItemUnitController extends Controller
     private function validateItemUnitRequest(Request $request, ?ItemUnit $itemUnit = null)
     {
         $rules = [
-            'sku' => 'required|unique:item_units' . ($itemUnit ? ',sku,' . $itemUnit->id : ''),
+            'sku' => 'required|unique:item_units,sku',
             'condition' => 'required|string|max:255',
             'notes' => 'nullable|string',
             'acquisition_source' => 'required|string|max:255',
