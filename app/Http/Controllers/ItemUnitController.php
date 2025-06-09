@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Item;
 use App\Models\ItemUnit;
+use App\Models\StockMovement;
 use App\Models\Warehouse;
 use Illuminate\Http\Request;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
@@ -65,6 +66,14 @@ class ItemUnitController extends Controller
 
         $validated['qr_image_url'] = $this->generateQrCode($validated['sku']);
         ItemUnit::create($validated);
+
+        StockMovement::create([
+            'item_unit_id' => ItemUnit::latest()->first()->id,
+            'type' => 'in',
+            'quantity' => $validated['quantity'],
+            'movement_date' => now(),
+            'description' => 'Barang masuk ke gudang',
+        ]);
 
         return redirect()->route('item-units.index')
             ->with('success', 'Unit barang berhasil ditambahkan.');

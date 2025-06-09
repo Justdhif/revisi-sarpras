@@ -52,4 +52,9 @@ class ItemUnit extends Model
     {
         return $this->hasMany(StockMovement::class);
     }
+
+    public function damagedItems()
+    {
+        return $this->hasMany(DamagedItem::class);
+    }
 }

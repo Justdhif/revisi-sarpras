@@ -37,7 +37,7 @@
         </div>
 
         <!-- Inventory Management Section -->
-        <div class="mt-6" x-data="{ itemsOpen: {{ request()->routeIs('items.*', 'item-units.*', 'stock_movements.*') ? 'true' : 'false' }} }">
+        <div class="mt-6" x-data="{ itemsOpen: {{ request()->routeIs('items.*', 'item-units.*', 'stock_movements.*', 'damaged-items.*') ? 'true' : 'false' }} }">
             <h3 class="px-3 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Manajemen
                 Inventori</h3>
             <div class="space-y-1">
@@ -66,6 +66,11 @@
                     <a href="{{ route('stock_movements.index') }}"
                         class="block px-3 py-1.5 text-sm rounded-md font-medium transition-colors {{ request()->routeIs('stock_movements.*') ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50 hover:text-accent-foreground' }}">
                         <i class="fas fa-history w-5 mr-2 text-muted-foreground"></i> Riwayat Stok
+                    </a>
+                    <a href="{{ route('damaged-items.index') }}"
+                        class="block px-3 py-1.5 text-sm rounded-md font-medium transition-colors
+                            {{ request()->routeIs('damaged-items.*') ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50 hover:text-accent-foreground' }}">
+                        <i class="fas fa-bolt w-5 mr-2 text-muted-foreground"></i> Barang Rusak
                     </a>
                 </div>
             </div>

@@ -3,13 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\ItemUnit;
-use Illuminate\Http\Request;
+use App\Models\RepairedItem;
 use App\Models\StockMovement;
+use App\Models\DamagedItem;
+use Illuminate\Http\Request;
 
 class StockMovementController extends Controller
 {
     const PAGINATION_COUNT = 10;
-    const MOVEMENT_TYPES = ['in', 'out', 'damaged'];
+    const MOVEMENT_TYPES = ['in', 'out', 'damaged', 'repaired'];
     const DEFAULT_SORT = 'item_asc';
 
     public function index(Request $request)
@@ -123,5 +125,18 @@ class StockMovementController extends Controller
         };
 
         $itemUnit->save();
+
+        if ($movement->type === 'damaged') {
+            DamagedItem::create([
+                'item_unit_id' => $movement->item_unit_id,
+                'quantity' => $movement->quantity,
+                'damaged_at' => $movement->movement_date,
+                'description' => $movement->description,
+            ]);
+
+            $itemUnit->type = 'damaged';
+            $itemUnit->save();
+
+        }
     }
 }

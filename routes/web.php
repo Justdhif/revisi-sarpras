@@ -11,6 +11,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ItemUnitController;
 use App\Http\Controllers\WarehouseController;
 use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\DamagedItemController;
 use App\Http\Controllers\BorrowDetailController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\BorrowRequestController;
@@ -138,6 +139,13 @@ Route::middleware(['auth', 'role:super-admin'])->group(function () {
         Route::get('/', [StockMovementController::class, 'index'])->name('stock_movements.index');
         Route::post('/', [StockMovementController::class, 'store'])->name('stock_movements.store');
     });
+
+    /*
+    |----------------------------------------------------------------------
+    | Damaged Items
+    |----------------------------------------------------------------------
+    */
+    Route::get('/damaged-items', [DamagedItemController::class, 'index'])->name('damaged-items.index');
 
     /*
     |----------------------------------------------------------------------
