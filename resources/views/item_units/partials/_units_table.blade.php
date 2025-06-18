@@ -1,11 +1,23 @@
-<div x-show="units.length > 0" class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
+<div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
     <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
                     <th scope="col"
                         class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        SKU
+                        <a
+                            href="{{ route('item-units.index', array_merge(request()->query(), ['sort' => 'sku', 'direction' => $sortField === 'sku' && $sortDirection === 'asc' ? 'desc' : 'asc'])) }}">
+                            SKU
+                            @if ($sortField === 'sku')
+                                @if ($sortDirection === 'asc')
+                                    <i class="fas fa-sort-up ml-1"></i>
+                                @else
+                                    <i class="fas fa-sort-down ml-1"></i>
+                                @endif
+                            @else
+                                <i class="fas fa-sort ml-1 text-gray-400"></i>
+                            @endif
+                        </a>
                     </th>
                     <th scope="col"
                         class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -29,7 +41,19 @@
                     </th>
                     <th scope="col"
                         class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Kuantitas
+                        <a
+                            href="{{ route('item-units.index', array_merge(request()->query(), ['sort' => 'quantity', 'direction' => $sortField === 'quantity' && $sortDirection === 'asc' ? 'desc' : 'asc'])) }}">
+                            Kuantitas
+                            @if ($sortField === 'quantity')
+                                @if ($sortDirection === 'asc')
+                                    <i class="fas fa-sort-up ml-1"></i>
+                                @else
+                                    <i class="fas fa-sort-down ml-1"></i>
+                                @endif
+                            @else
+                                <i class="fas fa-sort ml-1 text-gray-400"></i>
+                            @endif
+                        </a>
                     </th>
                     <th scope="col"
                         class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -38,59 +62,55 @@
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
-                <template x-for="unit in units" :key="unit.id">
+                @foreach ($itemUnits as $unit)
                     <tr>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900" x-text="unit.sku"></div>
+                            <div class="text-sm font-medium text-gray-900">{{ $unit->sku }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="ml-4">
-                                <div class="text-sm font-medium text-gray-900" x-text="unit.item.name"></div>
+                                <div class="text-sm font-medium text-gray-900">{{ $unit->item->name }}</div>
                             </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span
-                                x-bind:class="{
-                                    'bg-green-100 text-green-800': unit.condition === 'new',
-                                    'bg-blue-100 text-blue-800': unit.condition === 'used',
-                                    'bg-purple-100 text-purple-800': unit.condition === 'refurbished',
-                                    'bg-red-100 text-red-800': unit.condition === 'damaged',
-                                    'bg-gray-100 text-gray-800': !['new', 'used', 'refurbished', 'damaged'].includes(
-                                        unit.condition)
-                                }"
-                                class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full">
-                                <span x-text="unit.condition.charAt(0).toUpperCase() + unit.condition.slice(1)"></span>
+                                class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full
+                            {{ $unit->condition === 'good'
+                                ? 'bg-green-100 text-green-800'
+                                : ($unit->condition === 'damaged'
+                                    ? 'bg-red-100 text-red-800'
+                                    : 'bg-gray-100 text-gray-800') }}">
+                                {{ ucfirst($unit->condition) }}
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-600" x-text="unit.warehouse.name"></div>
+                            <div class="text-sm text-gray-600">{{ $unit->warehouse->name }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span
-                                x-bind:class="{
-                                    'bg-green-100 text-green-800': unit.status === 'available',
-                                    'bg-yellow-100 text-yellow-800': unit.status === 'reserved',
-                                    'bg-red-100 text-red-800': unit.status === 'out_of_stock',
-                                    'bg-gray-100 text-gray-800': !['available', 'reserved', 'out_of_stock'].includes(
-                                        unit.status)
-                                }"
-                                class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full">
-                                <span
-                                    x-text="unit.status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())"></span>
+                                class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full
+                            {{ $unit->status === 'available'
+                                ? 'bg-green-100 text-green-800'
+                                : ($unit->status === 'reserved'
+                                    ? 'bg-yellow-100 text-yellow-800'
+                                    : ($unit->status === 'out_of_stock'
+                                        ? 'bg-red-100 text-red-800'
+                                        : 'bg-gray-100 text-gray-800')) }}">
+                                {{ str_replace('_', ' ', ucfirst($unit->status)) }}
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="h-16 w-16 p-1 bg-white rounded border border-gray-200">
-                                <img x-bind:src="'https://api.qrserver.com/v1/create-qr-code/?size=60x60&data=' + unit.sku"
-                                    x-bind:alt="'QR Code for ' + unit.sku">
+                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=60x60&data={{ $unit->sku }}"
+                                    alt="QR Code for {{ $unit->sku }}">
                             </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900" x-text="unit.quantity"></div>
+                            <div class="text-sm font-medium text-gray-900">{{ $unit->quantity }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <div class="flex justify-end space-x-2">
-                                <a x-bind:href="'{{ route('item-units.index') }}/' + unit.id"
+                                <a href="{{ route('item-units.show', $unit->id) }}"
                                     class="text-amber-600 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 px-3 py-1.5 rounded-md transition-colors duration-200 flex items-center">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20"
                                         fill="currentColor">
@@ -101,7 +121,7 @@
                                     </svg>
                                     Lihat
                                 </a>
-                                <a x-bind:href="'{{ route('item-units.index') }}/' + unit.id + '/edit'"
+                                <a href="{{ route('item-units.edit', $unit->id) }}"
                                     class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-md transition-colors duration-200 flex items-center">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20"
                                         fill="currentColor">
@@ -110,7 +130,7 @@
                                     </svg>
                                     Edit
                                 </a>
-                                <form x-bind:action="'{{ route('item-units.index') }}/' + unit.id" method="POST"
+                                <form action="{{ route('item-units.destroy', $unit->id) }}" method="POST"
                                     class="inline delete-form">
                                     @csrf
                                     @method('DELETE')
@@ -128,95 +148,55 @@
                             </div>
                         </td>
                     </tr>
-                </template>
+                @endforeach
             </tbody>
         </table>
     </div>
 
     <!-- Pagination -->
-    <div x-show="pagination.total > 0"
-        class="mt-6 bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 rounded-b-lg">
-        <div class="flex-1 flex justify-between sm:hidden">
-            <button x-on:click="previousPage()" x-bind:disabled="pagination.current_page === 1"
-                x-bind:class="{
-                    'opacity-50 cursor-not-allowed': pagination.current_page === 1,
-                    'hover:bg-gray-50': pagination.current_page !== 1
-                }"
-                class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white">
-                Previous
-            </button>
-            <button x-on:click="nextPage()" x-bind:disabled="pagination.current_page === pagination.last_page"
-                x-bind:class="{
-                    'opacity-50 cursor-not-allowed': pagination.current_page === pagination.last_page,
-                    'hover:bg-gray-50': pagination.current_page !== pagination.last_page
-                }"
-                class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white">
-                Next
-            </button>
-        </div>
-        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-            <div>
-                <p class="text-sm text-gray-700">
-                    Showing
-                    <span class="font-medium" x-text="pagination.from"></span>
-                    to
-                    <span class="font-medium" x-text="pagination.to"></span>
-                    of
-                    <span class="font-medium" x-text="pagination.total"></span>
-                    results
-                </p>
+    @if ($itemUnits->total() > 0)
+        <div class="mt-6 bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 rounded-b-lg">
+            <div class="flex-1 flex justify-between sm:hidden">
+                @if ($itemUnits->onFirstPage())
+                    <span
+                        class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-300 bg-white cursor-not-allowed">
+                        Previous
+                    </span>
+                @else
+                    <a href="{{ $itemUnits->previousPageUrl() }}"
+                        class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        Previous
+                    </a>
+                @endif
+
+                @if ($itemUnits->hasMorePages())
+                    <a href="{{ $itemUnits->nextPageUrl() }}"
+                        class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        Next
+                    </a>
+                @else
+                    <span
+                        class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-300 bg-white cursor-not-allowed">
+                        Next
+                    </span>
+                @endif
             </div>
-            <div>
-                <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                    <button x-on:click="previousPage()" x-bind:disabled="pagination.current_page === 1"
-                        x-bind:class="{
-                            'opacity-50 cursor-not-allowed': pagination.current_page === 1,
-                            'hover:bg-gray-50': pagination.current_page !== 1
-                        }"
-                        class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500">
-                        <span class="sr-only">Previous</span>
-                        <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
-                            aria-hidden="true">
-                            <path fill-rule="evenodd"
-                                d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-                                clip-rule="evenodd" />
-                        </svg>
-                    </button>
-
-                    <template x-for="page in pagination.links" :key="page.label">
-                        <template x-if="page.url">
-                            <button x-on:click="goToPage(page.url)" x-bind:disabled="page.active"
-                                x-bind:class="{
-                                    'z-10 bg-indigo-50 border-indigo-500 text-indigo-600': page.active,
-                                    'bg-white border-gray-300 text-gray-500 hover:bg-gray-50': !page.active
-                                }"
-                                class="relative inline-flex items-center px-4 py-2 border text-sm font-medium"
-                                x-text="page.label" aria-current="page">
-                            </button>
-                        </template>
-                        <template x-if="!page.url && page.label !== '...'">
-                            <span
-                                class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700"
-                                x-text="page.label"></span>
-                        </template>
-                    </template>
-
-                    <button x-on:click="nextPage()" x-bind:disabled="pagination.current_page === pagination.last_page"
-                        x-bind:class="{
-                            'opacity-50 cursor-not-allowed': pagination.current_page === pagination.last_page,
-                            'hover:bg-gray-50': pagination.current_page !== pagination.last_page
-                        }"
-                        class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500">
-                        <span class="sr-only">Next</span>
-                        <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
-                            fill="currentColor" aria-hidden="true">
-                            <path fill-rule="evenodd"
-                                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                                clip-rule="evenodd" />
-                        </svg>
-                    </button>
-                </nav>
+            <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                <div>
+                    <p class="text-sm text-gray-700">
+                        Showing
+                        <span class="font-medium">{{ $itemUnits->firstItem() }}</span>
+                        to
+                        <span class="font-medium">{{ $itemUnits->lastItem() }}</span>
+                        of
+                        <span class="font-medium">{{ $itemUnits->total() }}</span>
+                        results
+                    </p>
+                </div>
+                <div>
+                    {{ $itemUnits->links() }}
+                </div>
             </div>
         </div>
-    </div>
+    @endif
 </div>

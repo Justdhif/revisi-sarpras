@@ -3,14 +3,15 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\User;
+use App\Models\Notification;
 use App\Models\ReturnDetail;
-use App\Notifications\UserRequestedReturnNotification;
 use Illuminate\Http\Request;
 use App\Models\BorrowRequest;
 use App\Models\ReturnRequest;
 use App\Models\CustomNotification;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Storage;
+use App\Notifications\UserRequestedReturnNotification;
 
 class ReturnRequestApiController extends Controller
 {
@@ -89,15 +90,21 @@ class ReturnRequestApiController extends Controller
                 'return_request_id' => $return->id,
                 'item_unit_id' => $detail['item_unit_id'],
                 'condition' => $detail['condition'],
-                'quantity' => $detail['quantity'] ?? 1, // ✅ default quantity = 1
+                'quantity' => $detail['quantity'] ?? 1,
                 'photo' => $photoPath,
             ]);
         }
 
-        $admins = User::where('role', 'admin')->get();
+        $adminId = User::where('role', 'super-admin')->get();
 
-        foreach ($admins as $admin) {
-            $admin->notify(new UserRequestedReturnNotification($return));
+        foreach ($adminId as $admin) {
+            Notification::create([
+                'sender_id' => auth()->id(),
+                'receiver_id' => $admin->id,
+                'notification_type' => 'request_pengembalian',
+                'message' => auth()->user()->name . ' mengajukan permintaan pengembalian barang.',
+                'return_request_id' => $return->id,
+            ]);
         }
 
         return response()->json([

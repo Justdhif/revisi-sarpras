@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class CategoryController extends Controller
 {
@@ -11,8 +12,21 @@ class CategoryController extends Controller
 
     public function index()
     {
-        $categories = Category::latest()->paginate(self::PAGINATION_COUNT);
-        return view('categories.index', compact('categories'));
+        $results = DB::select("CALL getAllCategories()");
+
+        $currentPage = request()->get('page', 1);
+        $perPage = self::PAGINATION_COUNT;
+        $offset = ($currentPage - 1) * $perPage;
+
+        $paginated = new \Illuminate\Pagination\LengthAwarePaginator(
+            array_slice($results, $offset, $perPage),
+            count($results),
+            $perPage,
+            $currentPage,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
+
+        return view('categories.index', ['categories' => $paginated]);
     }
 
     public function store(Request $request)
@@ -22,7 +36,10 @@ class CategoryController extends Controller
             'description' => 'nullable|string',
         ]);
 
-        Category::create($validated);
+        DB::statement("CALL createCategory(?, ?)", [
+            $validated['name'],
+            $validated['description'] ?? null,
+        ]);
 
         return redirect()->route('categories.index')
             ->with('success', 'Kategori berhasil ditambahkan!');
@@ -41,7 +58,11 @@ class CategoryController extends Controller
             'description' => 'nullable|string',
         ]);
 
-        $category->update($validated);
+        DB::statement("CALL updateCategory(?, ?, ?)", [
+            $category->id,
+            $validated['name'],
+            $validated['description'] ?? null,
+        ]);
 
         return redirect()->route('categories.index')
             ->with('success', 'Kategori berhasil diperbarui!');
@@ -49,7 +70,7 @@ class CategoryController extends Controller
 
     public function destroy(Category $category)
     {
-        $category->delete();
+        DB::statement("CALL deleteCategory(?)", [$category->id]);
 
         return redirect()->route('categories.index')
             ->with('success', 'Kategori berhasil dihapus!');

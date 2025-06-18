@@ -12,8 +12,13 @@ class ReturnRequest extends Model
     protected $fillable = [
         'status',
         'notes',
-        'borrow_request_id'
+        'borrow_request_id',
+        'handled_by',
     ];
+
+    public function handler() {
+        return $this->belongsTo(User::class, 'handled_by');
+    }
 
     public function borrowRequest()
     {
@@ -23,5 +28,10 @@ class ReturnRequest extends Model
     public function returnDetails()
     {
         return $this->hasMany(ReturnDetail::class);
+    }
+
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class);
     }
 }

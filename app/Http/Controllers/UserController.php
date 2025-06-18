@@ -3,13 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Origin;
+use Barryvdh\DomPDF\PDF;
 use App\Exports\UsersExport;
 use App\Models\BorrowDetail;
-use App\Models\BorrowRequest;
 use Illuminate\Http\Request;
+use App\Models\BorrowRequest;
 use Illuminate\Support\Facades\Hash;
 use Maatwebsite\Excel\Facades\Excel;
-use Barryvdh\DomPDF\PDF;
+use Illuminate\Support\Facades\Storage;
 
 class UserController extends Controller
 {
@@ -36,24 +38,65 @@ class UserController extends Controller
 
     public function index(Request $request)
     {
-        $users = $this->getFilteredUsers($request);
+        $sortField = $request->get('sort', 'username');
+        $sortDirection = $request->get('direction', 'asc');
 
-        if ($request->ajax()) {
-            return $this->getAjaxResponse($users);
-        }
+        $query = User::query()
+            ->when($request->search, function ($query) use ($request) {
+                return $query->where('username', 'like', '%' . $request->search . '%')
+                    ->orWhere('email', 'like', '%' . $request->search . '%');
+            })
+            ->when($request->origin, function ($query) use ($request) {
+                return $query->where('origin_id', $request->origin);
+            })
+            ->when($request->status, function ($query) use ($request) {
+                if ($request->status === 'active') {
+                    return $query->where('active', true);
+                } elseif ($request->status === 'inactive') {
+                    return $query->where('active', false);
+                }
+            })
+            ->orderBy($sortField, $sortDirection);
 
-        return view('users.index', ['users' => $users]);
+        $users = $query->paginate(10);
+        $origins = Origin::latest()->get();
+
+        return view('users.index', [
+            'users' => $users,
+            'origins' => $origins,
+            'sortField' => $sortField,
+            'sortDirection' => $sortDirection,
+        ]);
     }
 
     public function create()
     {
-        return view('users.create');
+        $classes = Origin::latest()->get();
+        return view('users.create', compact('classes'));
     }
 
     public function store(Request $request)
     {
-        $validated = $this->validateUserRequest($request);
-        $this->createUser($validated);
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'username' => 'required|unique:users',
+            'origin_id' => 'nullable|string|max:255',
+            'email' => 'nullable|email|unique:users',
+            'phone' => 'nullable',
+            'password' => 'required|confirmed|min:6',
+            'password_confirmation' => 'required|same:password',
+        ]);
+
+        User::create([
+            'username' => $validated['username'],
+            'name' => $validated['name'],
+            'origin_id' => $validated['origin_id'] ?? null,
+            'email' => $validated['email'],
+            'phone' => $validated['phone'],
+            'password' => Hash::make($validated['password']),
+            'role' => 'user',
+            'profile_picture' => self::DEFAULT_AVATAR_URL . '?name=' . urlencode($validated['name']) . '&background=random&rounded=true',
+        ]);
 
         return redirect()->route('users.index')
             ->with('success', 'User berhasil dibuat.');
@@ -61,8 +104,31 @@ class UserController extends Controller
 
     public function show(User $user)
     {
-        $stats = $this->getUserBorrowStats($user);
-        $borrows = $this->getUserBorrows($user);
+        $stats = [
+            'totalBorrowCount' => BorrowRequest::where('user_id', $user->id)->count(),
+            'totalItemBorrowed' => BorrowDetail::whereHas('borrowRequest', fn($q) => $q->where('user_id', $user->id))->count(),
+            'totalItemReturned' => BorrowDetail::whereHas('borrowRequest', function ($q) use ($user) {
+                $q->where('user_id', $user->id)
+                    ->whereHas('returnRequest', function ($q) {
+                        $q->where('status', 'approved');
+                    });
+            })->count(),
+        ];
+
+        $borrows = [
+            'activeBorrows' => BorrowRequest::with(['borrowDetail.itemUnit.item', 'returnRequest'])
+                ->where('user_id', $user->id)
+                ->where('status', 'approved')
+                ->get(),
+
+            'returnedBorrows' => BorrowRequest::with(['borrowDetail.itemUnit.item', 'returnRequest'])
+                ->where('user_id', $user->id)
+                ->where('status', 'approved')
+                ->whereHas('returnRequest', function ($q) {
+                    $q->where('status', 'approved');
+                })
+                ->get(),
+        ];
 
         return view('users.show', array_merge(
             ['user' => $user],
@@ -78,8 +144,21 @@ class UserController extends Controller
 
     public function update(Request $request, User $user)
     {
-        $validated = $this->validateUserUpdateRequest($request, $user);
-        $this->updateUser($user, $validated);
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'username' => 'required|unique:users,username,' . $user->id,
+            'email' => 'nullable|email|unique:users,email,' . $user->id,
+            'phone' => 'nullable',
+            'origin_id' => 'nullable|string|max:255',
+            'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:' . self::MAX_IMAGE_SIZE,
+        ]);
+
+        if (isset($validated['profile_picture'])) {
+            $imagePath = $validated['profile_picture']->store(self::PROFILE_IMAGE_PATH, 'public');
+            $validated['profile_picture'] = 'storage/' . $imagePath;
+        }
+
+        $user->update($validated);
 
         return redirect()->route('users.index')
             ->with('success', 'User diperbarui.');
@@ -90,116 +169,5 @@ class UserController extends Controller
         $user->delete();
         return redirect()->route('users.index')
             ->with('success', 'User dihapus.');
-    }
-
-    private function getFilteredUsers(Request $request)
-    {
-        $query = User::query();
-
-        if ($request->filled('search')) {
-            $query->where(function ($q) use ($request) {
-                $q->where('username', 'like', "%{$request->search}%")
-                    ->orWhere('email', 'like', "%{$request->search}%")
-                    ->orWhere('origin', 'like', "%{$request->search}%");
-            });
-        }
-
-        return $query->orderBy('username')->paginate(self::PAGINATION_COUNT);
-    }
-
-    private function getAjaxResponse($users)
-    {
-        return response()->json([
-            'data' => $users->items(),
-            'current_page' => $users->currentPage(),
-            'last_page' => $users->lastPage(),
-            'from' => $users->firstItem(),
-            'to' => $users->lastItem(),
-            'total' => $users->total(),
-            'links' => $users->links()->elements,
-        ]);
-    }
-
-    private function validateUserRequest(Request $request)
-    {
-        return $request->validate([
-            'name' => 'required|string|max:255',
-            'username' => 'required|unique:users',
-            'origin' => 'nullable|string|max:255',
-            'email' => 'nullable|email|unique:users',
-            'phone' => 'nullable',
-            'password' => 'required|confirmed|min:6',
-            'password_confirmation' => 'required|same:password',
-        ]);
-    }
-
-    private function createUser(array $data)
-    {
-        return User::create([
-            'username' => $data['username'],
-            'name' => $data['name'],
-            'origin' => $data['origin'] ?? null,
-            'email' => $data['email'],
-            'phone' => $data['phone'],
-            'password' => Hash::make($data['password']),
-            'role' => 'user',
-            'profile_picture' => $this->generateAvatarUrl($data['name']),
-        ]);
-    }
-
-    private function validateUserUpdateRequest(Request $request, User $user)
-    {
-        return $request->validate([
-            'name' => 'required|string|max:255',
-            'username' => 'required|unique:users,username,' . $user->id,
-            'email' => 'nullable|email|unique:users,email,' . $user->id,
-            'phone' => 'nullable',
-            'origin' => 'nullable|string|max:255',
-            'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:' . self::MAX_IMAGE_SIZE,
-        ]);
-    }
-
-    private function updateUser(User $user, array $data)
-    {
-        if (isset($data['profile_picture'])) {
-            $data['profile_picture'] = $this->storeProfileImage($data['profile_picture']);
-        }
-
-        $user->update($data);
-    }
-
-    private function storeProfileImage($image)
-    {
-        $imagePath = $image->store(self::PROFILE_IMAGE_PATH, 'public');
-        return 'storage/' . $imagePath;
-    }
-
-    private function generateAvatarUrl(string $name)
-    {
-        return self::DEFAULT_AVATAR_URL . '?name=' . urlencode($name) . '&background=random&rounded=true';
-    }
-
-    private function getUserBorrowStats(User $user)
-    {
-        return [
-            'totalBorrowCount' => BorrowRequest::where('user_id', $user->id)->count(),
-            'totalItemBorrowed' => BorrowDetail::whereHas('borrowRequest', fn($q) => $q->where('user_id', $user->id))->count(),
-            'totalItemReturned' => BorrowDetail::whereHas('borrowRequest', fn($q) => $q->where('user_id', $user->id)->whereHas('returnRequest'))->count(),
-        ];
-    }
-
-    private function getUserBorrows(User $user)
-    {
-        return [
-            'activeBorrows' => BorrowRequest::with('borrowDetail.itemUnit.item')
-                ->where('user_id', $user->id)
-                ->where('status', 'approved')
-                ->whereDoesntHave('returnRequest')
-                ->get(),
-            'returnedBorrows' => BorrowRequest::with('details.itemUnit.item')
-                ->where('user_id', $user->id)
-                ->whereHas('returnRequest')
-                ->get(),
-        ];
     }
 }

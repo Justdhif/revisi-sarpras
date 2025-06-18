@@ -134,3 +134,19 @@ body {
 .notification-close:hover {
     opacity: 1 !important;
 }
+
+.apexcharts-tooltip {
+    @apply bg-white shadow-lg rounded-lg border border-gray-200;
+}
+
+.apexcharts-tooltip-title {
+    @apply bg-gray-50 border-b border-gray-200 py-2 px-3 font-medium text-gray-900;
+}
+
+.apexcharts-tooltip-series-group {
+    @apply py-1 px-3;
+}
+
+.apexcharts-tooltip-marker {
+    @apply w-3 h-3 rounded-full mr-2;
+}

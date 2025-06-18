@@ -4,14 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Models\ItemUnit;
 use Barryvdh\DomPDF\PDF;
+use App\Models\Notification;
 use App\Models\ReturnDetail;
 use Illuminate\Http\Request;
 use App\Models\BorrowRequest;
 use App\Models\ReturnRequest;
 use App\Models\StockMovement;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\ReturnRequestsExport;
+use Illuminate\Support\Facades\Storage;
 use App\Notifications\ReturnApprovedNotification;
 use App\Notifications\ReturnRejectedNotification;
 
@@ -41,13 +44,33 @@ class ReturnRequestController extends Controller
 
     public function index(Request $request)
     {
-        $returns = $this->getFilteredReturnRequests($request);
+        $sortField = $request->get('sort', 'created_at');
+        $sortDirection = $request->get('direction', 'desc');
 
-        if ($request->ajax()) {
-            return $this->getAjaxResponse($returns);
-        }
+        $query = ReturnRequest::with(['borrowRequest.user', 'returnDetails.itemUnit'])
+            ->when($request->search, function ($query) use ($request) {
+                return $query->whereHas('borrowRequest.user', function ($q) use ($request) {
+                    $q->where('name', 'like', '%' . $request->search . '%');
+                });
+            })
+            ->when($request->status, function ($query) use ($request) {
+                return $query->where('status', $request->status);
+            })
+            ->when($request->start_date, function ($query) use ($request) {
+                return $query->whereDate('created_at', '>=', $request->start_date);
+            })
+            ->when($request->end_date, function ($query) use ($request) {
+                return $query->whereDate('created_at', '<=', $request->end_date);
+            })
+            ->orderBy($sortField, $sortDirection);
 
-        return view('return_requests.index', ['returns' => $returns]);
+        $returnRequests = $query->paginate(10);
+
+        return view('return_requests.index', [
+            'returnRequests' => $returnRequests,
+            'sortField' => $sortField,
+            'sortDirection' => $sortDirection,
+        ]);
     }
 
     public function create(BorrowRequest $borrowRequest)
@@ -58,9 +81,31 @@ class ReturnRequestController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $this->validateReturnRequest($request);
-        $returnRequest = $this->createReturnRequest($validated);
-        $this->createReturnDetails($returnRequest, $validated['item_units']);
+        $validated = $request->validate([
+            'borrow_request_id' => 'required|exists:borrow_requests,id',
+            'notes' => 'nullable|string',
+            'item_units.*.id' => 'required|exists:item_units,id',
+            'item_units.*.condition' => 'required|string',
+            'item_units.*.photo' => 'required|image|mimes:jpeg,png,jpg|max:' . self::MAX_PHOTO_SIZE,
+            'item_units.*.quantity' => 'required|numeric',
+        ]);
+
+        $returnRequest = ReturnRequest::create([
+            'borrow_request_id' => $validated['borrow_request_id'],
+            'notes' => $validated['notes'],
+        ]);
+
+        foreach ($validated['item_units'] as $unit) {
+            $photoPath = $unit['photo']->store(self::PHOTO_STORAGE_PATH, 'public');
+
+            ReturnDetail::create([
+                'item_unit_id' => $unit['id'],
+                'condition' => $unit['condition'],
+                'return_request_id' => $returnRequest->id,
+                'quantity' => $unit['quantity'],
+                'photo' => $photoPath,
+            ]);
+        }
 
         return redirect()->route('return-requests.index')
             ->with('success', 'Pengembalian berhasil diajukan.');
@@ -92,10 +137,41 @@ class ReturnRequestController extends Controller
         DB::beginTransaction();
 
         try {
-            $this->processApproval($returnRequest);
+            $returnRequest->update([
+                'status' => 'approved',
+                'handled_by' => Auth::id(),
+            ]);
+
+            foreach ($returnRequest->returnDetails as $detail) {
+                $itemUnit = $detail->itemUnit;
+                $item = $itemUnit->item;
+
+                StockMovement::create([
+                    'item_unit_id' => $itemUnit->id,
+                    'movement_type' => 'in',
+                    'quantity' => $detail->quantity,
+                    'description' => 'Persetujuan pengembalian',
+                    'movement_date' => now(),
+                ]);
+
+                if ($item->type === 'consumable') {
+                    $itemUnit->quantity += $detail->quantity;
+                }
+
+                $itemUnit->status = 'available';
+                $itemUnit->save();
+            }
+
+            Notification::create([
+                'sender_id' => Auth::id(),
+                'receiver_id' => $returnRequest->user_id,
+                'notification_type' => 'approved_return_request',
+                'message' => 'Permintaan pengembalian telah disetujui',
+                'return_request_id' => $returnRequest->id
+            ]);
+
             DB::commit();
 
-            $returnRequest->user->notify(new ReturnApprovedNotification($returnRequest));
             return back()->with('success', 'Pengembalian disetujui.');
 
         } catch (\Exception $e) {
@@ -107,114 +183,7 @@ class ReturnRequestController extends Controller
     public function reject(ReturnRequest $returnRequest)
     {
         $returnRequest->update(['status' => 'rejected']);
-        $returnRequest->user->notify(new ReturnRejectedNotification($returnRequest));
 
         return back()->with('error', 'Pengembalian ditolak.');
-    }
-
-    private function getFilteredReturnRequests(Request $request)
-    {
-        $query = ReturnRequest::with(['borrowRequest.requester', 'borrowRequest.item']);
-
-        if ($request->filled('search')) {
-            $query->whereHas('borrowRequest.requester', fn($q) => $q->where('name', 'like', "%{$request->search}%"));
-        }
-
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        if ($request->filled('start_date')) {
-            $query->whereDate('return_date', '>=', $request->start_date);
-        }
-
-        if ($request->filled('end_date')) {
-            $query->whereDate('return_date', '<=', $request->end_date);
-        }
-
-        return $query->orderBy('created_at', 'desc')->paginate(self::PAGINATION_COUNT);
-    }
-
-    private function getAjaxResponse($returns)
-    {
-        return response()->json([
-            'data' => $returns->items(),
-            'current_page' => $returns->currentPage(),
-            'last_page' => $returns->lastPage(),
-            'from' => $returns->firstItem(),
-            'to' => $returns->lastItem(),
-            'total' => $returns->total(),
-            'links' => $returns->links()->elements,
-        ]);
-    }
-
-    private function validateReturnRequest(Request $request)
-    {
-        return $request->validate([
-            'borrow_request_id' => 'required|exists:borrow_requests,id',
-            'notes' => 'nullable|string',
-            'item_units.*.id' => 'required|exists:item_units,id',
-            'item_units.*.condition' => 'required|string',
-            'item_units.*.photo' => 'required|image|mimes:jpeg,png,jpg|max:' . self::MAX_PHOTO_SIZE,
-            'item_units.*.quantity' => 'required|numeric',
-        ]);
-    }
-
-    private function createReturnRequest(array $data)
-    {
-        return ReturnRequest::create([
-            'borrow_request_id' => $data['borrow_request_id'],
-            'notes' => $data['notes'],
-        ]);
-    }
-
-    private function createReturnDetails(ReturnRequest $returnRequest, array $itemUnits)
-    {
-        foreach ($itemUnits as $unit) {
-            $photoPath = $unit['photo']->store(self::PHOTO_STORAGE_PATH, 'public');
-
-            ReturnDetail::create([
-                'item_unit_id' => $unit['id'],
-                'condition' => $unit['condition'],
-                'return_request_id' => $returnRequest->id,
-                'quantity' => $unit['quantity'],
-                'photo' => $photoPath,
-            ]);
-        }
-    }
-
-    private function processApproval(ReturnRequest $returnRequest)
-    {
-        $returnRequest->update(['status' => 'approved']);
-
-        foreach ($returnRequest->returnDetails as $detail) {
-            $this->processReturnDetail($detail);
-        }
-    }
-
-    private function processReturnDetail(ReturnDetail $detail)
-    {
-        $itemUnit = $detail->itemUnit;
-        $item = $itemUnit->item;
-
-        $this->recordStockMovement($itemUnit, $detail->quantity);
-
-        if ($item->type === 'consumable') {
-            $itemUnit->quantity += $detail->quantity;
-        }
-
-        $itemUnit->status = 'available';
-        $itemUnit->save();
-    }
-
-    private function recordStockMovement(ItemUnit $itemUnit, $quantity)
-    {
-        StockMovement::create([
-            'item_unit_id' => $itemUnit->id,
-            'type' => 'in',
-            'quantity' => $quantity,
-            'description' => 'Persetujuan pengembalian',
-            'movement_date' => now(),
-        ]);
     }
 }

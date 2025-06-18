@@ -48,7 +48,7 @@
                     <label for="movement-type" class="block text-sm font-medium text-gray-700 mb-2">Jenis Movement
                         <span class="text-red-500">*</span></label>
                     <div class="relative">
-                        <select id="movement-type" name="type" required
+                        <select id="movement-type" name="movement_type" required
                             class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all duration-200 outline-none text-gray-700 shadow-sm hover:border-gray-300 appearance-none">
                             <option value="">-- Pilih Jenis --</option>
                             <option value="in">Stock In</option>

@@ -38,42 +38,77 @@ class ItemUnitController extends Controller
 
     public function index(Request $request)
     {
-        $units = $this->getFilteredItemUnits($request);
+        $sortField = $request->get('sort', 'sku');
+        $sortDirection = $request->get('direction', 'asc');
+
+        $query = ItemUnit::with(['item', 'warehouse'])
+            ->when($request->search, function ($query) use ($request) {
+                return $query->where('sku', 'like', '%' . $request->search . '%')
+                    ->orWhereHas('item', function ($q) use ($request) {
+                        $q->where('name', 'like', '%' . $request->search . '%');
+                    });
+            })
+            ->when($request->condition, function ($query) use ($request) {
+                return $query->where('condition', $request->condition);
+            })
+            ->when($request->status, function ($query) use ($request) {
+                return $query->where('status', $request->status);
+            })
+            ->when($request->warehouse, function ($query) use ($request) {
+                return $query->where('warehouse_id', $request->warehouse);
+            })
+            ->orderBy($sortField, $sortDirection);
+
+        $itemUnits = $query->paginate(10);
         $warehouses = Warehouse::all();
 
-        if ($request->ajax()) {
-            return $this->getAjaxResponse($units);
-        }
-
-        return view('item_units.index', compact('warehouses'));
+        return view('item_units.index', [
+            'itemUnits' => $itemUnits,
+            'warehouses' => $warehouses,
+            'sortField' => $sortField,
+            'sortDirection' => $sortDirection,
+        ]);
     }
 
     public function create()
     {
         return view('item_units.create', [
             'items' => Item::all(),
-            'warehouses' => $this->getAvailableWarehouses()
+            'warehouses' => Warehouse::where('capacity', '>', ItemUnit::sum('quantity'))->get()
         ]);
     }
 
     public function store(Request $request)
     {
-        $validated = $this->validateItemUnitRequest($request);
+        $validated = $request->validate([
+            'sku' => 'required|unique:item_units,sku',
+            'condition' => 'required|string|max:255',
+            'notes' => 'nullable|string',
+            'acquisition_source' => 'required|string|max:255',
+            'acquisition_date' => 'required|date',
+            'acquisition_notes' => 'nullable|string',
+            'status' => 'required|in:available,borrowed,unknown',
+            'quantity' => 'required|integer|min:1',
+            'item_id' => 'required|exists:items,id',
+            'warehouse_id' => 'required|exists:warehouses,id',
+        ]);
 
-        if (!$this->validateWarehouseCapacity($validated['warehouse_id'], $validated['quantity'])) {
+        $warehouse = Warehouse::findOrFail($validated['warehouse_id']);
+        $totalQuantity = $warehouse->itemUnits()->sum('quantity');
+
+        if (($warehouse->capacity - $totalQuantity) < $validated['quantity']) {
             return back()->with('error', 'Kapasitas gudang tidak mencukupi.')->withInput();
         }
 
-        $validated['qr_image_url'] = $this->generateQrCode($validated['sku']);
-        ItemUnit::create($validated);
+        $qrCode = QrCode::format(self::QR_CODE_FORMAT)
+            ->size(self::QR_CODE_SIZE)
+            ->generate($validated['sku']);
 
-        StockMovement::create([
-            'item_unit_id' => ItemUnit::latest()->first()->id,
-            'type' => 'in',
-            'quantity' => $validated['quantity'],
-            'movement_date' => now(),
-            'description' => 'Barang masuk ke gudang',
-        ]);
+        $fileName = self::QR_CODE_DIR . '/' . $validated['sku'] . '.' . self::QR_CODE_FORMAT;
+        Storage::disk('public')->put($fileName, $qrCode);
+        $validated['qr_image_url'] = Storage::url($fileName);
+
+        ItemUnit::create($validated);
 
         return redirect()->route('item-units.index')
             ->with('success', 'Unit barang berhasil ditambahkan.');
@@ -96,20 +131,35 @@ class ItemUnitController extends Controller
 
     public function update(Request $request, ItemUnit $itemUnit)
     {
-        $validated = $this->validateItemUnitRequest($request, $itemUnit);
+        $validated = $request->validate([
+            'sku' => 'required|unique:item_units,sku,' . $itemUnit->id,
+            'condition' => 'required|string|max:255',
+            'notes' => 'nullable|string',
+            'acquisition_source' => 'required|string|max:255',
+            'acquisition_date' => 'required|date',
+            'acquisition_notes' => 'nullable|string',
+            'status' => 'required|in:available,borrowed,unknown',
+            'quantity' => 'required|integer|min:1',
+            'item_id' => 'required|exists:items,id',
+            'warehouse_id' => 'required|exists:warehouses,id',
+        ]);
 
-        if (
-            !$this->validateUpdatedWarehouseCapacity(
-                $validated['warehouse_id'],
-                $validated['quantity'],
-                $itemUnit->quantity
-            )
-        ) {
+        $warehouse = Warehouse::findOrFail($validated['warehouse_id']);
+        $currentTotal = $warehouse->itemUnits()->sum('quantity');
+        $adjustedTotal = $currentTotal - $itemUnit->quantity + $validated['quantity'];
+
+        if ($adjustedTotal > $warehouse->capacity) {
             return back()->with('error', 'Update gagal: kapasitas gudang tidak mencukupi.')->withInput();
         }
 
         if ($validated['sku'] !== $itemUnit->sku) {
-            $validated['qr_image_url'] = $this->generateQrCode($validated['sku']);
+            $qrCode = QrCode::format(self::QR_CODE_FORMAT)
+                ->size(self::QR_CODE_SIZE)
+                ->generate($validated['sku']);
+
+            $fileName = self::QR_CODE_DIR . '/' . $validated['sku'] . '.' . self::QR_CODE_FORMAT;
+            Storage::disk('public')->put($fileName, $qrCode);
+            $validated['qr_image_url'] = Storage::url($fileName);
         }
 
         $itemUnit->update($validated);
@@ -123,95 +173,5 @@ class ItemUnitController extends Controller
         $itemUnit->delete();
         return redirect()->route('item-units.index')
             ->with('success', 'Unit barang berhasil dihapus.');
-    }
-
-    private function getFilteredItemUnits(Request $request)
-    {
-        $query = ItemUnit::with(['item', 'warehouse']);
-
-        if ($request->filled('search')) {
-            $query->where(function ($q) use ($request) {
-                $q->where('sku', 'like', "%{$request->search}%")
-                    ->orWhereHas('item', fn($q) => $q->where('name', 'like', "%{$request->search}%"))
-                    ->orWhereHas('warehouse', fn($q) => $q->where('name', 'like', "%{$request->search}%"));
-            });
-        }
-
-        if ($request->filled('condition')) {
-            $query->where('condition', $request->condition);
-        }
-
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        if ($request->filled('warehouse')) {
-            $query->where('warehouse_id', $request->warehouse);
-        }
-
-        return $query->paginate(self::PAGINATION_COUNT);
-    }
-
-    private function getAjaxResponse($units)
-    {
-        return response()->json([
-            'data' => $units->items(),
-            'current_page' => $units->currentPage(),
-            'last_page' => $units->lastPage(),
-            'from' => $units->firstItem(),
-            'to' => $units->lastItem(),
-            'total' => $units->total(),
-            'links' => $units->links()->elements,
-        ]);
-    }
-
-    private function getAvailableWarehouses()
-    {
-        return Warehouse::where('capacity', '>', ItemUnit::sum('quantity'))->get();
-    }
-
-    private function validateItemUnitRequest(Request $request, ?ItemUnit $itemUnit = null)
-    {
-        $rules = [
-            'sku' => 'required|unique:item_units,sku',
-            'condition' => 'required|string|max:255',
-            'notes' => 'nullable|string',
-            'acquisition_source' => 'required|string|max:255',
-            'acquisition_date' => 'required|date',
-            'acquisition_notes' => 'nullable|string',
-            'status' => 'required|in:available,borrowed,unknown',
-            'quantity' => 'required|integer|min:1',
-            'item_id' => 'required|exists:items,id',
-            'warehouse_id' => 'required|exists:warehouses,id',
-        ];
-
-        return $request->validate($rules);
-    }
-
-    private function validateWarehouseCapacity($warehouseId, $quantity)
-    {
-        $warehouse = Warehouse::findOrFail($warehouseId);
-        $totalQuantity = $warehouse->itemUnits()->sum('quantity');
-        return ($warehouse->capacity - $totalQuantity) >= $quantity;
-    }
-
-    private function validateUpdatedWarehouseCapacity($warehouseId, $newQuantity, $oldQuantity)
-    {
-        $warehouse = Warehouse::findOrFail($warehouseId);
-        $currentTotal = $warehouse->itemUnits()->sum('quantity');
-        $adjustedTotal = $currentTotal - $oldQuantity + $newQuantity;
-        return $adjustedTotal <= $warehouse->capacity;
-    }
-
-    private function generateQrCode($sku)
-    {
-        $qrCode = QrCode::format(self::QR_CODE_FORMAT)
-            ->size(self::QR_CODE_SIZE)
-            ->generate($sku);
-
-        $fileName = self::QR_CODE_DIR . '/' . $sku . '.' . self::QR_CODE_FORMAT;
-        Storage::disk('public')->put($fileName, $qrCode);
-
-        return Storage::url($fileName);
     }
 }

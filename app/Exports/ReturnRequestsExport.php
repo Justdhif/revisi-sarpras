@@ -10,7 +10,7 @@ class ReturnRequestsExport implements FromCollection, WithHeadings
 {
     public function collection()
     {
-        return ReturnDetail::with(['itemUnit.item', 'returnRequest.borrowRequest.user'])->get()->map(function ($detail) {
+        return ReturnDetail::with(['itemUnit.item', 'handler', 'returnRequest.borrowRequest.user'])->get()->map(function ($detail) {
             return [
                 'ID' => $detail->id,
                 'Peminjam' => $detail->returnRequest->borrowRequest->user->username ?? '-',
@@ -20,6 +20,7 @@ class ReturnRequestsExport implements FromCollection, WithHeadings
                 'Foto' => $detail->photo ? asset('storage/' . $detail->photo) : '-',
                 'Jumlah' => $detail->quantity,
                 'Catatan' => $detail->notes,
+                'Dihandle Oleh' => $detail->handler->username ?? '-',
                 'Tanggal Pengembalian' => $detail->created_at->format('Y-m-d H:i'),
             ];
         });
@@ -36,6 +37,7 @@ class ReturnRequestsExport implements FromCollection, WithHeadings
             'Foto',
             'Jumlah',
             'Catatan',
+            'Dihandle Oleh',
             'Tanggal Pengembalian',
         ];
     }

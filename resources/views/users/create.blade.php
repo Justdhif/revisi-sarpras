@@ -117,9 +117,15 @@
                                                 d="M9 17v-2a4 4 0 00-4-4H3m12 0a4 4 0 014 4v2m0-6a4 4 0 00-4-4m0 0V5a4 4 0 00-4-4H9a4 4 0 00-4 4v2a4 4 0 004 4h6z" />
                                         </svg>
                                     </div>
-                                    <input type="text" name="origin" id="origin"
-                                        class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-3 border"
-                                        placeholder="Contoh: XII IPA 3 atau Guru Bahasa">
+                                    <select name="origin_id" id="origin"
+                                        class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-3 border">
+                                        <option value="">Pilih Asal</option>
+                                        @forelse ($classes as $class)
+                                            <option value="{{ $class->id }}">{{ $class->name }}</option>
+                                        @empty
+                                            <option value="">Tidak ada kelas</option>
+                                        @endforelse
+                                    </select>
                                 </div>
                             </div>
 

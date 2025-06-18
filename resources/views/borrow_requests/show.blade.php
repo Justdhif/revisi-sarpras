@@ -87,6 +87,7 @@
                     <div class="mt-8 pt-6 border-t border-gray-200 flex space-x-3">
                         <form method="POST" action="{{ route('borrow-requests.approve', $borrowRequest) }}">
                             @csrf
+                            @method('PATCH')
                             <button type="submit"
                                 class="inline-flex items-center bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg">
                                 <i class="fas fa-check mr-2"></i> Setujui
@@ -94,6 +95,7 @@
                         </form>
                         <form method="POST" action="{{ route('borrow-requests.reject', $borrowRequest) }}">
                             @csrf
+                            @method('PATCH')
                             <button type="submit"
                                 class="inline-flex items-center bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg">
                                 <i class="fas fa-times mr-2"></i> Tolak

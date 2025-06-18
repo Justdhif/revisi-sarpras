@@ -131,8 +131,15 @@
                                     <h3 class="text-sm font-medium text-gray-500">ID Peminjaman</h3>
                                     <p class="text-lg font-semibold text-gray-800">#{{ $borrow->id }}</p>
                                 </div>
-                                <span class="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                    Aktif
+                                <span
+                                    class="px-3 py-1 rounded-full text-xs font-medium
+    @if ($borrow->returnRequest && $borrow->returnRequest->status == 'approved') bg-green-100 text-green-800
+    @else bg-blue-100 text-blue-800 @endif">
+                                    @if ($borrow->returnRequest && $borrow->returnRequest->status == 'approved')
+                                        Dikembalikan
+                                    @else
+                                        Aktif
+                                    @endif
                                 </span>
                             </div>
                             <div class="space-y-3">
@@ -184,7 +191,7 @@
                                 </span>
                             </div>
                             <div class="space-y-3">
-                                @foreach ($borrow->details as $detail)
+                                @foreach ($borrow->borrowDetail as $detail)
                                     <div class="flex items-center p-3 bg-gray-50 rounded-lg border border-gray-200">
                                         <div class="bg-green-100 p-2 rounded-lg mr-4">
                                             <i class="fas fa-check text-green-600"></i>
@@ -192,7 +199,7 @@
                                         <div class="flex-1">
                                             <h4 class="font-medium text-gray-800">{{ $detail->itemUnit->item->name }}</h4>
                                             <p class="text-sm text-gray-500">Serial:
-                                                {{ $detail->itemUnit->serial_number ?? '-' }}</p>
+                                                {{ $detail->itemUnit->sku ?? '-' }}</p>
                                         </div>
                                         <div class="text-right">
                                             <p class="text-xs text-gray-500">Dikembalikan pada</p>

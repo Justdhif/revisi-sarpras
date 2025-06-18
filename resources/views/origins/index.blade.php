@@ -27,12 +27,6 @@
             </button>
         </div>
 
-        @if (session('success'))
-            <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded">
-                <p>{{ session('success') }}</p>
-            </div>
-        @endif
-
         @if ($origins->isEmpty())
             <div class="flex flex-col items-center justify-center min-h-[60vh] py-12 text-center">
                 <div class="max-w-md mx-auto px-4">
@@ -104,8 +98,8 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div
-                                            class="text-sm font-medium text-gray-900 {{ $userOriginCount == 0 ? 'text-red-600' : '' }}">
-                                            {{ $userOriginCount }} Orang
+                                            class="text-sm font-medium text-gray-900 {{ $origin->users()->count() == 0 ? 'text-red-600' : '' }}">
+                                            {{ $origin->users()->count() }} orang
                                         </div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">

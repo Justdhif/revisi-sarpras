@@ -16,117 +16,74 @@ class StockMovementController extends Controller
 
     public function index(Request $request)
     {
-        $query = $this->buildFilterQuery($request);
-        $movements = $query->paginate(self::PAGINATION_COUNT);
+        $sortField = $request->get('sort', 'movement_date');
+        $sortDirection = $request->get('direction', 'desc');
 
-        if ($request->ajax()) {
-            return $this->getAjaxResponse($movements);
+        $query = StockMovement::with(['itemUnit.item'])
+            ->when($request->search, function ($q) use ($request) {
+                $q->whereHas('itemUnit.item', function ($q) use ($request) {
+                    $q->where('name', 'like', '%' . $request->search . '%');
+                });
+            })
+            ->when($request->movement_type, function ($q) use ($request) {
+                $q->where('movement_type', $request->movement_type);
+            })
+            ->when($request->start_date, function ($q) use ($request) {
+                $q->where('movement_date', '>=', $request->start_date);
+            })
+            ->when($request->end_date, function ($q) use ($request) {
+                $q->where('movement_date', '<=', $request->end_date);
+            });
+
+        // Handle sorting
+        if ($sortField === 'item_name') {
+            $query->join('item_units', 'stock_movements.item_unit_id', '=', 'item_units.id')
+                ->join('items', 'item_units.item_id', '=', 'items.id')
+                ->orderBy('items.name', $sortDirection)
+                ->select('stock_movements.*');
+        } elseif ($sortField === 'movement_type') {
+            $query->orderBy('movement_type', $sortDirection);
+        } else {
+            $query->orderBy($sortField, $sortDirection);
         }
+
+        $movements = $query->paginate(10);
+        $itemUnits = ItemUnit::latest()->get();
 
         return view('stock_movements.index', [
             'movements' => $movements,
-            'itemUnits' => ItemUnit::with('item')->get()
+            'itemUnits' => $itemUnits,
+            'sortField' => $sortField,
+            'sortDirection' => $sortDirection,
         ]);
     }
 
     public function store(Request $request)
     {
-        $validated = $this->validateStockMovementRequest($request);
-        $this->processStockMovement($validated);
-
-        return redirect()->back()
-            ->with('success', 'Stock movement recorded');
-    }
-
-    private function buildFilterQuery(Request $request)
-    {
-        $query = StockMovement::with(['itemUnit.item'])
-            ->latest('movement_date');
-
-        $this->applyFilters($query, $request);
-        $this->applySorting($query, $request);
-
-        return $query;
-    }
-
-    private function applyFilters($query, Request $request)
-    {
-        if ($request->filled('type')) {
-            $query->where('type', $request->type);
-        }
-
-        if ($request->filled('start_date')) {
-            $query->where('movement_date', '>=', $request->start_date);
-        }
-
-        if ($request->filled('end_date')) {
-            $query->where('movement_date', '<=', $request->end_date);
-        }
-
-        if ($request->filled('search')) {
-            $query->whereHas('itemUnit.item', function ($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->search . '%');
-            });
-        }
-    }
-
-    private function applySorting($query, Request $request)
-    {
-        $sortOptions = [
-            'item_asc' => ['items.name', 'asc'],
-            'item_desc' => ['items.name', 'desc']
-        ];
-
-        $sort = $request->get('sort', self::DEFAULT_SORT);
-        $sortOption = $sortOptions[$sort] ?? $sortOptions[self::DEFAULT_SORT];
-
-        if (array_key_exists($sort, $sortOptions)) {
-            $query->join('item_units', 'stock_movements.item_unit_id', '=', 'item_units.id')
-                ->join('items', 'item_units.item_id', '=', 'items.id')
-                ->select('stock_movements.*')
-                ->orderBy($sortOption[0], $sortOption[1]);
-        } else {
-            $query->orderBy($sortOption[0], $sortOption[1]);
-        }
-    }
-
-    private function getAjaxResponse($movements)
-    {
-        return response()->json([
-            'data' => $movements->items(),
-            'current_page' => $movements->currentPage(),
-            'last_page' => $movements->lastPage(),
-            'from' => $movements->firstItem(),
-            'to' => $movements->lastItem(),
-            'total' => $movements->total(),
-            'links' => $movements->links()->elements,
-        ]);
-    }
-
-    private function validateStockMovementRequest(Request $request)
-    {
-        return $request->validate([
+        $validated = $request->validate([
             'item_unit_id' => 'required|exists:item_units,id',
-            'type' => 'required|in:' . implode(',', self::MOVEMENT_TYPES),
+            'movement_type' => 'required|in:' . implode(',', self::MOVEMENT_TYPES),
             'quantity' => 'required|integer|min:1',
             'description' => 'nullable|string',
             'movement_date' => 'required|date',
         ]);
-    }
 
-    private function processStockMovement(array $data)
-    {
-        $movement = StockMovement::create($data);
+        $movement = StockMovement::create($validated);
         $itemUnit = $movement->itemUnit;
 
-        match ($movement->type) {
-            'in' => $itemUnit->quantity += $movement->quantity,
-            'out', 'damaged' => $itemUnit->quantity -= $movement->quantity,
-        };
+        switch ($movement->type) {
+            case 'in':
+                $itemUnit->quantity += $movement->quantity;
+                break;
+            case 'out':
+            case 'damaged':
+                $itemUnit->quantity -= $movement->quantity;
+                break;
+        }
 
         $itemUnit->save();
 
-        if ($movement->type === 'damaged') {
+        if ($movement->movement_type === 'damaged') {
             DamagedItem::create([
                 'item_unit_id' => $movement->item_unit_id,
                 'quantity' => $movement->quantity,
@@ -134,9 +91,19 @@ class StockMovementController extends Controller
                 'description' => $movement->description,
             ]);
 
-            $itemUnit->type = 'damaged';
+            $itemUnit->condition = 'damaged';
+            $itemUnit->status = 'unvailable';
             $itemUnit->save();
-
         }
+
+        return redirect()->back()
+            ->with('success', 'Stock movement recorded');
+    }
+
+    public function destroy(StockMovement $stockMovement)
+    {
+        $stockMovement->delete();
+        return redirect()->back()
+            ->with('success', 'Stock movement deleted');
     }
 }

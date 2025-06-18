@@ -177,7 +177,7 @@
 
                     <!-- Recent Returns -->
                     <div class="bg-white rounded-lg border border-gray-200 shadow-sm">
-                        <x-dashboard.section-header title="Pengembalian Terbaru" link="{{ route('return-requests.index') }}" linkText="View All" />
+                        <x-dashboard.section-header title="Pengembalian Terbaru" link="{{ route('return_requests.index') }}" linkText="View All" />
 
                         <div class="divide-y divide-gray-200">
                             @forelse ($recentReturns as $return)

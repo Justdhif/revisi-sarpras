@@ -78,26 +78,13 @@ Route::middleware(['auth', 'role:super-admin'])->group(function () {
 
     /*
     |----------------------------------------------------------------------
-    | Notification Management
-    |----------------------------------------------------------------------
-    */
-    Route::prefix('notifications')->group(function () {
-        Route::get('/', [NotificationController::class, 'index'])->name('notifications.index');
-        Route::get('/{id}', [NotificationController::class, 'show'])->name('notifications.show');
-        Route::post('/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.markAll');
-        Route::get('/unread-count', [NotificationController::class, 'unreadCount']);
-        Route::get('/create', [NotificationController::class, 'create'])->name('notifications.create');
-        Route::post('/send', [NotificationController::class, 'send'])->name('notifications.send');
-    });
-
-    /*
-    |----------------------------------------------------------------------
     | Borrow Request Management
     |----------------------------------------------------------------------
     */
     Route::prefix('borrow-requests')->group(function () {
-        Route::put('/{id}/approve', [BorrowRequestController::class, 'approve'])->name('borrow-requests.approve');
-        Route::post('/{id}/reject', [BorrowRequestController::class, 'reject'])->name('borrow-requests.reject');
+        Route::patch('/{id}/approve', [BorrowRequestController::class, 'approve'])->name('borrow-requests.approve');
+        Route::patch('/{id}/reject', [BorrowRequestController::class, 'reject'])->name('borrow-requests.reject');
+        Route::post('/{id}/reminder', [BorrowRequestController::class, 'sendReminder'])->name('borrow-requests.sendReminder');
     });
 
     /*
@@ -121,13 +108,15 @@ Route::middleware(['auth', 'role:super-admin'])->group(function () {
     |----------------------------------------------------------------------
     */
     Route::prefix('return_requests')->group(function () {
-        Route::get('/', [ReturnRequestController::class, 'index'])->name('return-requests.index');
+        Route::get('/', [ReturnRequestController::class, 'index'])->name('return_requests.index');
         Route::get('/create/{borrowRequest}', [ReturnRequestController::class, 'create'])->name('return_requests.create');
         Route::post('/', [ReturnRequestController::class, 'store'])->name('return_requests.store');
         Route::get('/{return_request}', [ReturnRequestController::class, 'show'])->name('return_requests.show');
         Route::get('/{return_request}/edit', [ReturnRequestController::class, 'edit'])->name('return_requests.edit');
-        Route::put('/{return_request}/approve', [ReturnRequestController::class, 'approve'])->name('return-requests.approve');
-        Route::put('/{return_request}/reject', [ReturnRequestController::class, 'reject'])->name('return-requests.reject');
+        Route::put('/{return_request}', [ReturnRequestController::class, 'update'])->name('return_requests.update');
+        Route::delete('/{return_request}', [ReturnRequestController::class, 'destroy'])->name('return_requests.destroy');
+        Route::patch('/{return_request}/approve', [ReturnRequestController::class, 'approve'])->name('return_requests.approve');
+        Route::patch('/{return_request}/reject', [ReturnRequestController::class, 'reject'])->name('return_requests.reject');
     });
 
     /*
@@ -138,6 +127,7 @@ Route::middleware(['auth', 'role:super-admin'])->group(function () {
     Route::prefix('stock-movements')->group(function () {
         Route::get('/', [StockMovementController::class, 'index'])->name('stock_movements.index');
         Route::post('/', [StockMovementController::class, 'store'])->name('stock_movements.store');
+        Route::delete('/{stockMovement}', [StockMovementController::class, 'destroy'])->name('stock_movements.destroy');
     });
 
     /*
@@ -146,6 +136,18 @@ Route::middleware(['auth', 'role:super-admin'])->group(function () {
     |----------------------------------------------------------------------
     */
     Route::get('/damaged-items', [DamagedItemController::class, 'index'])->name('damaged-items.index');
+
+    /*
+    |----------------------------------------------------------------------
+    | Notifications
+    |----------------------------------------------------------------------
+    */
+    Route::prefix('notifications')->group(function () {
+        Route::get('/', [NotificationController::class, 'index'])->name('notifications.index');
+        Route::get('/{id}', [NotificationController::class, 'show'])->name('notifications.show');
+        Route::patch('/{id}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+        Route::patch('/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.markAllAsRead');
+    });
 
     /*
     |----------------------------------------------------------------------

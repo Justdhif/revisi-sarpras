@@ -10,10 +10,9 @@ class BorrowRequestsExport implements FromCollection, WithHeadings
 {
     public function collection()
     {
-        return BorrowRequest::with(['user', 'approver', 'borrowDetails.itemUnit.item'])
+        return BorrowRequest::with(['user', 'handler', 'borrowDetails.itemUnit.item'])
             ->get()
             ->map(function ($borrow) {
-                // Gabungkan item yang dipinjam dalam 1 string
                 $items = $borrow->borrowDetails->map(function ($detail) {
                     $itemName = $detail->itemUnit->item->name ?? '-';
                     $sku = $detail->itemUnit->sku ?? '-';
@@ -26,8 +25,9 @@ class BorrowRequestsExport implements FromCollection, WithHeadings
                     'ID' => $borrow->id,
                     'Peminjam' => $borrow->user->username ?? '-',
                     'Status' => ucfirst($borrow->status),
+                    'Tanggal Pinjam' => $borrow->borrow_date_expected,
                     'Tanggal Kembali (Harapan)' => $borrow->return_date_expected,
-                    'Disetujui Oleh' => $borrow->approver->username ?? '-',
+                    'Dihandle Oleh' => $borrow->handler->username ?? '-',
                     'Catatan' => $borrow->notes,
                     'Tanggal Dibuat' => $borrow->created_at->format('Y-m-d H:i'),
                     'Barang Dipinjam' => $items,
@@ -42,7 +42,7 @@ class BorrowRequestsExport implements FromCollection, WithHeadings
             'Peminjam',
             'Status',
             'Tanggal Kembali (Harapan)',
-            'Disetujui Oleh',
+            'Dihandle Oleh',
             'Catatan',
             'Tanggal Dibuat',
             'Barang Dipinjam',

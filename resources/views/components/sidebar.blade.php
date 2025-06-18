@@ -14,24 +14,29 @@
             <a href="{{ route('dashboard') }}"
                 class="flex items-center px-3 py-2 text-sm rounded-md font-medium transition-colors
                     {{ request()->routeIs('dashboard') ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50 hover:text-accent-foreground' }}">
-                <i class="fas fa-home w-5 mr-3 text-muted-foreground"></i> Dashboard
+                <i
+                    class="fas fa-home w-5 mr-3 {{ request()->routeIs('dashboard') ? 'text-blue-500' : 'text-muted-foreground' }}"></i>
+                Dashboard
             </a>
         </div>
 
         <!-- Master Data Section -->
         <div class="mt-6">
-            <h3 class="px-3 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Master Data
-            </h3>
+            <h3 class="px-3 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Master Data</h3>
             <div class="space-y-1">
                 <a href="{{ route('categories.index') }}"
                     class="flex items-center px-3 py-2 text-sm rounded-md font-medium transition-colors
                         {{ request()->routeIs('categories.*') ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50 hover:text-accent-foreground' }}">
-                    <i class="fas fa-tags w-5 mr-3 text-muted-foreground"></i> Kategori
+                    <i
+                        class="fas fa-tags w-5 mr-3 {{ request()->routeIs('categories.*') ? 'text-purple-500' : 'text-muted-foreground' }}"></i>
+                    Kategori
                 </a>
                 <a href="{{ route('warehouses.index') }}"
                     class="flex items-center px-3 py-2 text-sm rounded-md font-medium transition-colors
                         {{ request()->routeIs('warehouses.*') ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50 hover:text-accent-foreground' }}">
-                    <i class="fas fa-warehouse w-5 mr-3 text-muted-foreground"></i> Gudang
+                    <i
+                        class="fas fa-warehouse w-5 mr-3 {{ request()->routeIs('warehouses.*') ? 'text-amber-500' : 'text-muted-foreground' }}"></i>
+                    Gudang
                 </a>
             </div>
         </div>
@@ -43,9 +48,11 @@
             <div class="space-y-1">
                 <button @click="itemsOpen = !itemsOpen"
                     class="w-full flex items-center justify-between px-3 py-2 text-sm rounded-md font-medium transition-colors
-                        {{ request()->routeIs('items.*', 'item-units.*', 'stock_movements.*') ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50 hover:text-accent-foreground' }}">
+                        {{ request()->routeIs('items.*', 'item-units.*', 'stock_movements.*', 'damaged-items.*') ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50 hover:text-accent-foreground' }}">
                     <span class="flex items-center">
-                        <i class="fas fa-box-open w-5 mr-3 text-muted-foreground"></i> Barang
+                        <i
+                            class="fas fa-box-open w-5 mr-3 {{ request()->routeIs('items.*', 'item-units.*', 'stock_movements.*', 'damaged-items.*') ? 'text-emerald-500' : 'text-muted-foreground' }}"></i>
+                        Barang
                     </span>
                     <i
                         :class="itemsOpen ? 'fas fa-chevron-up text-muted-foreground' :
@@ -56,21 +63,30 @@
                     <a href="{{ route('items.index') }}"
                         class="block px-3 py-1.5 text-sm rounded-md font-medium transition-colors
                             {{ request()->routeIs('items.*') ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50 hover:text-accent-foreground' }}">
-                        <i class="fas fa-box w-5 mr-2 text-muted-foreground"></i> Daftar Barang
+                        <i
+                            class="fas fa-box w-5 mr-2 {{ request()->routeIs('items.*') ? 'text-emerald-600' : 'text-muted-foreground' }}"></i>
+                        Daftar Barang
                     </a>
                     <a href="{{ route('item-units.index') }}"
                         class="block px-3 py-1.5 text-sm rounded-md font-medium transition-colors
                             {{ request()->routeIs('item-units.*') ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50 hover:text-accent-foreground' }}">
-                        <i class="fas fa-boxes w-5 mr-2 text-muted-foreground"></i> Daftar Unit
+                        <i
+                            class="fas fa-boxes w-5 mr-2 {{ request()->routeIs('item-units.*') ? 'text-teal-500' : 'text-muted-foreground' }}"></i>
+                        Daftar Unit
                     </a>
                     <a href="{{ route('stock_movements.index') }}"
-                        class="block px-3 py-1.5 text-sm rounded-md font-medium transition-colors {{ request()->routeIs('stock_movements.*') ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50 hover:text-accent-foreground' }}">
-                        <i class="fas fa-history w-5 mr-2 text-muted-foreground"></i> Riwayat Stok
+                        class="block px-3 py-1.5 text-sm rounded-md font-medium transition-colors
+                            {{ request()->routeIs('stock_movements.*') ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50 hover:text-accent-foreground' }}">
+                        <i
+                            class="fas fa-history w-5 mr-2 {{ request()->routeIs('stock_movements.*') ? 'text-cyan-500' : 'text-muted-foreground' }}"></i>
+                        Riwayat Stok
                     </a>
                     <a href="{{ route('damaged-items.index') }}"
                         class="block px-3 py-1.5 text-sm rounded-md font-medium transition-colors
                             {{ request()->routeIs('damaged-items.*') ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50 hover:text-accent-foreground' }}">
-                        <i class="fas fa-bolt w-5 mr-2 text-muted-foreground"></i> Barang Rusak
+                        <i
+                            class="fas fa-bolt w-5 mr-2 {{ request()->routeIs('damaged-items.*') ? 'text-red-500' : 'text-muted-foreground' }}"></i>
+                        Barang Rusak
                     </a>
                 </div>
             </div>
@@ -78,18 +94,21 @@
 
         <!-- Transaction Section -->
         <div class="mt-6">
-            <h3 class="px-3 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Transaksi
-            </h3>
+            <h3 class="px-3 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Transaksi</h3>
             <div class="space-y-1">
                 <a href="{{ route('borrow-requests.index') }}"
                     class="flex items-center px-3 py-2 text-sm rounded-md font-medium transition-colors
                         {{ request()->routeIs('borrow-requests.*') ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50 hover:text-accent-foreground' }}">
-                    <i class="fas fa-redo-alt w-5 mr-3 text-muted-foreground"></i> Peminjaman
+                    <i
+                        class="fas fa-redo-alt w-5 mr-3 {{ request()->routeIs('borrow-requests.*') ? 'text-indigo-500' : 'text-muted-foreground' }}"></i>
+                    Peminjaman
                 </a>
-                <a href="{{ route('return-requests.index') }}"
+                <a href="{{ route('return_requests.index') }}"
                     class="flex items-center px-3 py-2 text-sm rounded-md font-medium transition-colors
-                        {{ request()->routeIs('return-requests.index') ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50 hover:text-accent-foreground' }}">
-                    <i class="fas fa-undo-alt w-5 mr-3 text-muted-foreground"></i> Pengembalian
+                        {{ request()->routeIs('return_requests.*') ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50 hover:text-accent-foreground' }}">
+                    <i
+                        class="fas fa-undo-alt w-5 mr-3 {{ request()->routeIs('return_requests.*') ? 'text-violet-500' : 'text-muted-foreground' }}"></i>
+                    Pengembalian
                 </a>
             </div>
         </div>
@@ -101,12 +120,15 @@
                 <a href="{{ route('users.index') }}"
                     class="flex items-center px-3 py-2 text-sm rounded-md font-medium transition-colors
                         {{ request()->routeIs('users.*') ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50 hover:text-accent-foreground' }}">
-                    <i class="fas fa-users w-5 mr-3 text-muted-foreground"></i> Pengguna
+                    <i
+                        class="fas fa-users w-5 mr-3 {{ request()->routeIs('users.*') ? 'text-pink-500' : 'text-muted-foreground' }}"></i>
+                    Pengguna
                 </a>
                 <a href="{{ route('origins.index') }}"
                     class="flex items-center px-3 py-2 text-sm rounded-md font-medium transition-colors
                         {{ request()->routeIs('origins.*') ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50 hover:text-accent-foreground' }}">
-                    <i class="fas fa-map-marker-alt w-5 mr-3 text-muted-foreground"></i>
+                    <i
+                        class="fas fa-map-marker-alt w-5 mr-3 {{ request()->routeIs('origins.*') ? 'text-rose-500' : 'text-muted-foreground' }}"></i>
                     Asal
                 </a>
             </div>
@@ -121,30 +143,28 @@
             <h3 class="px-3 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Sistem</h3>
             <div class="space-y-1">
                 <a href="{{ route('notifications.index') }}"
-                    class="flex items-center px-3 py-2 text-sm rounded-md font-medium transition-colors
-                        {{ request()->routeIs('notifications.index') ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50 hover:text-accent-foreground' }}">
-                    <div class="relative group">
-                        <i class="fas fa-bell w-5 mr-3 text-muted-foreground"></i>
-                        @if ($unreadCount > 0)
-                            <span
-                                class="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
-                                {{ $unreadCount > 9 ? '9+' : $unreadCount }}
-                            </span>
-                        @endif
-
-                        <!-- Tooltip -->
-                        <div
-                            class="absolute left-6 top-0 z-50 hidden group-hover:block bg-gray-800 text-white text-xs rounded px-2 py-1 shadow-lg">
-                            {{ $unreadCount }} notifikasi belum dibaca
-                        </div>
-                    </div>
+                    class="relative flex items-center px-3 py-2 text-sm rounded-md font-medium transition-colors
+                {{ request()->routeIs('notifications.*') ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50 hover:text-accent-foreground' }}">
+                    <i
+                        class="fas fa-bell w-5 mr-3 {{ request()->routeIs('notifications.*') ? 'text-amber-500' : 'text-muted-foreground' }}"></i>
                     Notifikasi
-                </a>
 
+                    @if ($unreadCount > 0)
+                        <span class="absolute left-5 top-1.5">
+                            <span class="relative flex h-2 w-2">
+                                <span
+                                    class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                            </span>
+                        </span>
+                    @endif
+                </a>
                 <a href="{{ route('activity-logs.index') }}"
                     class="flex items-center px-3 py-2 text-sm rounded-md font-medium transition-colors
-                        {{ request()->routeIs('activity-logs.index') ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50 hover:text-accent-foreground' }}">
-                    <i class="fas fa-history w-5 mr-3 text-muted-foreground"></i> Log Aktivitas
+                {{ request()->routeIs('activity-logs.index') ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50 hover:text-accent-foreground' }}">
+                    <i
+                        class="fas fa-history w-5 mr-3 {{ request()->routeIs('activity-logs.index') ? 'text-orange-500' : 'text-muted-foreground' }}"></i>
+                    Log Aktivitas
                 </a>
             </div>
         </div>

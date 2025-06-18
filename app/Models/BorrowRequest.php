@@ -16,7 +16,7 @@ class BorrowRequest extends Model
         'reason',
         'notes',
         'user_id',
-        'approved_by'
+        'handled_by',
     ];
 
     public function user()
@@ -24,9 +24,14 @@ class BorrowRequest extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function approver()
+    public function handler()
     {
-        return $this->belongsTo(User::class, 'approved_by');
+        return $this->belongsTo(User::class, 'handled_by');
+    }
+
+    public function requester()
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function borrowDetail()
@@ -37,6 +42,11 @@ class BorrowRequest extends Model
     public function returnRequest()
     {
         return $this->hasOne(ReturnRequest::class);
+    }
+
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class);
     }
 }
 

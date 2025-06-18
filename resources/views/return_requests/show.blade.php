@@ -77,14 +77,14 @@
 
                 @if ($returnRequest->status === 'pending')
                     <div class="mt-8 pt-6 border-t border-gray-200 flex space-x-3">
-                        <form method="POST" action="{{ route('return-requests.approve', $returnRequest) }}">
+                        <form method="POST" action="{{ route('return_requests.approve', $returnRequest) }}">
                             @csrf
                             <button type="submit"
                                 class="inline-flex items-center bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg">
                                 <i class="fas fa-check mr-2"></i> Setujui
                             </button>
                         </form>
-                        <form method="POST" action="{{ route('return-requests.reject', $returnRequest) }}">
+                        <form method="POST" action="{{ route('return_requests.reject', $returnRequest) }}">
                             @csrf
                             <button type="submit"
                                 class="inline-flex items-center bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg">

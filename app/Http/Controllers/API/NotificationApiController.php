@@ -4,70 +4,63 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\Notification;
 
 class NotificationApiController extends Controller
 {
-    // GET /api/notifications
     public function index(Request $request)
     {
-        $user = $request->user();
+        $userId = $request->user()->id;
 
-        $query = $user->notifications();
+        $notifications = Notification::with([
+            'borrowRequest.borrowDetail.itemUnit.item',
+            'returnRequest.details.itemUnit.item'
+        ])
+            ->where('receiver_id', $userId)
+            ->when($request->search, function ($query) use ($request) {
+                $search = '%' . $request->search . '%';
+                return $query->where('message', 'like', $search)
+                    ->orWhere('notification_type', 'like', $search);
+            })
+            ->when($request->type, fn($q) => $q->where('notification_type', $request->type))
+            ->when($request->status, fn($q) => $q->where('is_read', $request->status === 'read'))
+            ->orderBy($request->get('sort', 'created_at'), $request->get('direction', 'desc'))->get();
 
-        if ($request->status === 'read') {
-            $query->whereNotNull('read_at');
-        } elseif ($request->status === 'unread') {
-            $query->whereNull('read_at');
-        }
-
-        $notifications = $query->latest()->get()->map(function ($n) {
-            return [
-                'id' => $n->id,
-                'title' => $n->data['title'] ?? 'Notifikasi',
-                'message' => $n->data['message'] ?? '-',
-                'time' => $n->created_at->diffForHumans(),
-                'created_at' => $n->created_at->format('Y-m-d H:i:s'),
-                'read_at' => $n->read_at,
-                'user_name' => $n->data['user_name'] ?? null,
-                'related_type' => $n->data['borrow_request_id'] ? 'Peminjaman' : ($n->data['return_request_id'] ? 'Pengembalian' : null),
-                'related_id' => $n->data['borrow_request_id'] ?? $n->data['return_request_id'] ?? null,
-            ];
-        });
-
-        return response()->json([
-            'status' => 'success',
-            'notifications' => $notifications,
-        ]);
+        return response()->json($notifications);
     }
 
-    // GET /api/notifications/{id}
     public function show(Request $request, $id)
     {
-        $user = $request->user();
-        $notification = $user->notifications()->findOrFail($id);
+        $notification = Notification::with([
+            'borrowRequest.borrowDetail.itemUnit.item',
+            'returnRequest.details.itemUnit.item'
+        ])
+            ->where('receiver_id', $request->user()->id)
+            ->findOrFail($id);
 
-        if (is_null($notification->read_at)) {
-            $notification->markAsRead();
+        if (!$notification->is_read) {
+            $notification->update(['is_read' => true]);
         }
 
-        return response()->json([
-            'id' => $notification->id,
-            'title' => $notification->data['title'] ?? 'Notifikasi',
-            'message' => $notification->data['message'] ?? '-',
-            'created_at' => $notification->created_at->format('Y-m-d H:i'),
-            'read_at' => $notification->read_at,
-            'user_name' => $notification->data['user_name'] ?? null,
-            'related_type' => isset($notification->data['borrow_request_id']) ? 'Peminjaman' : (isset($notification->data['return_request_id']) ? 'Pengembalian' : null),
-            'related_id' => $notification->data['borrow_request_id'] ?? $notification->data['return_request_id'] ?? null,
-        ]);
+        return response()->json($notification);
     }
 
-    // POST /api/notifications/mark-all-as-read
+    public function markAsRead(Request $request, $id)
+    {
+        $notification = Notification::where('receiver_id', $request->user()->id)
+            ->findOrFail($id);
+
+        $notification->update(['is_read' => true]);
+
+        return response()->json(['message' => 'Notifikasi ditandai sebagai dibaca.']);
+    }
+
     public function markAllAsRead(Request $request)
     {
-        $user = $request->user();
-        $user->unreadNotifications->markAsRead();
+        Notification::where('receiver_id', $request->user()->id)
+            ->where('is_read', false)
+            ->update(['is_read' => true]);
 
-        return response()->json(['status' => 'success', 'message' => 'Semua notifikasi telah dibaca.']);
+        return response()->json(['message' => 'Semua notifikasi ditandai sebagai dibaca.']);
     }
 }

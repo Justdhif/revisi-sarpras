@@ -17,7 +17,6 @@ class OriginController extends Controller
 
         return view('origins.index', [
             'origins' => $origins,
-            'userOriginCount' => $origins->total() // More accurate count of origins with users
         ]);
     }
 
